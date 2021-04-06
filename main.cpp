@@ -55,16 +55,22 @@ class Listener:public BasicListener{
     virtual void exitLoopBody(BasicParser::LoopBodyContext *ctx)override{
         
     }
-}
-void main(int argc, const char* argv[]){
+    
+    virtual void visitTerminal(antlr4::tree::TerminalNode *node)override{}
+    virtual void visitErrorNode(antlr4::tree::ErrorNode *node)override{}
+    virtual void enterEveryRule(ParserRuleContext *ctx)override{}
+    virtual void exitEveryRule(ParserRuleContext *ctx)override{}
+};
+
+int main(int argc, const char* argv[]){
     std::ifstream stream;
-    stream.open(argv[1]);
+    stream.open("./test.txt");
     ANTLRInputStream input(stream);
     BasicLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
     BasicParser parser(&tokens);
 
-    tree::ParseTree *tree = parser.key();
-    TreeShapeListener listener;
+    tree::ParseTree *tree = parser.statement();
+    Listener listener;
     tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
 }

@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/yorkin/prj/visualBasic/build",
-  "command": "/usr/bin/c++  -I/usr/include/antlr4-runtime -I/home/yorkin/prj/visualBasic/./antlr -g -o CMakeFiles/classicBasic.dir/main.cpp.o -c /home/yorkin/prj/visualBasic/main.cpp",
-  "file": "/home/yorkin/prj/visualBasic/main.cpp"
-}
-]
