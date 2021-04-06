@@ -1,4 +1,5 @@
 grammar Basic;
+statements:statement*;
 exp: Number;
 statement:forStmt|loopStmt|ifStmt;
 
@@ -6,11 +7,11 @@ forStmt: For exp To exp Step exp statement* (Exit For)? statement* Next exp;
 foreachStmt: For Each exp Step In exp statement* (Exit For)? statement* Next exp;
 ifStmt:If exp Then statement* (ElseIf exp Then statement*)* (Else statement*)? End If;
 
-loopStmt : Do While exp loopBody Loop
-        | Do Until exp loopBody Loop
-        | Do loopBody Loop Until exp
-        | Do loopBody Loop While exp
-        | While exp  loopBody Wend
+loopStmt : Do While exp loopBody? Loop
+        | Do Until exp loopBody? Loop
+        | Do loopBody? Loop Until exp
+        | Do loopBody? Loop While exp
+        | While exp loopBody? Wend
         ;
 
 loopBody : statement* Exit Do statement*;
@@ -18,6 +19,8 @@ loopBody : statement* Exit Do statement*;
 //-234.233e-6
 Number: '-'?[0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;
 
+Comment: '\'' ~('\r'|'\n')*  -> skip;
+BlockComment: '\'*' .* '*\'' -> skip;
 WS: [ \n\t\r_:]->skip;
 
 ElseIf:E L S E I F;

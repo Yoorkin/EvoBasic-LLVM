@@ -25,7 +25,7 @@ class Listener:public BasicListener{
         
     }
     virtual void exitForStmt(BasicParser::ForStmtContext *ctx)override{
-        cout<<23333<<endl;
+        cout<<ctx->exp(0)->getText()<<endl;
     }
 
     virtual void enterForeachStmt(BasicParser::ForeachStmtContext *ctx)override{
