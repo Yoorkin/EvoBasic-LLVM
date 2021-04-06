@@ -14,6 +14,9 @@
 class  BasicListener : public antlr4::tree::ParseTreeListener {
 public:
 
+  virtual void enterStatements(BasicParser::StatementsContext *ctx) = 0;
+  virtual void exitStatements(BasicParser::StatementsContext *ctx) = 0;
+
   virtual void enterExp(BasicParser::ExpContext *ctx) = 0;
   virtual void exitExp(BasicParser::ExpContext *ctx) = 0;
 

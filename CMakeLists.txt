@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(classicBasic VERSION 0.1.0)
 
+#生成antlr cpp代码
+execute_process(COMMAND antlr4 Basic.g4 -o antlr -Dlanguage=Cpp -listener)
+
 file(COPY test.txt DESTINATION ${PROJECT_BINARY_DIR})
 
 include(CTest)

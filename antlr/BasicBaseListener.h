@@ -16,6 +16,9 @@
 class  BasicBaseListener : public BasicListener {
 public:
 
+  virtual void enterStatements(BasicParser::StatementsContext * /*ctx*/) override { }
+  virtual void exitStatements(BasicParser::StatementsContext * /*ctx*/) override { }
+
   virtual void enterExp(BasicParser::ExpContext * /*ctx*/) override { }
   virtual void exitExp(BasicParser::ExpContext * /*ctx*/) override { }
 
