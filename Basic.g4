@@ -1,7 +1,20 @@
 grammar Basic;
 statements:statement*;
-exp: Number;
 statement:forStmt|loopStmt|ifStmt;
+
+exp: '-'exp
+    | exp op=('~'|'&'|'|') exp
+    | exp op=('^'|'mod') exp
+    | exp op=('*'|'/') exp
+    | exp op=('+'|'-') exp
+    | exp op=('='|'>'|'<'|'<='|'<>'|'>=') exp
+    | exp op=('and'|'or'|'not'|'xor') exp
+    | '('exp')'
+    | Number
+    | String
+    | ID
+    | Boolean
+    ;
 
 forStmt: For exp To exp Step exp statement* (Exit For)? statement* Next exp;
 foreachStmt: For Each exp Step In exp statement* (Exit For)? statement* Next exp;
@@ -17,7 +30,10 @@ loopStmt : Do While exp loopBody? Loop
 loopBody : statement* Exit Do statement*;
 
 //-234.233e-6
-Number: '-'?[0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;
+Number: [0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;
+String: '"' ~('"'|'\r'|'\n')* '"';
+Boolean: T R U E | F A L S E;
+
 
 Comment: '\'' ~('\r'|'\n')*  -> skip;
 BlockComment: '\'*' .* '*\'' -> skip;

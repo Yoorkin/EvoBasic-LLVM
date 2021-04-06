@@ -60,6 +60,8 @@ class Listener:public BasicListener{
     virtual void visitErrorNode(antlr4::tree::ErrorNode *node)override{}
     virtual void enterEveryRule(ParserRuleContext *ctx)override{}
     virtual void exitEveryRule(ParserRuleContext *ctx)override{}
+    virtual void enterStatements(BasicParser::StatementsContext *ctx)override{}
+    virtual void exitStatements(BasicParser::StatementsContext *ctx)override{}
 };
 
 int main(int argc, const char* argv[]){
