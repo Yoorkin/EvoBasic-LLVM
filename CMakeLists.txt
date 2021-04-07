@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(classicBasic VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 14)
 #生成antlr cpp代码
-execute_process(COMMAND antlr4 Basic.g4 -o antlr -Dlanguage=Cpp -listener)
+execute_process(COMMAND antlr4 Basic.g4 -o antlr -Dlanguage=Cpp -visitor -no-listener)
 
 find_package(LLVM REQUIRED CONFIG)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")

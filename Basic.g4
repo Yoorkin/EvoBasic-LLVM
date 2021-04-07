@@ -1,44 +1,50 @@
 grammar Basic;
 statements:statement*;
-statement:forStmt|loopStmt|ifStmt;
 
-exp: '-'exp
-    | exp op=('~'|'&'|'|') exp
-    | exp op=('^'|'mod') exp
-    | exp op=('*'|'/') exp
-    | exp op=('+'|'-') exp
-    | exp op=('='|'>'|'<'|'<='|'<>'|'>=') exp
-    | exp op=('and'|'or'|'not'|'xor') exp
-    | '('exp')'
-    | Number
-    | String
-    | ID
-    | Boolean
+statement:forStmt|loopStmt|ifStmt|Exit exitFlag=(For|Do|Sub|Function);
+
+exp: op=('-'|'~')exp                         #NegOp
+    | left=exp op=('&'|'|')     right=exp      #BitOp
+    | left=exp op=('^'|'mod')       right=exp        #PowModOp
+    | left=exp op=('*'|'/'|'\\')    right=exp     #MulOp
+    | left=exp op=('+'|'-')         right=exp          #PluOp
+    | left=exp op=('='|'>'|'<'|'<='|'<>'|'>=') right=exp #CmpOp
+    | 'not' right=exp                      #LogicNotOp
+    | left=exp op=('and'|'or'|'xor') right=exp   #LogicOp
+    | '('exp')'                             #Bucket
+    | Number                                #Number
+    | String                                #String
+    | ID                                    #ID
+    | Boolean                               #Boolean
     ;
 
-forStmt: For exp To exp Step exp statement* (Exit For)? statement* Next exp;
-foreachStmt: For Each exp Step In exp statement* (Exit For)? statement* Next exp;
-ifStmt:If exp Then statement* (ElseIf exp Then statement*)* (Else statement*)? End If;
+forStmt: For iterator=exp '=' begin=exp To end=exp Step step=exp statement* Next nextFlag=exp?;
+foreachStmt: For Each iterator=exp In group=exp statement* Next nextFlag=exp?;
 
-loopStmt : Do While exp loopBody? Loop
-        | Do Until exp loopBody? Loop
-        | Do loopBody? Loop Until exp
-        | Do loopBody? Loop While exp
-        | While exp loopBody? Wend
+ifStmt: If condition=exp Then statement* (Else elsestatement=statement*)? LineEnd           #SingleLineIf
+        | If firstBlock=ifBlock (ElseIf elseifBlock=ifBlock)* (Else elseBlock=statement*)? End If #MutiLineIf
         ;
+ifBlock: condition=exp Then statement* ;
 
-loopBody : statement* Exit Do statement*;
+
+loopStmt : Do While exp statement* Loop #DoWhile
+        | Do Until exp statement* Loop  #DoUntil
+        | Do statement* Loop Until exp  #LoopUntil
+        | Do statement* Loop While exp  #LoopWhile
+        | While exp statement* Wend     #WhileWend
+        ;
 
 //-234.233e-6
 Number: [0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;
 String: '"' ~('"'|'\r'|'\n')* '"';
 Boolean: T R U E | F A L S E;
 
-
 Comment: '\'' ~('\r'|'\n')*  -> skip;
 BlockComment: '\'*' .* '*\'' -> skip;
+LineEnd: [\n\r];
 WS: [ \n\t\r_:]->skip;
 
+If:I F;
 ElseIf:E L S E I F;
 Wend:W E N D;
 From:F O R M;
@@ -80,12 +86,12 @@ For: F O R;
 Optional: O P T I O N A L;
 Byval:B Y V A L;
 Byref:B Y R E F;
-If:I F;
 Then:T H E N;
 Else:E L S E;
 Call:C A L L;
 Sub:S U B;
 As: A S;
+ID: [a-zA-z_][a-zA-z0-9_]*;
 
 fragment A:('a'|'A');
 fragment B:('b'|'B');

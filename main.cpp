@@ -38,14 +38,12 @@ class Listener:public BasicListener{
     virtual void exitExp(BasicParser::ExpContext *ctx)override{
         
     }
-
     virtual void enterStatement(BasicParser::StatementContext *ctx)override{
         
     }
     virtual void exitStatement(BasicParser::StatementContext *ctx)override{
         
     }
-
     virtual void enterForStmt(BasicParser::ForStmtContext *ctx)override{
         
     }
@@ -59,14 +57,12 @@ class Listener:public BasicListener{
     virtual void exitForeachStmt(BasicParser::ForeachStmtContext *ctx)override{
         
     }
-
     virtual void enterIfStmt(BasicParser::IfStmtContext *ctx)override{
         
     }
     virtual void exitIfStmt(BasicParser::IfStmtContext *ctx)override{
         
     }
-
     virtual void enterLoopStmt(BasicParser::LoopStmtContext *ctx)override{
         
     }
