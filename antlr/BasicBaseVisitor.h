@@ -43,6 +43,18 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitAssignStmt(BasicParser::AssignStmtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitExitStmt(BasicParser::ExitStmtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *ctx) override {
     return visitChildren(ctx);
   }

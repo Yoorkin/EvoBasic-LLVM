@@ -8,25 +8,41 @@ varDecl: Dim variable (','variable)*;
 
 variable: name=ID As type=ID ('=' initial=exp)?;
 
-functionDecl:Function name=ID '(' ')' As returnType=ID statement* End Function;
+functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID statement* End Function;
 
 subDecl: Sub name=ID ('(' ')')? statement* End Sub;
 
-statement:forStmt|loopStmt|ifStmt|LineEnd|Exit exitFlag=(For|Do|Sub|Function);
 
-exp: op=('-'|'~')exp                         #NegOp
-    | left=exp op=('&'|'|')     right=exp      #BitOp
-    | left=exp op=('^'|'mod')       right=exp        #PowModOp
-    | left=exp op=('*'|'/'|'\\')    right=exp     #MulOp
-    | left=exp op=('+'|'-')         right=exp          #PluOp
+statement:forStmt
+        |loopStmt
+        |ifStmt
+        |LineEnd
+        |exitStmt
+        |returnStmt
+        |assignStmt
+        ;
+
+assignStmt: ID '=' exp;
+
+exitStmt:Exit exitFlag=(For|Do|Sub|Function);
+
+returnStmt:Return exp
+          |name=ID '=' exp
+          ;
+
+exp: op=('-'|'~')exp                                    #NegOp
+    | left=exp op=('&'|'|')     right=exp               #BitOp
+    | left=exp op=('^'|'mod')       right=exp           #PowModOp
+    | left=exp op=('*'|'/'|'\\')    right=exp           #MulOp
+    | left=exp op=('+'|'-')         right=exp           #PluOp
     | left=exp op=('='|'>'|'<'|'<='|'<>'|'>=') right=exp #CmpOp
-    | 'not' right=exp                      #LogicNotOp
-    | left=exp op=('and'|'or'|'xor') right=exp   #LogicOp
-    | '('exp')'                             #Bucket
-    | Number                                #Number
-    | String                                #String
-    | ID                                    #ID
-    | Boolean                               #Boolean
+    | op='not' right=exp                                #LogicNotOp
+    | left=exp op=('and'|'or'|'xor') right=exp          #LogicOp
+    | '('exp')'                                         #Bucket
+    | Number                                            #Number
+    | String                                            #String
+    | ID                                                #ID
+    | Boolean                                           #Boolean
     ;
 
 forStmt: For iterator=exp '=' begin=exp To end=exp Step step=exp statement* Next nextFlag=exp?;

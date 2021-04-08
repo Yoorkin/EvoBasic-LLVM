@@ -1,12 +1,4 @@
-Function main()As Integer
+Function main(a as integer,b as boolean,c as single)As integer
 
 
 End Function
-
-Function anotherFunction()As Integer
-
-End Function
-
-Sub tool()
-
-End sub

@@ -1,6 +1,9 @@
 #ifndef CB_VISITOR
 #define CB_VISITOR
 
+#include<map>
+#include<string>
+
 #include<antlr4-runtime/antlr4-runtime.h>
 #include"antlr/BasicLexer.h"
 #include"antlr/BasicParser.h"
@@ -28,10 +31,11 @@
 #include<llvm/IR/DataLayout.h>
 #include<llvm/ExecutionEngine/ExecutionEngine.h>
 using namespace llvm;
-
+using namespace std;
 using namespace antlr4;
 
 class Visitor:public BasicBaseVisitor{
+  map<string,llvm::Type*> buildInTypes;
   llvm::Module* mod;
   LLVMContext* context;
   BasicBlock* block;
@@ -40,6 +44,14 @@ class Visitor:public BasicBaseVisitor{
   Visitor(llvm::Module* m,LLVMContext* ctx){
     mod=m;
     context=ctx;
+    buildInTypes.operator=({
+      {"integer",Type::getInt32Ty(*context)},
+      {"single",Type::getFloatTy(*context)},
+      {"double",Type::getDoubleTy(*context)},
+      {"boolean",Type::getInt1Ty(*context)},
+      {"long",Type::getInt64Ty(*context)},
+      {"byte",Type::getInt8Ty(*context)}
+    });
   }
 
   virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *ctx) override {
@@ -55,9 +67,22 @@ class Visitor:public BasicBaseVisitor{
   }
 
   virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
-    FunctionType *type = FunctionType::get(Type::getInt32Ty(*context),false);
+    vector<Type*> argsType;
+    for(auto arg:ctx->variable()){
+      cout<<arg->type->getText()<<endl;
+     // argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+    }
+    cout<<'*'<<ctx->returnType->getText()<<endl;
+    Type* retType = buildInTypes.find(ctx->returnType->getText())->second;
+    FunctionType *type = FunctionType::get(retType,argsType,false);
     function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
     block = BasicBlock::Create(*context, "EntryBlock", function);
+    auto argsName = ctx->variable();
+    auto arg = function->arg_begin();
+    for(auto param:ctx->variable()){
+      arg->setName(param->name->getText());
+      arg++;
+    }
     return visitChildren(ctx);
   }
 

@@ -33,6 +33,12 @@ public:
 
     virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *context) = 0;
 
+    virtual antlrcpp::Any visitAssignStmt(BasicParser::AssignStmtContext *context) = 0;
+
+    virtual antlrcpp::Any visitExitStmt(BasicParser::ExitStmtContext *context) = 0;
+
+    virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *context) = 0;
+
     virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *context) = 0;
 
     virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *context) = 0;
