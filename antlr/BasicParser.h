@@ -28,9 +28,10 @@ public:
   };
 
   enum {
-    RuleDeclare = 0, RuleVarDecl = 1, RuleVariable = 2, RuleFunctionDecl = 3, 
-    RuleSubDecl = 4, RuleStatement = 5, RuleExp = 6, RuleForStmt = 7, RuleForeachStmt = 8, 
-    RuleIfStmt = 9, RuleIfBlock = 10, RuleLoopStmt = 11
+    RuleModuleBody = 0, RuleDeclare = 1, RuleVarDecl = 2, RuleVariable = 3, 
+    RuleFunctionDecl = 4, RuleSubDecl = 5, RuleStatement = 6, RuleExp = 7, 
+    RuleForStmt = 8, RuleForeachStmt = 9, RuleIfStmt = 10, RuleIfBlock = 11, 
+    RuleLoopStmt = 12
   };
 
   explicit BasicParser(antlr4::TokenStream *input);
@@ -43,6 +44,7 @@ public:
   virtual antlr4::dfa::Vocabulary& getVocabulary() const override;
 
 
+  class ModuleBodyContext;
   class DeclareContext;
   class VarDeclContext;
   class VariableContext;
@@ -55,6 +57,22 @@ public:
   class IfStmtContext;
   class IfBlockContext;
   class LoopStmtContext; 
+
+  class  ModuleBodyContext : public antlr4::ParserRuleContext {
+  public:
+    ModuleBodyContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<DeclareContext *> declare();
+    DeclareContext* declare(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> LineEnd();
+    antlr4::tree::TerminalNode* LineEnd(size_t i);
+
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ModuleBodyContext* moduleBody();
 
   class  DeclareContext : public antlr4::ParserRuleContext {
   public:
@@ -107,14 +125,16 @@ public:
 
   class  FunctionDeclContext : public antlr4::ParserRuleContext {
   public:
+    antlr4::Token *name = nullptr;
+    antlr4::Token *returnType = nullptr;
     FunctionDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<antlr4::tree::TerminalNode *> Function();
     antlr4::tree::TerminalNode* Function(size_t i);
-    std::vector<antlr4::tree::TerminalNode *> ID();
-    antlr4::tree::TerminalNode* ID(size_t i);
     antlr4::tree::TerminalNode *As();
     antlr4::tree::TerminalNode *End();
+    std::vector<antlr4::tree::TerminalNode *> ID();
+    antlr4::tree::TerminalNode* ID(size_t i);
     std::vector<StatementContext *> statement();
     StatementContext* statement(size_t i);
 
@@ -127,12 +147,13 @@ public:
 
   class  SubDeclContext : public antlr4::ParserRuleContext {
   public:
+    antlr4::Token *name = nullptr;
     SubDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<antlr4::tree::TerminalNode *> Sub();
     antlr4::tree::TerminalNode* Sub(size_t i);
-    antlr4::tree::TerminalNode *ID();
     antlr4::tree::TerminalNode *End();
+    antlr4::tree::TerminalNode *ID();
     std::vector<StatementContext *> statement();
     StatementContext* statement(size_t i);
 

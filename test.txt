@@ -1,9 +1,12 @@
-for 1 to 10 step 2
-    if 1 then 
+Function main()As Integer
 
-    elseif 5 then
 
-    else
+End Function
 
-    end if
-next 1
+Function anotherFunction()As Integer
+
+End Function
+
+Sub tool()
+
+End sub

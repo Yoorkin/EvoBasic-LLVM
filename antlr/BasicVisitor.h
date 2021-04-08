@@ -19,6 +19,8 @@ public:
   /**
    * Visit parse trees produced by BasicParser.
    */
+    virtual antlrcpp::Any visitModuleBody(BasicParser::ModuleBodyContext *context) = 0;
+
     virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *context) = 0;
 
     virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *context) = 0;

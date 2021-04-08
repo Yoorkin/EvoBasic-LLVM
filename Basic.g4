@@ -1,14 +1,16 @@
 grammar Basic;
 
+moduleBody: (declare|LineEnd)*;
+
 declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl;
 
 varDecl: Dim variable (','variable)*;
 
 variable: name=ID As type=ID ('=' initial=exp)?;
 
-functionDecl:Function ID '(' ')' As ID statement* End Function;
+functionDecl:Function name=ID '(' ')' As returnType=ID statement* End Function;
 
-subDecl: Sub ID'(' ')' statement* End Sub;
+subDecl: Sub name=ID ('(' ')')? statement* End Sub;
 
 statement:forStmt|loopStmt|ifStmt|LineEnd|Exit exitFlag=(For|Do|Sub|Function);
 
@@ -51,7 +53,7 @@ Boolean: T R U E | F A L S E;
 Comment: '\'' ~('\r'|'\n')*  -> skip;
 BlockComment: '\'*' .* '*\'' -> skip;
 LineEnd: [\n\r];
-WS: [ \n\t\r_:]->skip;
+WS: [ \t]->skip;
 
 If:I F;
 ElseIf:E L S E I F;

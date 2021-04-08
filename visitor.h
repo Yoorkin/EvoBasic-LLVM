@@ -1,22 +1,45 @@
+#ifndef CB_VISITOR
+#define CB_VISITOR
 
-// Generated from Basic.g4 by ANTLR 4.9.1
+#include<antlr4-runtime/antlr4-runtime.h>
+#include"antlr/BasicLexer.h"
+#include"antlr/BasicParser.h"
+#include"antlr/BasicBaseVisitor.h"
 
-#pragma once
+#include<llvm/IR/DerivedTypes.h>
+#include<llvm/IR/IRBuilder.h>
+#include<llvm/IR/Function.h>
+#include<llvm/IR/InstrTypes.h>
+#include<llvm/IR/Instruction.h>
+#include<llvm/IR/LLVMContext.h>
+#include<llvm/IR/Module.h>
+#include<llvm/IR/Verifier.h>
+#include<llvm/Support/raw_ostream.h>
+#include<llvm/Target/TargetMachine.h>
+#include<llvm/ExecutionEngine/JITSymbol.h>
+#include<llvm/ExecutionEngine/Orc/LLJIT.h>
+#include<llvm/ExecutionEngine/Orc/CompileUtils.h>
+#include<llvm/ExecutionEngine/Orc/Core.h>
+#include<llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
+#include<llvm/ExecutionEngine/Orc/ExecutionUtils.h>
+#include<llvm/ExecutionEngine/Orc/IRCompileLayer.h>
+#include<llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+#include<llvm/ExecutionEngine/SectionMemoryManager.h>
+#include<llvm/IR/DataLayout.h>
+#include<llvm/ExecutionEngine/ExecutionEngine.h>
+using namespace llvm;
 
+using namespace antlr4;
 
-#include "antlr4-runtime.h"
-#include "BasicVisitor.h"
-
-
-/**
- * This class provides an empty implementation of BasicVisitor, which can be
- * extended to create a visitor which only needs to handle a subset of the available methods.
- */
-class  BasicBaseVisitor : public BasicVisitor {
-public:
-
-  virtual antlrcpp::Any visitModuleBody(BasicParser::ModuleBodyContext *ctx) override {
-    return visitChildren(ctx);
+class Visitor:public BasicBaseVisitor{
+  llvm::Module* mod;
+  LLVMContext* context;
+  BasicBlock* block;
+  Function *function;
+  public:
+  Visitor(llvm::Module* m,LLVMContext* ctx){
+    mod=m;
+    context=ctx;
   }
 
   virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *ctx) override {
@@ -32,10 +55,16 @@ public:
   }
 
   virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
+    FunctionType *type = FunctionType::get(Type::getInt32Ty(*context),false);
+    function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
+    block = BasicBlock::Create(*context, "EntryBlock", function);
     return visitChildren(ctx);
   }
 
   virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
+    FunctionType *type = FunctionType::get(Type::getInt32Ty(*context),false);
+    function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
+    block = BasicBlock::Create(*context, "EntryBlock", function);
     return visitChildren(ctx);
   }
 
@@ -135,6 +164,6 @@ public:
     return visitChildren(ctx);
   }
 
-
 };
 
+#endif
