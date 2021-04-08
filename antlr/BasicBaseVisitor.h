@@ -15,7 +15,23 @@
 class  BasicBaseVisitor : public BasicVisitor {
 public:
 
-  virtual antlrcpp::Any visitStatements(BasicParser::StatementsContext *ctx) override {
+  virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -27,11 +43,23 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *ctx) override {
+  virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *ctx) override {
+  virtual antlrcpp::Any visitLogicNotOp(BasicParser::LogicNotOpContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitString(BasicParser::StringContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -44,14 +72,6 @@ public:
   }
 
   virtual antlrcpp::Any visitPowModOp(BasicParser::PowModOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitString(BasicParser::StringContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -79,15 +99,35 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitIfStmt(BasicParser::IfStmtContext *ctx) override {
+  virtual antlrcpp::Any visitSingleLineIf(BasicParser::SingleLineIfContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitLoopStmt(BasicParser::LoopStmtContext *ctx) override {
+  virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitLoopBody(BasicParser::LoopBodyContext *ctx) override {
+  virtual antlrcpp::Any visitIfBlock(BasicParser::IfBlockContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitDoWhile(BasicParser::DoWhileContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitDoUntil(BasicParser::DoUntilContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitLoopUntil(BasicParser::LoopUntilContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitLoopWhile(BasicParser::LoopWhileContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitWhileWend(BasicParser::WhileWendContext *ctx) override {
     return visitChildren(ctx);
   }
 

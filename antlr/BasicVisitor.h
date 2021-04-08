@@ -19,25 +19,35 @@ public:
   /**
    * Visit parse trees produced by BasicParser.
    */
-    virtual antlrcpp::Any visitStatements(BasicParser::StatementsContext *context) = 0;
+    virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *context) = 0;
+
+    virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *context) = 0;
+
+    virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *context) = 0;
+
+    virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *context) = 0;
+
+    virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *context) = 0;
 
     virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *context) = 0;
 
     virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *context) = 0;
 
-    virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *context) = 0;
-
     virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *context) = 0;
+
+    virtual antlrcpp::Any visitLogicNotOp(BasicParser::LogicNotOpContext *context) = 0;
+
+    virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *context) = 0;
+
+    virtual antlrcpp::Any visitString(BasicParser::StringContext *context) = 0;
+
+    virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *context) = 0;
 
     virtual antlrcpp::Any visitBucket(BasicParser::BucketContext *context) = 0;
 
     virtual antlrcpp::Any visitMulOp(BasicParser::MulOpContext *context) = 0;
 
     virtual antlrcpp::Any visitPowModOp(BasicParser::PowModOpContext *context) = 0;
-
-    virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *context) = 0;
-
-    virtual antlrcpp::Any visitString(BasicParser::StringContext *context) = 0;
 
     virtual antlrcpp::Any visitID(BasicParser::IDContext *context) = 0;
 
@@ -51,11 +61,21 @@ public:
 
     virtual antlrcpp::Any visitForeachStmt(BasicParser::ForeachStmtContext *context) = 0;
 
-    virtual antlrcpp::Any visitIfStmt(BasicParser::IfStmtContext *context) = 0;
+    virtual antlrcpp::Any visitSingleLineIf(BasicParser::SingleLineIfContext *context) = 0;
 
-    virtual antlrcpp::Any visitLoopStmt(BasicParser::LoopStmtContext *context) = 0;
+    virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *context) = 0;
 
-    virtual antlrcpp::Any visitLoopBody(BasicParser::LoopBodyContext *context) = 0;
+    virtual antlrcpp::Any visitIfBlock(BasicParser::IfBlockContext *context) = 0;
+
+    virtual antlrcpp::Any visitDoWhile(BasicParser::DoWhileContext *context) = 0;
+
+    virtual antlrcpp::Any visitDoUntil(BasicParser::DoUntilContext *context) = 0;
+
+    virtual antlrcpp::Any visitLoopUntil(BasicParser::LoopUntilContext *context) = 0;
+
+    virtual antlrcpp::Any visitLoopWhile(BasicParser::LoopWhileContext *context) = 0;
+
+    virtual antlrcpp::Any visitWhileWend(BasicParser::WhileWendContext *context) = 0;
 
 
 };

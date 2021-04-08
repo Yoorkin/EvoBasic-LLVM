@@ -1,7 +1,16 @@
 grammar Basic;
-statements:statement*;
 
-statement:forStmt|loopStmt|ifStmt|Exit exitFlag=(For|Do|Sub|Function);
+declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl;
+
+varDecl: Dim variable (','variable)*;
+
+variable: name=ID As type=ID ('=' initial=exp)?;
+
+functionDecl:Function ID '(' ')' As ID statement* End Function;
+
+subDecl: Sub ID'(' ')' statement* End Sub;
+
+statement:forStmt|loopStmt|ifStmt|LineEnd|Exit exitFlag=(For|Do|Sub|Function);
 
 exp: op=('-'|'~')exp                         #NegOp
     | left=exp op=('&'|'|')     right=exp      #BitOp
