@@ -69,10 +69,9 @@ class Visitor:public BasicBaseVisitor{
   virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
     vector<Type*> argsType;
     for(auto arg:ctx->variable()){
-      cout<<arg->type->getText()<<endl;
-     // argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+      argsType.push_back(buildInTypes.find(arg->type->getText())->second);
     }
-    cout<<'*'<<ctx->returnType->getText()<<endl;
+    cout<<ctx->returnType->getText()<<endl;
     Type* retType = buildInTypes.find(ctx->returnType->getText())->second;
     FunctionType *type = FunctionType::get(retType,argsType,false);
     function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
@@ -87,7 +86,11 @@ class Visitor:public BasicBaseVisitor{
   }
 
   virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
-    FunctionType *type = FunctionType::get(Type::getInt32Ty(*context),false);
+    vector<Type*> argsType;
+    for(auto arg:ctx->variable()){
+      argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+    }
+    FunctionType *type = FunctionType::get(Type::getVoidTy(*context),argsType,false);
     function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
     block = BasicBlock::Create(*context, "EntryBlock", function);
     return visitChildren(ctx);

@@ -161,6 +161,8 @@ public:
     antlr4::tree::TerminalNode *ID();
     std::vector<StatementContext *> statement();
     StatementContext* statement(size_t i);
+    std::vector<VariableContext *> variable();
+    VariableContext* variable(size_t i);
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;

@@ -5,11 +5,14 @@ set(CMAKE_CXX_STANDARD 14)
 execute_process(COMMAND antlr4 Basic.g4 -o antlr -Dlanguage=Cpp -visitor -no-listener)
 
 find_package(LLVM REQUIRED CONFIG)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "sdfsadf ${CMAKE_CXX_FLAGS}")
-
+    
 file(COPY test.txt DESTINATION ${PROJECT_BINARY_DIR})
 
 include(CTest)

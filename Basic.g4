@@ -10,7 +10,7 @@ variable: name=ID As type=ID ('=' initial=exp)?;
 
 functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID statement* End Function;
 
-subDecl: Sub name=ID ('(' ')')? statement* End Sub;
+subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? statement* End Sub;
 
 
 statement:forStmt

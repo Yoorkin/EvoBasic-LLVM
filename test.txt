@@ -1,4 +1,7 @@
-Function main(a as integer,b as boolean,c as single)As integer
-
+Function main(a as integer,b as boolean,c as single)As boolean
 
 End Function
+
+sub enableTool(toolID as long)
+
+end sub
