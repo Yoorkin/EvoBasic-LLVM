@@ -2,15 +2,19 @@ grammar Basic;
 
 moduleBody: (declare|LineEnd)*;
 
-declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl;
+declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl|typeDecl;
+
+typeDecl:Type ID (variable? LineEnd)* End Type;
 
 varDecl: Dim variable (','variable)*;
 
-variable: name=ID As type=ID ('=' initial=exp)?;
+variable: name=ID As type=varType ('=' initial=exp)?;
 
 functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID statement* End Function;
 
 subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? statement* End Sub;
+
+varType: (ID);
 
 
 statement:forStmt

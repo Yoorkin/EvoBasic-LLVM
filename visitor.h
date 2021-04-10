@@ -34,164 +34,79 @@ using namespace llvm;
 using namespace std;
 using namespace antlr4;
 
+class TypeTable{
+    map<string,llvm::Type*> builtInTypes;
+public:
+    TypeTable(LLVMContext& context){
+        builtInTypes.operator=({
+               {"integer",Type::getInt32Ty(context)},
+               {"single",Type::getFloatTy(context)},
+               {"double",Type::getDoubleTy(context)},
+               {"boolean",Type::getInt1Ty(context)},
+               {"long",Type::getInt64Ty(context)},
+               {"byte",Type::getInt8Ty(context)}
+       });
+    }
+
+    Type* find(Token* type){
+        string name = type->getText();
+        transform(name::begin(),name::end(),::tolower);
+        auto builtIn = builtInTypes.find(name);
+        if(builtIn!=buildInTypes.end())return builtIn;
+        auto structure = StructType::getTypeByName(name);
+        if(structure!=null)return structure;
+        //TODO: 报告找不到类型
+    }
+};
+
 class Visitor:public BasicBaseVisitor{
-  map<string,llvm::Type*> buildInTypes;
-  llvm::Module* mod;
-  LLVMContext* context;
-  BasicBlock* block;
-  Function *function;
-  public:
-  Visitor(llvm::Module* m,LLVMContext* ctx){
-    mod=m;
-    context=ctx;
-    buildInTypes.operator=({
-      {"integer",Type::getInt32Ty(*context)},
-      {"single",Type::getFloatTy(*context)},
-      {"double",Type::getDoubleTy(*context)},
-      {"boolean",Type::getInt1Ty(*context)},
-      {"long",Type::getInt64Ty(*context)},
-      {"byte",Type::getInt8Ty(*context)}
-    });
-  }
-
-  virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
-    vector<Type*> argsType;
-    for(auto arg:ctx->variable()){
-      argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+    llvm::Module* mod;
+    LLVMContext* context;
+    BasicBlock* block;
+    Function *function;
+public:
+    Visitor(llvm::Module* m,LLVMContext* ctx){
+        mod=m;
+        context=ctx;
     }
-    cout<<ctx->returnType->getText()<<endl;
-    Type* retType = buildInTypes.find(ctx->returnType->getText())->second;
-    FunctionType *type = FunctionType::get(retType,argsType,false);
-    function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
-    block = BasicBlock::Create(*context, "EntryBlock", function);
-    auto argsName = ctx->variable();
-    auto arg = function->arg_begin();
-    for(auto param:ctx->variable()){
-      arg->setName(param->name->getText());
-      arg++;
+
+    virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
+        return visitChildren(ctx);
     }
-    return visitChildren(ctx);
-  }
 
-  virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
-    vector<Type*> argsType;
-    for(auto arg:ctx->variable()){
-      argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+    virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override {
+
     }
-    FunctionType *type = FunctionType::get(Type::getVoidTy(*context),argsType,false);
-    function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
-    block = BasicBlock::Create(*context, "EntryBlock", function);
-    return visitChildren(ctx);
-  }
 
-  virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *ctx) override {
-    return visitChildren(ctx);
-  }
+    virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
+        vector<Type*> argsType;
+        for(auto arg:ctx->variable()){
+            argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+        }
+        cout<<ctx->returnType->getText()<<endl;
+        Type* retType = buildInTypes.find(ctx->returnType->getText())->second;
+        FunctionType *type = FunctionType::get(retType,argsType,false);
+        function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
+        block = BasicBlock::Create(*context, "EntryBlock", function);
+        auto argsName = ctx->variable();
+        auto arg = function->arg_begin();
+        for(auto param:ctx->variable()){
+            arg->setName(param->name->getText());
+            arg++;
+        }
+        return visitChildren(ctx);
+    }
 
-  virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitLogicNotOp(BasicParser::LogicNotOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitString(BasicParser::StringContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitBucket(BasicParser::BucketContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitMulOp(BasicParser::MulOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitPowModOp(BasicParser::PowModOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitID(BasicParser::IDContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitBoolean(BasicParser::BooleanContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitBitOp(BasicParser::BitOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitLogicOp(BasicParser::LogicOpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitForStmt(BasicParser::ForStmtContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitForeachStmt(BasicParser::ForeachStmtContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitSingleLineIf(BasicParser::SingleLineIfContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitIfBlock(BasicParser::IfBlockContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitDoWhile(BasicParser::DoWhileContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitDoUntil(BasicParser::DoUntilContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitLoopUntil(BasicParser::LoopUntilContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitLoopWhile(BasicParser::LoopWhileContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitWhileWend(BasicParser::WhileWendContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
+    virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
+        vector<Type*> argsType;
+        for(auto arg:ctx->variable()){
+            argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+        }
+        FunctionType *type = FunctionType::get(Type::getVoidTy(*context),argsType,false);
+        function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
+        block = BasicBlock::Create(*context, "EntryBlock", function);
+        return visitChildren(ctx);
+    }
 };
 
 #endif

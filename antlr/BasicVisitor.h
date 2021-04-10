@@ -23,6 +23,8 @@ public:
 
     virtual antlrcpp::Any visitDeclare(BasicParser::DeclareContext *context) = 0;
 
+    virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *context) = 0;
+
     virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *context) = 0;
 
     virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *context) = 0;
@@ -30,6 +32,8 @@ public:
     virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *context) = 0;
 
     virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *context) = 0;
+
+    virtual antlrcpp::Any visitVarType(BasicParser::VarTypeContext *context) = 0;
 
     virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *context) = 0;
 

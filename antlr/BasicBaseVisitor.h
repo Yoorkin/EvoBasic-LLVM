@@ -23,6 +23,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -36,6 +40,10 @@ public:
   }
 
   virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitVarType(BasicParser::VarTypeContext *ctx) override {
     return visitChildren(ctx);
   }
 
