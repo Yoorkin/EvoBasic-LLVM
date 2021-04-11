@@ -84,14 +84,16 @@ class Visitor:public BasicBaseVisitor{
     TypeTable typeTable;
 public:
 
-
-
-    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx){
-
-    }
+    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx){}
 
     virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
-        return visitChildren(ctx);
+        vector<Type*> paramList;
+        vector<ArgumentInfo> arguments;
+        for(auto arg:ctx->variable()){
+            arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
+            paramList.push_back(arguments.back().type);
+        }
+        return StructType::create(paramList,strToLower(ctx->name->getText()));
     }
 
     virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override {

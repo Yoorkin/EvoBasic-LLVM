@@ -231,12 +231,12 @@ tree::TerminalNode* BasicParser::TypeDeclContext::Type(size_t i) {
   return getToken(BasicParser::Type, i);
 }
 
-tree::TerminalNode* BasicParser::TypeDeclContext::ID() {
-  return getToken(BasicParser::ID, 0);
-}
-
 tree::TerminalNode* BasicParser::TypeDeclContext::End() {
   return getToken(BasicParser::End, 0);
+}
+
+tree::TerminalNode* BasicParser::TypeDeclContext::ID() {
+  return getToken(BasicParser::ID, 0);
 }
 
 std::vector<tree::TerminalNode *> BasicParser::TypeDeclContext::LineEnd() {
@@ -285,7 +285,7 @@ BasicParser::TypeDeclContext* BasicParser::typeDecl() {
     setState(49);
     match(BasicParser::Type);
     setState(50);
-    match(BasicParser::ID);
+    dynamic_cast<TypeDeclContext *>(_localctx)->name = match(BasicParser::ID);
     setState(57);
     _errHandler->sync(this);
     _la = _input->LA(1);

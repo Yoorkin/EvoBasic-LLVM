@@ -4,7 +4,7 @@ moduleBody: (declare|LineEnd)*;
 
 declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl|typeDecl;
 
-typeDecl:Type ID (variable? LineEnd)* End Type;
+typeDecl:Type name=ID (variable? LineEnd)* End Type;
 
 varDecl: Dim variable (','variable)*;
 

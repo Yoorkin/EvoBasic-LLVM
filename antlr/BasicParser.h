@@ -98,12 +98,13 @@ public:
 
   class  TypeDeclContext : public antlr4::ParserRuleContext {
   public:
+    antlr4::Token *name = nullptr;
     TypeDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<antlr4::tree::TerminalNode *> Type();
     antlr4::tree::TerminalNode* Type(size_t i);
-    antlr4::tree::TerminalNode *ID();
     antlr4::tree::TerminalNode *End();
+    antlr4::tree::TerminalNode *ID();
     std::vector<antlr4::tree::TerminalNode *> LineEnd();
     antlr4::tree::TerminalNode* LineEnd(size_t i);
     std::vector<VariableContext *> variable();
