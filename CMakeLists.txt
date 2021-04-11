@@ -27,7 +27,7 @@ file(GLOB antlrGrammar "./antlr/*.cpp")
 
 add_executable(classicBasic main.cpp ${antlrGrammar})
 
-llvm_map_components_to_libnames(llvm_libs Core ExecutionEngine Interpreter MC MCJIT Support nativecodegen)
+llvm_map_components_to_libnames(llvm_libs Core Interpreter MC MCJIT Support nativecodegen IRReader)
 target_link_libraries(classicBasic antlr4-runtime ${llvm_libs} )
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

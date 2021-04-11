@@ -34,10 +34,17 @@ using namespace llvm;
 using namespace std;
 using namespace antlr4;
 
+string strToLower(string str){
+    transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
+    return str;
+}
+
 class TypeTable{
+    LLVMContext& context;
+    llvm::Module& mod;
     map<string,llvm::Type*> builtInTypes;
 public:
-    TypeTable(LLVMContext& context){
+    TypeTable(llvm::Module& mod,LLVMContext& context):mod(mod),context(context){
         builtInTypes.operator=({
                {"integer",Type::getInt32Ty(context)},
                {"single",Type::getFloatTy(context)},
@@ -49,25 +56,38 @@ public:
     }
 
     Type* find(Token* type){
-        string name = type->getText();
-        transform(name::begin(),name::end(),::tolower);
+        string name = strToLower(type->getText());
         auto builtIn = builtInTypes.find(name);
-        if(builtIn!=buildInTypes.end())return builtIn;
-        auto structure = StructType::getTypeByName(name);
-        if(structure!=null)return structure;
+        if(builtIn!=builtInTypes.end())return builtIn->second;
+        auto structure = mod.getTypeByName(name.c_str());
+        if(structure!=nullptr)return structure;
         //TODO: 报告找不到类型
+        return nullptr;
+    }
+
+};
+
+class ArgumentInfo{
+public:
+    string name;
+    Type* type;
+    antlr4::tree::ParseTree* initial;
+    ArgumentInfo(BasicParser::VariableContext *ctx,TypeTable& typeTable){
+        name=strToLower(ctx->name->getText());
+        type=typeTable.find(ctx->type->ID()->getSymbol());
     }
 };
 
 class Visitor:public BasicBaseVisitor{
-    llvm::Module* mod;
-    LLVMContext* context;
-    BasicBlock* block;
-    Function *function;
+    llvm::Module& mod;
+    LLVMContext& context;
+    TypeTable typeTable;
 public:
-    Visitor(llvm::Module* m,LLVMContext* ctx){
-        mod=m;
-        context=ctx;
+
+
+
+    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx){
+
     }
 
     virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
@@ -75,37 +95,46 @@ public:
     }
 
     virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override {
-
+        ArgumentInfo info(ctx,typeTable);
+        return info;
     }
 
     virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
-        vector<Type*> argsType;
+        vector<Type*> paramList;
+        vector<ArgumentInfo> arguments;
         for(auto arg:ctx->variable()){
-            argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+            arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
+            paramList.push_back(arguments.back().type);
         }
-        cout<<ctx->returnType->getText()<<endl;
-        Type* retType = buildInTypes.find(ctx->returnType->getText())->second;
-        FunctionType *type = FunctionType::get(retType,argsType,false);
-        function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
-        block = BasicBlock::Create(*context, "EntryBlock", function);
-        auto argsName = ctx->variable();
-        auto arg = function->arg_begin();
-        for(auto param:ctx->variable()){
-            arg->setName(param->name->getText());
-            arg++;
+        Type* retType = typeTable.find(ctx->returnType);
+        FunctionType *type = FunctionType::get(retType,paramList,false);
+        auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
+        auto block = BasicBlock::Create(context, "EntryBlock", function);
+        auto param = function->arg_begin();
+        for(auto& arg:arguments){
+            param->setName(arg.name);
+            param++;
         }
-        return visitChildren(ctx);
+        return function;
     }
 
     virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
-        vector<Type*> argsType;
-        for(auto arg:ctx->variable()){
-            argsType.push_back(buildInTypes.find(arg->type->getText())->second);
+        vector<Type*> paramList;
+        vector<ArgumentInfo> arguments;
+        for(auto& arg:ctx->variable()){
+            arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
+            paramList.push_back(arguments.back().type);
         }
-        FunctionType *type = FunctionType::get(Type::getVoidTy(*context),argsType,false);
-        function = Function::Create(type,Function::ExternalLinkage,ctx->name->getText(),mod);
-        block = BasicBlock::Create(*context, "EntryBlock", function);
-        return visitChildren(ctx);
+        FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
+        string funcionName = ctx->name->getText();
+        auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
+        auto block = BasicBlock::Create(context, "EntryBlock", function);
+        auto param = function->arg_begin();
+        for(auto& arg:arguments){
+            param->setName(arg.name);
+            param++;
+        }
+        return function;
     }
 };
 
