@@ -25,7 +25,7 @@ int main(int argc, const char* argv[]){
 //    auto f = Function::Create(ft,GlobalValue::LinkageTypes::ExternalLinkage,"main",mod);
 //    BasicBlock* b = BasicBlock::Create(context,"enasdfdftry",f);
 //    builder.SetInsertPoint(b);
-//    builder.CreateAlloca(s,ConstantInt::get(Type::getInt32Ty(context),4),"myInst");
+    //builders.CreateAlloca(s,ConstantInt::get(Type::getInt32Ty(context),4),"myInst");
 //    builder.CreateAlloca(s2,ConstantInt::get(Type::getInt32Ty(context),4),"myInst2");
     Visitor visitor(mod,context);
     visitor.visit(tree);

@@ -34,12 +34,12 @@ returnStmt:Return exp
           |name=ID '=' exp
           ;
 
-exp: op=('-'|'~')exp                                    #NegOp
+exp: '-' right=exp                                    #NegOp
     | left=exp op=('&'|'|')     right=exp               #BitOp
     | left=exp op=('^'|'mod')       right=exp           #PowModOp
     | left=exp op=('*'|'/'|'\\')    right=exp           #MulOp
     | left=exp op=('+'|'-')         right=exp           #PluOp
-    | left=exp op=('='|'>'|'<'|'<='|'<>'|'>=') right=exp #CmpOp
+    | left=exp op=('='|'>'|'<'|'<='|'=<'|'<>'|'>='|'=>') right=exp #CmpOp
     | op='not' right=exp                                #LogicNotOp
     | left=exp op=('and'|'or'|'xor') right=exp          #LogicOp
     | '('exp')'                                         #Bucket

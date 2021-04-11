@@ -72,6 +72,7 @@ public:
     string name;
     Type* type;
     antlr4::tree::ParseTree* initial;
+
     ArgumentInfo(BasicParser::VariableContext *ctx,TypeTable& typeTable){
         name=strToLower(ctx->name->getText());
         type=typeTable.find(ctx->type->ID()->getSymbol());
@@ -82,15 +83,16 @@ class Visitor:public BasicBaseVisitor{
     llvm::Module& mod;
     LLVMContext& context;
     TypeTable typeTable;
+    IRBuilder<> builder;
 public:
 
-    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx){}
+    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx),builder(ctx){}
 
     virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
         vector<Type*> paramList;
         vector<ArgumentInfo> arguments;
         for(auto arg:ctx->variable()){
-            arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
+            arguments.push_back(visit(arg).as<ArgumentInfo>());
             paramList.push_back(arguments.back().type);
         }
         return StructType::create(paramList,strToLower(ctx->name->getText()));
@@ -124,7 +126,7 @@ public:
         vector<Type*> paramList;
         vector<ArgumentInfo> arguments;
         for(auto& arg:ctx->variable()){
-            arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
+            arguments.push_back(visit(arg).as<ArgumentInfo>());
             paramList.push_back(arguments.back().type);
         }
         FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
@@ -138,6 +140,98 @@ public:
         }
         return function;
     }
+
+
+    virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *ctx) override {
+        auto l = visit(ctx->left).as<llvm::Value*>();
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        auto op = ctx->op->getText();
+        if(op=="+")
+            return builder.CreateAdd(l,r);
+        else 
+            return builder.CreateSub(l,r);
+    }
+
+    map<string,CmpInst::Predicate> cmpIntSigned={
+        {"=",CmpInst::Predicate::ICMP_EQ},
+        {"<>",CmpInst::Predicate::ICMP_NE},
+        {"<",CmpInst::Predicate::ICMP_SLT},
+        {"<=",CmpInst::Predicate::ICMP_SLE},
+        {"=<",CmpInst::Predicate::ICMP_SLE},
+        {">",CmpInst::Predicate::ICMP_SGT},
+        {">=",CmpInst::Predicate::ICMP_SGE},
+        {"=>",CmpInst::Predicate::ICMP_SGE}
+    };
+
+    virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *ctx) override {
+        auto l = visit(ctx->left).as<llvm::Value*>();
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        auto op = ctx->op->getText();
+        return builder.CreateCmp(cmpIntSigned[op],l,r);
+        //TODO:支持不同类型
+    }   
+
+    virtual antlrcpp::Any visitLogicNotOp(BasicParser::LogicNotOpContext *ctx) override {
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        return builder.CreateNot(r);
+    }
+
+    virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *ctx) override {
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        return builder.CreateNeg(r);
+    }
+
+    virtual antlrcpp::Any visitString(BasicParser::StringContext *ctx) override {
+        return visitChildren(ctx);
+    }
+
+    virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *ctx) override {
+        //TODO:支持浮点数/整数区分
+        int n=std::stoi(ctx->Number()->getSymbol()->getText());
+        return ConstantInt::get(Type::getInt32Ty(context),n,true);
+    }
+
+    virtual antlrcpp::Any visitBucket(BasicParser::BucketContext *ctx) override {
+        return visit(ctx->exp());
+    }
+
+    virtual antlrcpp::Any visitMulOp(BasicParser::MulOpContext *ctx) override {
+        auto l = visit(ctx->left).as<llvm::Value*>();
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        auto op = ctx->op->getText();
+        if(op=="*")return builder.CreateMul(l,r);
+        else if(op=="/"||op=="\\")return builder.CreateSDiv(l,r);//TODO: 支持两种除法
+    }
+
+    virtual antlrcpp::Any visitPowModOp(BasicParser::PowModOpContext *ctx) override {
+        auto l = visit(ctx->left).as<llvm::Value*>();
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        auto op = strToLower(ctx->op->getText());
+        return visitChildren(ctx);//TODO:pow和mod运算
+    }
+
+    virtual antlrcpp::Any visitID(BasicParser::IDContext *ctx) override {
+        return visitChildren(ctx);//TODO：访问变量
+    }
+
+    virtual antlrcpp::Any visitBoolean(BasicParser::BooleanContext *ctx) override {
+        //if(ctx->Boolean->)
+        return visitChildren(ctx);//TODO:返回布尔值
+    }
+
+    virtual antlrcpp::Any visitBitOp(BasicParser::BitOpContext *ctx) override {
+    return visitChildren(ctx);//TODO:位运算
+    }
+
+    virtual antlrcpp::Any visitLogicOp(BasicParser::LogicOpContext *ctx) override {
+        auto l = visit(ctx->left).as<llvm::Value*>();
+        auto r = visit(ctx->right).as<llvm::Value*>();
+        auto op = strToLower(ctx->op->getText());
+        if(op=="and")return builder.CreateAnd(l,r);
+        else if(op=="or")return builder.CreateOr(l,r);
+        else if(op=="xor")return builder.CreateXor(l,r);
+    }
+
 };
 
 #endif
