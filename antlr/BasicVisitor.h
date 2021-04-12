@@ -37,6 +37,14 @@ public:
 
     virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *context) = 0;
 
+    virtual antlrcpp::Any visitCallStmt(BasicParser::CallStmtContext *context) = 0;
+
+    virtual antlrcpp::Any visitArgPassValue(BasicParser::ArgPassValueContext *context) = 0;
+
+    virtual antlrcpp::Any visitArgIgnore(BasicParser::ArgIgnoreContext *context) = 0;
+
+    virtual antlrcpp::Any visitArgOptional(BasicParser::ArgOptionalContext *context) = 0;
+
     virtual antlrcpp::Any visitAssignStmt(BasicParser::AssignStmtContext *context) = 0;
 
     virtual antlrcpp::Any visitExitStmt(BasicParser::ExitStmtContext *context) = 0;
@@ -48,6 +56,8 @@ public:
     virtual antlrcpp::Any visitCmpOp(BasicParser::CmpOpContext *context) = 0;
 
     virtual antlrcpp::Any visitLogicNotOp(BasicParser::LogicNotOpContext *context) = 0;
+
+    virtual antlrcpp::Any visitInnerCall(BasicParser::InnerCallContext *context) = 0;
 
     virtual antlrcpp::Any visitNegOp(BasicParser::NegOpContext *context) = 0;
 

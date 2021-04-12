@@ -51,6 +51,22 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitCallStmt(BasicParser::CallStmtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitArgPassValue(BasicParser::ArgPassValueContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitArgIgnore(BasicParser::ArgIgnoreContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitArgOptional(BasicParser::ArgOptionalContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitAssignStmt(BasicParser::AssignStmtContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -72,6 +88,10 @@ public:
   }
 
   virtual antlrcpp::Any visitLogicNotOp(BasicParser::LogicNotOpContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitInnerCall(BasicParser::InnerCallContext *ctx) override {
     return visitChildren(ctx);
   }
 

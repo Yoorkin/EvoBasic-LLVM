@@ -76,6 +76,7 @@ public:
     ArgumentInfo(BasicParser::VariableContext *ctx,TypeTable& typeTable){
         name=strToLower(ctx->name->getText());
         type=typeTable.find(ctx->type->ID()->getSymbol());
+        initial=ctx->initial;
     }
 };
 
@@ -87,6 +88,20 @@ class Visitor:public BasicBaseVisitor{
 public:
 
     Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx),builder(ctx){}
+
+    virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
+        for(auto arg:ctx->variable()){
+            auto info = visit(arg).as<ArgumentInfo>();
+            auto ptr = builder.CreateAlloca(info.type,nullptr,info.name.c_str());
+            if(info.initial!=nullptr){
+                //TODO: 写一个Variant容器解决Any无法转换类型的问题
+                auto value = visit(info.initial).as<ConstantInt*>();
+                //cout<<value<<endl;
+                builder.CreateStore(value,ptr);
+            }
+        }
+        return visitChildren(ctx);
+    }
 
     virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
         vector<Type*> paramList;
@@ -114,10 +129,14 @@ public:
         FunctionType *type = FunctionType::get(retType,paramList,false);
         auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
         auto block = BasicBlock::Create(context, "EntryBlock", function);
+        builder.SetInsertPoint(block);
         auto param = function->arg_begin();
         for(auto& arg:arguments){
             param->setName(arg.name);
             param++;
+        }
+        for(auto& stmt:ctx->statement()){
+            visit(stmt);
         }
         return function;
     }
@@ -133,10 +152,14 @@ public:
         string funcionName = ctx->name->getText();
         auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
         auto block = BasicBlock::Create(context, "EntryBlock", function);
+        builder.SetInsertPoint(block);
         auto param = function->arg_begin();
         for(auto& arg:arguments){
             param->setName(arg.name);
             param++;
+        }
+        for(auto& stmt:ctx->statement()){
+            visit(stmt);
         }
         return function;
     }

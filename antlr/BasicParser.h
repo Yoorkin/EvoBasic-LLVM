@@ -15,24 +15,24 @@ public:
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
-    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, Number = 25, String = 26, 
-    Boolean = 27, Comment = 28, BlockComment = 29, LineEnd = 30, WS = 31, 
-    If = 32, ElseIf = 33, Wend = 34, From = 35, Import = 36, Namespace = 37, 
-    Implement = 38, Type = 39, Alias = 40, Self = 41, Static = 42, Module = 43, 
-    Public = 44, Private = 45, Protected = 46, Get = 47, Set = 48, Property = 49, 
-    Var = 50, Dim = 51, Let = 52, Return = 53, Function = 54, Difference = 55, 
-    Union = 56, Case = 57, Select = 58, End = 59, Until = 60, Loop = 61, 
-    Exit = 62, While = 63, Do = 64, Each = 65, To = 66, Step = 67, Next = 68, 
-    In = 69, For = 70, Optional = 71, Byval = 72, Byref = 73, Then = 74, 
-    Else = 75, Call = 76, Sub = 77, As = 78, ID = 79
+    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, Number = 26, 
+    String = 27, Boolean = 28, Comment = 29, BlockComment = 30, LineEnd = 31, 
+    WS = 32, If = 33, ElseIf = 34, Wend = 35, From = 36, Import = 37, Namespace = 38, 
+    Implement = 39, Type = 40, Alias = 41, Self = 42, Static = 43, Module = 44, 
+    Public = 45, Private = 46, Protected = 47, Get = 48, Set = 49, Property = 50, 
+    Var = 51, Dim = 52, Let = 53, Return = 54, Function = 55, Difference = 56, 
+    Union = 57, Case = 58, Select = 59, End = 60, Until = 61, Loop = 62, 
+    Exit = 63, While = 64, Do = 65, Each = 66, To = 67, Step = 68, Next = 69, 
+    In = 70, For = 71, Optional = 72, Byval = 73, Byref = 74, Then = 75, 
+    Else = 76, Call = 77, Sub = 78, As = 79, ID = 80
   };
 
   enum {
     RuleModuleBody = 0, RuleDeclare = 1, RuleTypeDecl = 2, RuleVarDecl = 3, 
     RuleVariable = 4, RuleFunctionDecl = 5, RuleSubDecl = 6, RuleVarType = 7, 
-    RuleStatement = 8, RuleAssignStmt = 9, RuleExitStmt = 10, RuleReturnStmt = 11, 
-    RuleExp = 12, RuleForStmt = 13, RuleForeachStmt = 14, RuleIfStmt = 15, 
-    RuleIfBlock = 16, RuleLoopStmt = 17
+    RuleStatement = 8, RuleCallStmt = 9, RulePassArg = 10, RuleAssignStmt = 11, 
+    RuleExitStmt = 12, RuleReturnStmt = 13, RuleExp = 14, RuleForStmt = 15, 
+    RuleForeachStmt = 16, RuleIfStmt = 17, RuleIfBlock = 18, RuleLoopStmt = 19
   };
 
   explicit BasicParser(antlr4::TokenStream *input);
@@ -54,6 +54,8 @@ public:
   class SubDeclContext;
   class VarTypeContext;
   class StatementContext;
+  class CallStmtContext;
+  class PassArgContext;
   class AssignStmtContext;
   class ExitStmtContext;
   class ReturnStmtContext;
@@ -220,6 +222,8 @@ public:
     ExitStmtContext *exitStmt();
     ReturnStmtContext *returnStmt();
     AssignStmtContext *assignStmt();
+    CallStmtContext *callStmt();
+    VarDeclContext *varDecl();
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -227,6 +231,67 @@ public:
   };
 
   StatementContext* statement();
+
+  class  CallStmtContext : public antlr4::ParserRuleContext {
+  public:
+    CallStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *Call();
+    antlr4::tree::TerminalNode *ID();
+    std::vector<PassArgContext *> passArg();
+    PassArgContext* passArg(size_t i);
+
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CallStmtContext* callStmt();
+
+  class  PassArgContext : public antlr4::ParserRuleContext {
+  public:
+    PassArgContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+   
+    PassArgContext() = default;
+    void copyFrom(PassArgContext *context);
+    using antlr4::ParserRuleContext::copyFrom;
+
+    virtual size_t getRuleIndex() const override;
+
+   
+  };
+
+  class  ArgIgnoreContext : public PassArgContext {
+  public:
+    ArgIgnoreContext(PassArgContext *ctx);
+
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  ArgOptionalContext : public PassArgContext {
+  public:
+    ArgOptionalContext(PassArgContext *ctx);
+
+    antlr4::Token *option = nullptr;
+    BasicParser::ExpContext *value = nullptr;
+    antlr4::tree::TerminalNode *ID();
+    ExpContext *exp();
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  ArgPassValueContext : public PassArgContext {
+  public:
+    ArgPassValueContext(PassArgContext *ctx);
+
+    BasicParser::ExpContext *value = nullptr;
+    ExpContext *exp();
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  PassArgContext* passArg();
 
   class  AssignStmtContext : public antlr4::ParserRuleContext {
   public:
@@ -322,6 +387,17 @@ public:
     antlr4::Token *op = nullptr;
     BasicParser::ExpContext *right = nullptr;
     ExpContext *exp();
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  InnerCallContext : public ExpContext {
+  public:
+    InnerCallContext(ExpContext *ctx);
+
+    antlr4::tree::TerminalNode *ID();
+    std::vector<PassArgContext *> passArg();
+    PassArgContext* passArg(size_t i);
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
