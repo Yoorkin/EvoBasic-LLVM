@@ -1,7 +1,8 @@
-Function main(a as integer,b as boolean,c as single)As boolean
-
-End Function
-
-sub enableTool(toolID as long)
-
+sub main
+    dim a as integer=5
+    call f(f(5))
 end sub
+
+function f(a as integer)as integer
+    return a+1*(6+8-4)
+end function

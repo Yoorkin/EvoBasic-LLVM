@@ -24,7 +24,19 @@ statement:forStmt
         |exitStmt
         |returnStmt
         |assignStmt
+        |callStmt
+        |varDecl
         ;
+
+callStmt: Call ID'('(passArg(','passArg)*)? ')'
+        | ID (passArg(','passArg)*)?
+        ;
+
+
+passArg:value=exp                       #ArgPassValue
+       |                                #ArgIgnore
+       |option=ID ('='|'=:') value=exp  #ArgOptional
+       ;
 
 assignStmt: ID '=' exp;
 
@@ -42,6 +54,7 @@ exp: '-' right=exp                                    #NegOp
     | left=exp op=('='|'>'|'<'|'<='|'=<'|'<>'|'>='|'=>') right=exp #CmpOp
     | op='not' right=exp                                #LogicNotOp
     | left=exp op=('and'|'or'|'xor') right=exp          #LogicOp
+    | ID'('(passArg(','passArg)*)?')'                   #InnerCall
     | '('exp')'                                         #Bucket
     | Number                                            #Number
     | String                                            #String
