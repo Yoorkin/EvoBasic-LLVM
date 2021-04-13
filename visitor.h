@@ -85,9 +85,12 @@ class Visitor:public BasicBaseVisitor{
     LLVMContext& context;
     TypeTable typeTable;
     IRBuilder<> builder;
+
 public:
 
-    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx),builder(ctx){}
+    Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx),builder(ctx){
+
+    }
 
     virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
         for(auto arg:ctx->variable()){
@@ -95,8 +98,7 @@ public:
             auto ptr = builder.CreateAlloca(info.type,nullptr,info.name.c_str());
             if(info.initial!=nullptr){
                 //TODO: 写一个Variant容器解决Any无法转换类型的问题
-                auto value = visit(info.initial).as<ConstantInt*>();
-                //cout<<value<<endl;
+                auto value = visit(info.initial).as<Value*>();
                 builder.CreateStore(value,ptr);
             }
         }
@@ -164,6 +166,10 @@ public:
         return function;
     }
 
+    virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *ctx) override {
+        builder.CreateRet(visit(ctx->exp()));
+        return nullptr;
+    }
 
     virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *ctx) override {
         auto l = visit(ctx->left).as<llvm::Value*>();
@@ -205,13 +211,13 @@ public:
     }
 
     virtual antlrcpp::Any visitString(BasicParser::StringContext *ctx) override {
-        return visitChildren(ctx);
+        return visitChildren(ctx);//TODO:String
     }
 
     virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *ctx) override {
         //TODO:支持浮点数/整数区分
         int n=std::stoi(ctx->Number()->getSymbol()->getText());
-        return ConstantInt::get(Type::getInt32Ty(context),n,true);
+        return (Value*)ConstantInt::get(Type::getInt32Ty(context),n,true);
     }
 
     virtual antlrcpp::Any visitBucket(BasicParser::BucketContext *ctx) override {
@@ -234,6 +240,7 @@ public:
     }
 
     virtual antlrcpp::Any visitID(BasicParser::IDContext *ctx) override {
+        //builder.CreateLoad()
         return visitChildren(ctx);//TODO：访问变量
     }
 
