@@ -38,13 +38,11 @@ passArg:value=exp                       #ArgPassValue
        |option=ID ('='|'=:') value=exp  #ArgOptional
        ;
 
-assignStmt: ID '=' exp;
+assignStmt: left=ID '=' right=exp;
 
 exitStmt:Exit exitFlag=(For|Do|Sub|Function);
 
-returnStmt:Return exp
-          |name=ID '=' exp
-          ;
+returnStmt:Return exp;
 
 exp: '-' right=exp                                    #NegOp
     | left=exp op=('&'|'|')     right=exp               #BitOp

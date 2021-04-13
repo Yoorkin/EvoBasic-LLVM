@@ -295,6 +295,8 @@ public:
 
   class  AssignStmtContext : public antlr4::ParserRuleContext {
   public:
+    antlr4::Token *left = nullptr;
+    BasicParser::ExpContext *right = nullptr;
     AssignStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *ID();
@@ -327,12 +329,10 @@ public:
 
   class  ReturnStmtContext : public antlr4::ParserRuleContext {
   public:
-    antlr4::Token *name = nullptr;
     ReturnStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *Return();
     ExpContext *exp();
-    antlr4::tree::TerminalNode *ID();
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;

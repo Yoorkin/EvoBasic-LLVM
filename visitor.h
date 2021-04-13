@@ -3,6 +3,7 @@
 
 #include<map>
 #include<string>
+#include<stack>
 
 #include<antlr4-runtime/antlr4-runtime.h>
 #include"antlr/BasicLexer.h"
@@ -84,8 +85,9 @@ class Visitor:public BasicBaseVisitor{
     llvm::Module& mod;
     LLVMContext& context;
     TypeTable typeTable;
+    using VarTable = map<string,AllocaInst*>;
+    stack<VarTable> frame;
     IRBuilder<> builder;
-
 public:
 
     Visitor(llvm::Module& m,LLVMContext& ctx):context(ctx),mod(m),typeTable(m,ctx),builder(ctx){
@@ -96,6 +98,7 @@ public:
         for(auto arg:ctx->variable()){
             auto info = visit(arg).as<ArgumentInfo>();
             auto ptr = builder.CreateAlloca(info.type,nullptr,info.name.c_str());
+            frame.top().insert(make_pair(info.name,ptr));
             if(info.initial!=nullptr){
                 //TODO: 写一个Variant容器解决Any无法转换类型的问题
                 auto value = visit(info.initial).as<Value*>();
@@ -121,6 +124,7 @@ public:
     }
 
     virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
+        frame.push(VarTable());
         vector<Type*> paramList;
         vector<ArgumentInfo> arguments;
         for(auto arg:ctx->variable()){
@@ -140,10 +144,12 @@ public:
         for(auto& stmt:ctx->statement()){
             visit(stmt);
         }
+        frame.pop();
         return function;
     }
 
     virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
+        frame.push(VarTable());
         vector<Type*> paramList;
         vector<ArgumentInfo> arguments;
         for(auto& arg:ctx->variable()){
@@ -163,12 +169,21 @@ public:
         for(auto& stmt:ctx->statement()){
             visit(stmt);
         }
+        frame.pop();
         return function;
     }
 
     virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *ctx) override {
-        builder.CreateRet(visit(ctx->exp()));
+        auto val = visit(ctx->exp()).as<Value*>();
+        builder.CreateRet(val);
         return nullptr;
+    }
+
+    virtual antlrcpp::Any visitAssignStmt(BasicParser::AssignStmtContext *ctx) override {
+        auto val = visit(ctx->right).as<Value*>();
+        auto ptr = frame.top().find(strToLower(ctx->left->getText()))->second;
+        builder.CreateStore(val,ptr);
+        return (Value*)ptr;
     }
 
     virtual antlrcpp::Any visitPluOp(BasicParser::PluOpContext *ctx) override {
@@ -240,8 +255,8 @@ public:
     }
 
     virtual antlrcpp::Any visitID(BasicParser::IDContext *ctx) override {
-        //builder.CreateLoad()
-        return visitChildren(ctx);//TODO：访问变量
+        Value* val = frame.top().find(strToLower(ctx->ID()->getText()))->second;
+        return val;//TODO：访问变量
     }
 
     virtual antlrcpp::Any visitBoolean(BasicParser::BooleanContext *ctx) override {
