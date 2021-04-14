@@ -119,6 +119,123 @@ public:
 
     }
 
+    //=========================================== utility =================================================
+    void visitBlock(vector<BasicParser::LineContext*>& block){
+        for(auto& line:block)visit(line);
+    }
+    //=========================================== flow-control =================================================
+
+    virtual antlrcpp::Any visitDoWhile(BasicParser::DoWhileContext *ctx) override {
+        frame.top().BeginLayer("Loop");
+        auto condition = visit(ctx->exp()).as<Value*>();
+        auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
+        auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
+        auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(condBlock);
+        builder.CreateCondBr(condition,loop,loopEnd);
+        builder.SetInsertPoint(loop);
+        visitBlock(ctx->block);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(loopEnd);
+        frame.top().EndLayer();
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitDoUntil(BasicParser::DoUntilContext *ctx) override {
+        frame.top().BeginLayer("Loop");
+        auto condition = visit(ctx->exp()).as<Value*>();
+        auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
+        auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
+        auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(condBlock);
+        builder.CreateCondBr(condition,loopEnd,loop);
+        builder.SetInsertPoint(loop);
+        visitBlock(ctx->block);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(loopEnd);
+        frame.top().EndLayer();
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitLoopUntil(BasicParser::LoopUntilContext *ctx) override {
+        frame.top().BeginLayer("Loop");
+        auto condition = visit(ctx->exp()).as<Value*>();
+        auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
+        auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
+        auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+        builder.CreateBr(loop);
+        builder.SetInsertPoint(condBlock);
+        builder.CreateCondBr(condition,loopEnd,loop);
+        builder.SetInsertPoint(loop);
+        visitBlock(ctx->block);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(loopEnd);
+        frame.top().EndLayer();
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitLoopWhile(BasicParser::LoopWhileContext *ctx) override {
+        frame.top().BeginLayer("Loop");
+        auto condition = visit(ctx->exp()).as<Value*>();
+        auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
+        auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
+        auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+        builder.CreateBr(loop);
+        builder.SetInsertPoint(condBlock);
+        builder.CreateCondBr(condition,loop,loopEnd);
+        builder.SetInsertPoint(loop);
+        visitBlock(ctx->block);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(loopEnd);
+        frame.top().EndLayer();
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitWhileWend(BasicParser::WhileWendContext *ctx) override {
+        frame.top().BeginLayer("Loop");
+        auto condition = visit(ctx->exp()).as<Value*>();
+        auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
+        auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
+        auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(condBlock);
+        builder.CreateCondBr(condition,loop,loopEnd);
+        builder.SetInsertPoint(loop);
+        visitBlock(ctx->block);
+        builder.CreateBr(condBlock);
+        builder.SetInsertPoint(loopEnd);
+        frame.top().EndLayer();
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitSingleLineIf(BasicParser::SingleLineIfContext *ctx) override {
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *ctx) override {
+        for(auto c:ctx->ifBlock())visit(c);
+        for(auto b:ctx->elseBlock)visit(b);
+        return nullptr;
+    }
+
+    virtual antlrcpp::Any visitIfBlock(BasicParser::IfBlockContext *ctx) override {
+        frame.top().BeginLayer("If");
+        Value* cond = visit(ctx->exp()).as<Value*>();
+        auto trueBlock = BasicBlock::Create(context,frame.top().getBlockName("True"),frame.top().function);
+        auto falseBlock = BasicBlock::Create(context,frame.top().getBlockName("False"),frame.top().function);
+        builder.CreateCondBr(cond,trueBlock,falseBlock);
+        builder.SetInsertPoint(trueBlock);
+        visitBlock(ctx->block);
+        builder.SetInsertPoint(falseBlock);
+        frame.top().EndLayer();
+        return falseBlock;
+    }
+
+    //============================================ declare ====================================================
+
+
     virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
         for(auto arg:ctx->variable()){
             auto info = visit(arg).as<ArgumentInfo>();
@@ -172,7 +289,7 @@ public:
             param->setName(arg.name);
             param++;
         }
-        for(auto b:ctx->block)visit(b);
+        visitBlock(ctx->block);
         frame.pop();
         return function;
     }
@@ -195,32 +312,9 @@ public:
             param->setName(arg.name);
             param++;
         }
-        for(auto b:ctx->block)visit(b);
+        visitBlock(ctx->block);
         frame.pop();
         return function;
-    }
-
-    virtual antlrcpp::Any visitSingleLineIf(BasicParser::SingleLineIfContext *ctx) override {
-        return visitChildren(ctx);
-    }
-
-    virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *ctx) override {
-        for(auto c:ctx->ifBlock())visit(c);
-        for(auto b:ctx->elseBlock)visit(b);
-        return nullptr;
-    }
-
-    virtual antlrcpp::Any visitIfBlock(BasicParser::IfBlockContext *ctx) override {
-        frame.top().BeginLayer("If");
-        Value* cond = visit(ctx->exp()).as<Value*>();
-        auto trueBlock = BasicBlock::Create(context,frame.top().getBlockName("True"),frame.top().function);
-        auto falseBlock = BasicBlock::Create(context,frame.top().getBlockName("False"),frame.top().function);
-        builder.CreateCondBr(cond,trueBlock,falseBlock);
-        builder.SetInsertPoint(trueBlock);
-        for(auto b:ctx->block)visit(b);
-        builder.SetInsertPoint(falseBlock);
-        frame.top().EndLayer();
-        return falseBlock;
     }
 
     virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *ctx) override {

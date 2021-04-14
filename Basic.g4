@@ -74,11 +74,11 @@ ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd 
 ifBlock: condition=exp Then LineEnd block+=line* ;
 
 
-loopStmt : Do While exp block=line* Loop #DoWhile
-        | Do Until exp block=line* Loop  #DoUntil
-        | Do block=line* Loop Until exp  #LoopUntil
-        | Do block=line* Loop While exp  #LoopWhile
-        | While exp block=line* Wend     #WhileWend
+loopStmt : Do While exp block+=line* Loop #DoWhile
+        | Do Until exp block+=line* Loop  #DoUntil
+        | Do block+=line* Loop Until exp  #LoopUntil
+        | Do block+=line* Loop While exp  #LoopWhile
+        | While exp block+=line* Wend     #WhileWend
         ;
 
 //-234.233e-6
