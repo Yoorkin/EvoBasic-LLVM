@@ -215,8 +215,16 @@ public:
     }
 
     virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *ctx) override {
-        for(auto c:ctx->ifBlock())visit(c);
+        list<BasicBlock*> trueBlocks;
+        for(auto c:ctx->ifBlock())trueBlocks.push_back(visit(c).as<BasicBlock*>());
         for(auto b:ctx->elseBlock)visit(b);
+        auto endBlock = BasicBlock::Create(context,frame.top().getBlockName("IF_End"),frame.top().function);
+        builder.CreateBr(endBlock);
+        for(auto b:trueBlocks){
+            builder.SetInsertPoint(b);
+            builder.CreateBr(endBlock);
+        }
+        builder.SetInsertPoint(endBlock);
         return nullptr;
     }
 
@@ -230,7 +238,7 @@ public:
         visitBlock(ctx->block);
         builder.SetInsertPoint(falseBlock);
         frame.top().EndLayer();
-        return falseBlock;
+        return trueBlock;
     }
 
     //============================================ declare ====================================================
