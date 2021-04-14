@@ -28,10 +28,14 @@ statement:forStmt
         |varDecl
         ;
 
-callStmt: Call ID'('(passArg(','passArg)*)? ')'
-        | ID (passArg(','passArg)*)?
+callStmt: Call ID '('(passArg(','passArg)*) ')'
+        | Call ID'('')'
+        | innerCall
         ;
 
+innerCall: ID (passArg(','passArg)*)
+        | ID
+        ;
 
 passArg:value=exp                       #ArgPassValue
        |                                #ArgIgnore
@@ -52,7 +56,7 @@ exp: '-' right=exp                                    #NegOp
     | left=exp op=('='|'>'|'<'|'<='|'=<'|'<>'|'>='|'=>') right=exp #CmpOp
     | op='not' right=exp                                #LogicNotOp
     | left=exp op=('and'|'or'|'xor') right=exp          #LogicOp
-    | ID'('(passArg(','passArg)*)?')'                   #InnerCall
+    | innerCall                                         #InnerCallOp
     | '('exp')'                                         #Bucket
     | Integer                                           #Integer
     | Decimal                                           #Decimal
@@ -85,7 +89,7 @@ String: '"' ~('"'|'\r'|'\n')* '"';
 Boolean: T R U E | F A L S E;
 
 Comment: '\'' ~('\r'|'\n')*  -> skip;
-BlockComment: '\'*' .* '*\'' -> skip;
+BlockComment: '\'*' .*? '*\'' -> skip;
 LineEnd: [\n\r];
 WS: [ \t]->skip;
 
