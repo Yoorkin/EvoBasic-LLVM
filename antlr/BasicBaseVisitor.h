@@ -47,6 +47,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitLine(BasicParser::LineContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -103,7 +107,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *ctx) override {
+  virtual antlrcpp::Any visitInteger(BasicParser::IntegerContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitDecimal(BasicParser::DecimalContext *ctx) override {
     return visitChildren(ctx);
   }
 

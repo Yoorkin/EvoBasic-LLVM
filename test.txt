@@ -4,5 +4,11 @@ sub main
 end sub
 
 function f(a as integer)as integer
-    return a+1*(6+8-4)
+    if 1+1=2 then
+        return 1
+    elseif 2+2=4 then
+        return 2
+    else
+        return 3
+    end if
 end function

@@ -35,6 +35,8 @@ public:
 
     virtual antlrcpp::Any visitVarType(BasicParser::VarTypeContext *context) = 0;
 
+    virtual antlrcpp::Any visitLine(BasicParser::LineContext *context) = 0;
+
     virtual antlrcpp::Any visitStatement(BasicParser::StatementContext *context) = 0;
 
     virtual antlrcpp::Any visitCallStmt(BasicParser::CallStmtContext *context) = 0;
@@ -63,7 +65,9 @@ public:
 
     virtual antlrcpp::Any visitString(BasicParser::StringContext *context) = 0;
 
-    virtual antlrcpp::Any visitNumber(BasicParser::NumberContext *context) = 0;
+    virtual antlrcpp::Any visitInteger(BasicParser::IntegerContext *context) = 0;
+
+    virtual antlrcpp::Any visitDecimal(BasicParser::DecimalContext *context) = 0;
 
     virtual antlrcpp::Any visitBucket(BasicParser::BucketContext *context) = 0;
 

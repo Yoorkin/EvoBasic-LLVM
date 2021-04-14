@@ -8,9 +8,6 @@ int main(int argc, const char* argv[]){
     stream.open("./test.txt");
     ANTLRInputStream input(stream);
     BasicLexer lexer(&input);
-    for(int i=0;i<lexer.getVocabulary().getMaxTokenType();i++){
-        cout<<i<<' '<<lexer.getVocabulary().getSymbolicName(i)<<endl;
-    }
     CommonTokenStream tokens(&lexer);
     BasicParser parser(&tokens);
     tree::ParseTree *tree = parser.moduleBody();

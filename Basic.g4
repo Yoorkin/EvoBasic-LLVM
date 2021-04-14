@@ -10,17 +10,17 @@ varDecl: Dim variable (','variable)*;
 
 variable: name=ID As type=varType ('=' initial=exp)?;
 
-functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID statement* End Function;
+functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID block+=line* End Function;
 
-subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? statement* End Sub;
+subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? block+=line* End Sub;
 
 varType: (ID);
 
+line:statement|LineEnd;
 
 statement:forStmt
         |loopStmt
         |ifStmt
-        |LineEnd
         |exitStmt
         |returnStmt
         |assignStmt
@@ -54,7 +54,8 @@ exp: '-' right=exp                                    #NegOp
     | left=exp op=('and'|'or'|'xor') right=exp          #LogicOp
     | ID'('(passArg(','passArg)*)?')'                   #InnerCall
     | '('exp')'                                         #Bucket
-    | Number                                            #Number
+    | Integer                                           #Integer
+    | Decimal                                           #Decimal
     | String                                            #String
     | ID                                                #ID
     | Boolean                                           #Boolean
@@ -63,10 +64,10 @@ exp: '-' right=exp                                    #NegOp
 forStmt: For iterator=exp '=' begin=exp To end=exp Step step=exp statement* Next nextFlag=exp?;
 foreachStmt: For Each iterator=exp In group=exp statement* Next nextFlag=exp?;
 
-ifStmt: If condition=exp Then statement* (Else elsestatement=statement*)? LineEnd           #SingleLineIf
-        | If firstBlock=ifBlock (ElseIf elseifBlock=ifBlock)* (Else elseBlock=statement*)? End If #MutiLineIf
+ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd           #SingleLineIf
+        | If ifBlock (ElseIf ifBlock)* (Else LineEnd elseBlock+=line*)? End If #MutiLineIf
         ;
-ifBlock: condition=exp Then statement* ;
+ifBlock: condition=exp Then LineEnd block+=line* ;
 
 
 loopStmt : Do While exp statement* Loop #DoWhile
@@ -77,7 +78,9 @@ loopStmt : Do While exp statement* Loop #DoWhile
         ;
 
 //-234.233e-6
-Number: [0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;
+//Number: [0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;
+Integer: [0-9]+;
+Decimal: [0-9]+'.'[0-9]+ | [0-9]+('E'|'e')'-'?[0-9]+;
 String: '"' ~('"'|'\r'|'\n')* '"';
 Boolean: T R U E | F A L S E;
 

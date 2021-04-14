@@ -15,24 +15,25 @@ public:
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
-    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, Number = 26, 
-    String = 27, Boolean = 28, Comment = 29, BlockComment = 30, LineEnd = 31, 
-    WS = 32, If = 33, ElseIf = 34, Wend = 35, From = 36, Import = 37, Namespace = 38, 
-    Implement = 39, Type = 40, Alias = 41, Self = 42, Static = 43, Module = 44, 
-    Public = 45, Private = 46, Protected = 47, Get = 48, Set = 49, Property = 50, 
-    Var = 51, Dim = 52, Let = 53, Return = 54, Function = 55, Difference = 56, 
-    Union = 57, Case = 58, Select = 59, End = 60, Until = 61, Loop = 62, 
-    Exit = 63, While = 64, Do = 65, Each = 66, To = 67, Step = 68, Next = 69, 
-    In = 70, For = 71, Optional = 72, Byval = 73, Byref = 74, Then = 75, 
-    Else = 76, Call = 77, Sub = 78, As = 79, ID = 80
+    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, Integer = 26, 
+    Decimal = 27, String = 28, Boolean = 29, Comment = 30, BlockComment = 31, 
+    LineEnd = 32, WS = 33, If = 34, ElseIf = 35, Wend = 36, From = 37, Import = 38, 
+    Namespace = 39, Implement = 40, Type = 41, Alias = 42, Self = 43, Static = 44, 
+    Module = 45, Public = 46, Private = 47, Protected = 48, Get = 49, Set = 50, 
+    Property = 51, Var = 52, Dim = 53, Let = 54, Return = 55, Function = 56, 
+    Difference = 57, Union = 58, Case = 59, Select = 60, End = 61, Until = 62, 
+    Loop = 63, Exit = 64, While = 65, Do = 66, Each = 67, To = 68, Step = 69, 
+    Next = 70, In = 71, For = 72, Optional = 73, Byval = 74, Byref = 75, 
+    Then = 76, Else = 77, Call = 78, Sub = 79, As = 80, ID = 81
   };
 
   enum {
     RuleModuleBody = 0, RuleDeclare = 1, RuleTypeDecl = 2, RuleVarDecl = 3, 
     RuleVariable = 4, RuleFunctionDecl = 5, RuleSubDecl = 6, RuleVarType = 7, 
-    RuleStatement = 8, RuleCallStmt = 9, RulePassArg = 10, RuleAssignStmt = 11, 
-    RuleExitStmt = 12, RuleReturnStmt = 13, RuleExp = 14, RuleForStmt = 15, 
-    RuleForeachStmt = 16, RuleIfStmt = 17, RuleIfBlock = 18, RuleLoopStmt = 19
+    RuleLine = 8, RuleStatement = 9, RuleCallStmt = 10, RulePassArg = 11, 
+    RuleAssignStmt = 12, RuleExitStmt = 13, RuleReturnStmt = 14, RuleExp = 15, 
+    RuleForStmt = 16, RuleForeachStmt = 17, RuleIfStmt = 18, RuleIfBlock = 19, 
+    RuleLoopStmt = 20
   };
 
   explicit BasicParser(antlr4::TokenStream *input);
@@ -53,6 +54,7 @@ public:
   class FunctionDeclContext;
   class SubDeclContext;
   class VarTypeContext;
+  class LineContext;
   class StatementContext;
   class CallStmtContext;
   class PassArgContext;
@@ -157,6 +159,8 @@ public:
   public:
     antlr4::Token *name = nullptr;
     antlr4::Token *returnType = nullptr;
+    BasicParser::LineContext *lineContext = nullptr;
+    std::vector<LineContext *> block;
     FunctionDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<antlr4::tree::TerminalNode *> Function();
@@ -167,8 +171,8 @@ public:
     antlr4::tree::TerminalNode* ID(size_t i);
     std::vector<VariableContext *> variable();
     VariableContext* variable(size_t i);
-    std::vector<StatementContext *> statement();
-    StatementContext* statement(size_t i);
+    std::vector<LineContext *> line();
+    LineContext* line(size_t i);
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -180,14 +184,16 @@ public:
   class  SubDeclContext : public antlr4::ParserRuleContext {
   public:
     antlr4::Token *name = nullptr;
+    BasicParser::LineContext *lineContext = nullptr;
+    std::vector<LineContext *> block;
     SubDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<antlr4::tree::TerminalNode *> Sub();
     antlr4::tree::TerminalNode* Sub(size_t i);
     antlr4::tree::TerminalNode *End();
     antlr4::tree::TerminalNode *ID();
-    std::vector<StatementContext *> statement();
-    StatementContext* statement(size_t i);
+    std::vector<LineContext *> line();
+    LineContext* line(size_t i);
     std::vector<VariableContext *> variable();
     VariableContext* variable(size_t i);
 
@@ -211,6 +217,20 @@ public:
 
   VarTypeContext* varType();
 
+  class  LineContext : public antlr4::ParserRuleContext {
+  public:
+    LineContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    StatementContext *statement();
+    antlr4::tree::TerminalNode *LineEnd();
+
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  LineContext* line();
+
   class  StatementContext : public antlr4::ParserRuleContext {
   public:
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -218,7 +238,6 @@ public:
     ForStmtContext *forStmt();
     LoopStmtContext *loopStmt();
     IfStmtContext *ifStmt();
-    antlr4::tree::TerminalNode *LineEnd();
     ExitStmtContext *exitStmt();
     ReturnStmtContext *returnStmt();
     AssignStmtContext *assignStmt();
@@ -421,11 +440,20 @@ public:
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  NumberContext : public ExpContext {
+  class  IntegerContext : public ExpContext {
   public:
-    NumberContext(ExpContext *ctx);
+    IntegerContext(ExpContext *ctx);
 
-    antlr4::tree::TerminalNode *Number();
+    antlr4::tree::TerminalNode *Integer();
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  DecimalContext : public ExpContext {
+  public:
+    DecimalContext(ExpContext *ctx);
+
+    antlr4::tree::TerminalNode *Decimal();
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -576,19 +604,19 @@ public:
   public:
     MutiLineIfContext(IfStmtContext *ctx);
 
-    BasicParser::IfBlockContext *firstBlock = nullptr;
-    BasicParser::IfBlockContext *elseifBlock = nullptr;
-    BasicParser::StatementContext *elseBlock = nullptr;
+    BasicParser::LineContext *lineContext = nullptr;
+    std::vector<LineContext *> elseBlock;
     std::vector<antlr4::tree::TerminalNode *> If();
     antlr4::tree::TerminalNode* If(size_t i);
-    antlr4::tree::TerminalNode *End();
     std::vector<IfBlockContext *> ifBlock();
     IfBlockContext* ifBlock(size_t i);
+    antlr4::tree::TerminalNode *End();
     std::vector<antlr4::tree::TerminalNode *> ElseIf();
     antlr4::tree::TerminalNode* ElseIf(size_t i);
     antlr4::tree::TerminalNode *Else();
-    std::vector<StatementContext *> statement();
-    StatementContext* statement(size_t i);
+    antlr4::tree::TerminalNode *LineEnd();
+    std::vector<LineContext *> line();
+    LineContext* line(size_t i);
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -598,13 +626,13 @@ public:
     SingleLineIfContext(IfStmtContext *ctx);
 
     BasicParser::ExpContext *condition = nullptr;
-    BasicParser::StatementContext *elsestatement = nullptr;
+    BasicParser::StatementContext *elseStatement = nullptr;
     antlr4::tree::TerminalNode *If();
     antlr4::tree::TerminalNode *Then();
-    antlr4::tree::TerminalNode *LineEnd();
-    ExpContext *exp();
     std::vector<StatementContext *> statement();
     StatementContext* statement(size_t i);
+    antlr4::tree::TerminalNode *LineEnd();
+    ExpContext *exp();
     antlr4::tree::TerminalNode *Else();
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -615,12 +643,15 @@ public:
   class  IfBlockContext : public antlr4::ParserRuleContext {
   public:
     BasicParser::ExpContext *condition = nullptr;
+    BasicParser::LineContext *lineContext = nullptr;
+    std::vector<LineContext *> block;
     IfBlockContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *Then();
+    antlr4::tree::TerminalNode *LineEnd();
     ExpContext *exp();
-    std::vector<StatementContext *> statement();
-    StatementContext* statement(size_t i);
+    std::vector<LineContext *> line();
+    LineContext* line(size_t i);
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
