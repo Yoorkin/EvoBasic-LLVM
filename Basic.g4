@@ -70,11 +70,11 @@ ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd 
 ifBlock: condition=exp Then LineEnd block+=line* ;
 
 
-loopStmt : Do While exp statement* Loop #DoWhile
-        | Do Until exp statement* Loop  #DoUntil
-        | Do statement* Loop Until exp  #LoopUntil
-        | Do statement* Loop While exp  #LoopWhile
-        | While exp statement* Wend     #WhileWend
+loopStmt : Do While exp block=line* Loop #DoWhile
+        | Do Until exp block=line* Loop  #DoUntil
+        | Do block=line* Loop Until exp  #LoopUntil
+        | Do block=line* Loop While exp  #LoopWhile
+        | While exp block=line* Wend     #WhileWend
         ;
 
 //-234.233e-6
@@ -136,7 +136,7 @@ Else:E L S E;
 Call:C A L L;
 Sub:S U B;
 As: A S;
-ID: [a-zA-z_][a-zA-z0-9_]*;
+ID: [a-zA-Z_][a-zA-Z0-9_]*;
 
 fragment A:('a'|'A');
 fragment B:('b'|'B');
