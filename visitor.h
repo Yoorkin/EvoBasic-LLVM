@@ -69,6 +69,15 @@ public:
 
 };
 
+class InvalidSyntax{
+    int row,column;
+public:
+    InvalidSyntax(antlr4::Token* token){
+        row=token->getLine();
+        column=token->getCharPositionInLine();
+    }
+};
+
 class ArgumentInfo{
 public:
     string name;
@@ -324,12 +333,23 @@ public:
         frame.pop();
         return function;
     }
-
+    //====================================== call statement =========================================
     virtual antlrcpp::Any visitInnerCall(BasicParser::InnerCallContext *ctx) override {
-        cout<<ctx->toStringTree()<<endl;
-        for(auto p:ctx->children)cout<<p<<endl;
+        for(auto p:ctx->passArg())cout<<p<<endl;
         return visitChildren(ctx);
     }
+
+    virtual antlrcpp::Any visitArgPassValue(BasicParser::ArgPassValueContext *ctx) override {
+        return visitChildren(ctx);
+
+    }
+    virtual antlrcpp::Any visitArgIgnore(BasicParser::ArgIgnoreContext *ctx) override {
+        return visitChildren(ctx);
+    }
+    virtual antlrcpp::Any visitArgOptional(BasicParser::ArgOptionalContext *ctx) override {
+        return visitChildren(ctx);
+    }
+
 
     virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *ctx) override {
         auto val = visit(ctx->exp()).as<Value*>();
