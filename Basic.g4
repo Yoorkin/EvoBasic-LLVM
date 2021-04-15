@@ -4,21 +4,22 @@ moduleBody: (declare|LineEnd)*;
 
 declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl|typeDecl;
 
-typeDecl:Type name=ID (variable? LineEnd)* End Type;
+typeDecl:Type name=ID LineEnd (variable? LineEnd)* End Type LineEnd;
 
-varDecl: Dim variable (','variable)*;
+varDecl: Dim variable (','variable)* LineEnd;
 
 variable: name=ID As type=varType ('=' initial=exp)?;
 
-functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID block+=line* End Function;
+functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID LineEnd block+=line* End Function LineEnd;
 
-subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? block+=line* End Sub;
+subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? LineEnd block+=line* End Sub LineEnd;
 
 varType: (ID);
 
 line:statement|LineEnd;
 
 statement:forStmt
+        |foreachStmt
         |loopStmt
         |ifStmt
         |exitStmt
@@ -28,13 +29,14 @@ statement:forStmt
         |varDecl
         ;
 
-callStmt: Call ID '('(passArg(','passArg)*) ')'
-        | Call ID'('')'
-        | innerCall
+callStmt: Call ID '('(passArg(','passArg)*) ')' LineEnd
+        | Call ID ('('')')? LineEnd
+        | ID (passArg(','passArg)*)  LineEnd
+        | ID LineEnd
         ;
 
-innerCall: ID (passArg(','passArg)*)
-        | ID
+innerCall: ID '(' (passArg (','passArg?)*) ')'
+        | ID ('(' ')')?
         ;
 
 passArg:value=exp                       #ArgPassValue
@@ -42,13 +44,13 @@ passArg:value=exp                       #ArgPassValue
        |option=ID ('='|'=:') value=exp  #ArgOptional
        ;
 
-assignStmt: left=ID '=' right=exp;
+assignStmt: left=ID '=' right=exp LineEnd;
 
-exitStmt:Exit exitFlag=(For|Do|Sub|Function);
+exitStmt:Exit exitFlag=(For|Do|Sub|Function) LineEnd;
 
-returnStmt:Return exp;
+returnStmt:Return exp LineEnd;
 
-exp: '-' right=exp                                    #NegOp
+exp: '-' right=exp                                      #NegOp
     | left=exp op=('&'|'|')     right=exp               #BitOp
     | left=exp op=('^'|'mod')       right=exp           #PowModOp
     | left=exp op=('*'|'/'|'\\')    right=exp           #MulOp
@@ -65,20 +67,20 @@ exp: '-' right=exp                                    #NegOp
     | Boolean                                           #Boolean
     ;
 
-forStmt: For iterator=exp '=' begin=exp To end=exp Step step=exp statement* Next nextFlag=exp?;
-foreachStmt: For Each iterator=exp In group=exp statement* Next nextFlag=exp?;
+foreachStmt: For Each (iterator=exp|Dim name=ID (As type=varType)?) In group=exp LineEnd line* Next nextFlag=exp? LineEnd;
+forStmt: For (iterator=exp|Dim name=ID (As type=varType)?) '=' begin=exp To end=exp (Step step=exp)? LineEnd line* Next nextFlag=exp? LineEnd;
 
 ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd           #SingleLineIf
-        | If ifBlock (ElseIf ifBlock)* (Else LineEnd elseBlock+=line*)? End If #MutiLineIf
+        | If ifBlock (ElseIf ifBlock)* (Else LineEnd elseBlock+=line*)? End If LineEnd    #MutiLineIf
         ;
+
 ifBlock: condition=exp Then LineEnd block+=line* ;
 
-
-loopStmt : Do While exp block+=line* Loop #DoWhile
-        | Do Until exp block+=line* Loop  #DoUntil
-        | Do block+=line* Loop Until exp  #LoopUntil
-        | Do block+=line* Loop While exp  #LoopWhile
-        | While exp block+=line* Wend     #WhileWend
+loopStmt : Do While exp LineEnd block+=line* Loop LineEnd #DoWhile
+        | Do Until exp LineEnd block+=line* Loop LineEnd #DoUntil
+        | Do LineEnd block+=line* Loop Until exp LineEnd #LoopUntil
+        | Do LineEnd block+=line* Loop While exp LineEnd #LoopWhile
+        | While exp LineEnd block+=line* Wend LineEnd    #WhileWend
         ;
 
 //-234.233e-6

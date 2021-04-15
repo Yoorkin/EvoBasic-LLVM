@@ -325,6 +325,12 @@ public:
         return function;
     }
 
+    virtual antlrcpp::Any visitInnerCall(BasicParser::InnerCallContext *ctx) override {
+        cout<<ctx->toStringTree()<<endl;
+        for(auto p:ctx->children)cout<<p<<endl;
+        return visitChildren(ctx);
+    }
+
     virtual antlrcpp::Any visitReturnStmt(BasicParser::ReturnStmtContext *ctx) override {
         auto val = visit(ctx->exp()).as<Value*>();
         builder.CreateRet(val);
@@ -413,7 +419,8 @@ public:
     }
 
     virtual antlrcpp::Any visitID(BasicParser::IDContext *ctx) override {
-        Value* val = frame.top().varTable.find(strToLower(ctx->ID()->getText()))->second;
+        auto p = frame.top().varTable.find(strToLower(ctx->ID()->getText()));
+        Value* val = builder.CreateLoad(p->second->getType(),p->second);
         return val;//TODO：访问变量
     }
 
