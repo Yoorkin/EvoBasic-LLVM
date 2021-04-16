@@ -114,6 +114,7 @@ public:
     llvm::Function* function;
     StackFrame(llvm::Function* function){
         this->function=function;
+        layers.push("");
     }
     map<string,AllocaInst*> varTable;
     map<string,Argument*> argTable;
