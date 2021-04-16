@@ -1,14 +1,8 @@
-sub main
-    dim a as integer=5
-    call f(f(5))
-end sub
-
 function f(a as integer)as integer
+    dim b as Integer
     if 1+1=2 then
-        return 1
-    elseif 2+2=4 then
-        return 2
+        return a
     else
-        return 3
+        return b
     end if
 end function

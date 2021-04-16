@@ -25,7 +25,7 @@ add_compile_definitions(LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 
 file(GLOB antlrGrammar "./antlr/*.cpp")
 
-add_executable(classicBasic main.cpp ${antlrGrammar} visitor.h errorListener.h)
+add_executable(classicBasic main.cpp ${antlrGrammar} codeGen.h errorListener.h codeGen.cpp)
 
 llvm_map_components_to_libnames(llvm_libs Core Interpreter MC MCJIT Support nativecodegen IRReader)
 target_link_libraries(classicBasic antlr4-runtime ${llvm_libs} )

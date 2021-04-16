@@ -1,6 +1,6 @@
 grammar Basic;
 
-moduleBody: (declare|LineEnd)*;
+moduleBody: (declare|LineEnd)* EOF;
 
 declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl|typeDecl;
 
