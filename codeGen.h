@@ -101,8 +101,10 @@ class ArgumentInfo{
 public:
     string name;
     Type* type;
+    Token* token;
     antlr4::tree::ParseTree* initial;
     ArgumentInfo(BasicParser::VariableContext *ctx,TypeTable& typeTable){
+        token=ctx->name;
         name=strToLower(ctx->name->getText());
         type=typeTable.find(ctx->type->ID()->getSymbol());
         initial=ctx->initial;
@@ -110,15 +112,16 @@ public:
 };
 
 class StackFrame{
+    friend GenerateUnit;
     int index=0;
     stack<string> layers;
+    map<string,AllocaInst*> varTable;
 public:
     llvm::Function* function;
     StackFrame(llvm::Function* function){
         this->function=function;
         layers.push("");
     }
-    map<string,AllocaInst*> varTable;
     void BeginLayer(string prefix){
         layers.push(prefix + "_" + std::to_string(index) + "_");
         index++;

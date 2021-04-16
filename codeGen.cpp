@@ -217,13 +217,13 @@ antlrcpp::Any Visitor::visitIfBlock(BasicParser::IfBlockContext *ctx){
 
 antlrcpp::Any Visitor::visitVarDecl(BasicParser::VarDeclContext *ctx){
     for(auto arg:ctx->variable()){
-    auto info = visit(arg).as<ArgumentInfo>();
-    auto ptr = builder.CreateAlloca(info.type,nullptr,info.name);
-    frame.back().varTable.insert(make_pair(info.name,ptr));
-    if(info.initial!=nullptr){
-        auto value = visit(info.initial).as<Value*>();
-        builder.CreateStore(value,ptr);
-    }
+        auto info = visit(arg).as<ArgumentInfo>();
+        auto ptr = builder.CreateAlloca(info.type,nullptr,info.name);
+        unit.addInst(info.token,ptr);
+        if(info.initial!=nullptr){
+            auto value = visit(info.initial).as<Value*>();
+            builder.CreateStore(value,ptr);
+        }
     }
     return visitChildren(ctx);
 }
@@ -261,7 +261,7 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
         param->setName(arg.name);
         auto inst = builder.CreateAlloca(arg.type,nullptr);
         builder.CreateStore(inst,param);
-        frame.back().varTable.insert((make_pair(arg.name,inst)));
+        unit.addInst(arg.token,inst);
         param++;
     }
     visitBlock(ctx->block);
@@ -273,8 +273,8 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
     vector<Type*> paramList;
     vector<ArgumentInfo> arguments;
     for(auto& arg:ctx->variable()){
-    arguments.push_back(visit(arg).as<ArgumentInfo>());
-    paramList.push_back(arguments.back().type);
+        arguments.push_back(visit(arg).as<ArgumentInfo>());
+        paramList.push_back(arguments.back().type);
     }
     FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
     string funcionName = ctx->name->getText();
@@ -287,7 +287,7 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
         param->setName(arg.name);
         auto inst = builder.CreateAlloca(arg.type,nullptr);
         builder.CreateStore(inst,param);
-        frame.back().varTable.insert((make_pair(arg.name,inst)));
+        unit.addInst(arg.token,inst);
         param++;
     }
     visitBlock(ctx->block);
@@ -400,9 +400,11 @@ antlrcpp::Any Visitor::visitPowModOp(BasicParser::PowModOpContext *ctx){
 }
 
 antlrcpp::Any Visitor::visitID(BasicParser::IDContext *ctx){
-    auto p = frame.back().varTable.find(strToLower(ctx->ID()->getText()));
-    Value* val = builder.CreateLoad(p->second->getType(),p->second);
-    return val;//TODO：访问变量
+    //TODO 检查这个函数还有没有用
+    //auto p = frame.back().varTable.find(strToLower(ctx->ID()->getText()));
+    //Value* val = builder.CreateLoad(p->second->getType(),p->second);
+    //return val;//TODO：访问变量
+    return nullptr;
 }
 
 antlrcpp::Any Visitor::visitBoolean(BasicParser::BooleanContext *ctx){
