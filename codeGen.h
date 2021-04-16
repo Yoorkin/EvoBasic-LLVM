@@ -50,7 +50,7 @@ class GenerateUnit{
     friend Visitor;
     llvm::Module mod;
     Visitor* visitor;
-    stack<StackFrame> frame;
+    list<StackFrame> frame;
     LLVMContext& context;
     Reporter reporter;
     BasicErrorListener errorListener;
@@ -60,6 +60,8 @@ class GenerateUnit{
 public:
     GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
     void generate();
+    AllocaInst* findInst(Token* id);
+    void addInst(Token* id,AllocaInst* inst);
     ~GenerateUnit(){
         delete visitor;
     }
@@ -117,10 +119,6 @@ public:
         layers.push("");
     }
     map<string,AllocaInst*> varTable;
-    map<string,Argument*> argTable;
-    Value* getValue(string name){
-
-    }
     void BeginLayer(string prefix){
         layers.push(prefix + "_" + std::to_string(index) + "_");
         index++;
@@ -139,14 +137,18 @@ class Visitor:public BasicBaseVisitor{
     IRBuilder<> builder;
     LLVMContext &context;
     llvm::Module& mod;
-    stack<StackFrame>& frame;
+    list<StackFrame>& frame;
     TypeTable& typeTable;
+    Reporter& reporter;
 public:
+
     Visitor(GenerateUnit& unit);
     //=========================================== utility =================================================
     void visitBlock(vector<BasicParser::LineContext*>& block){
         for(auto& line:block)visit(line);
     }
+//    template<typename T>
+//    void storeValue(Token* token,T value);
     //=========================================== flow-control =================================================
     virtual antlrcpp::Any visitDoWhile(BasicParser::DoWhileContext *ctx) override;
     virtual antlrcpp::Any visitDoUntil(BasicParser::DoUntilContext *ctx) override;
@@ -162,7 +164,7 @@ public:
     virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override;
     virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
     virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
-    //====================================== call statement =========================================
+    //====================================== call-statement =========================================
     virtual antlrcpp::Any visitInnerCall(BasicParser::InnerCallContext *ctx) override;
     virtual antlrcpp::Any visitArgPassValue(BasicParser::ArgPassValueContext *ctx) override;
     virtual antlrcpp::Any visitArgIgnore(BasicParser::ArgIgnoreContext *ctx) override;

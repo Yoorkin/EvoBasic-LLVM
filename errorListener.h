@@ -53,6 +53,9 @@ public:
     void report(int row,int column,Error error){
         report(row,column,errorTable[error]);
     }
+    void report(Token* token,string error){
+        report(token->getLine(),token->getCharPositionInLine(),error);
+    }
 };
 
 class BasicErrorListener:public BaseErrorListener{

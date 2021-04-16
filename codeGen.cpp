@@ -27,6 +27,27 @@ void GenerateUnit::generate(){
     mod.print(outs(),nullptr,false);
 }
 
+AllocaInst* GenerateUnit::findInst(Token* id){
+    string name = strToLower(id->getText());
+    for(auto iter=frame.rbegin();iter!=frame.rend();iter++){
+        auto var=iter->varTable.find(name);
+        if(var!=iter->varTable.end()){
+            return var->second;
+        }
+    }
+    reporter.report(id->getLine(),id->getCharPositionInLine(),"Can not find variable "+name);
+    return nullptr;
+}
+
+void GenerateUnit::addInst(Token* id,AllocaInst* inst){
+    string name = strToLower(id->getText());
+    auto p = frame.back().varTable.find(name);
+    if(p!=frame.back().varTable.end())
+        reporter.report(id,"redefinition of '"+name+"'");
+    else
+        frame.back().varTable.insert(make_pair(name,inst));
+}
+
 CodeGenerator::CodeGenerator(){
     LLVMInitializeNativeTarget();
     LLVMInitializeNativeAsmPrinter();
@@ -54,15 +75,33 @@ Type* TypeTable::find(Token* type){
 }
 
 //===================================== visitor =========================================================================
+
+//void Visitor::storeValue(Token* token){
+//    string name = strToLower(token->getText());
+//    for(auto iter=frame.rbegin();iter!=frame.rend();iter++){
+//        auto var=iter->varTable.find(name);
+//        if(var!=iter->varTable.end()){
+//            return builder.CreateLoad(var->second->getType(),var->second);
+//        }
+//        auto arg=iter->argTable.find(name);
+//        if(arg!=iter->argTable.end()){
+//            return arg->second;
+//        }
+//    }
+//    builder.Creat
+//    reporter.report(token->getLine(),token->getCharPositionInLine(),"Can not find variable "+name);
+//    return nullptr;
+//}
+
 Visitor::Visitor(GenerateUnit& unit)
-:typeTable(*unit.gen.typeTable),frame(unit.frame),context(unit.context),mod(unit.mod),builder(unit.context),unit(unit){
+:typeTable(*unit.gen.typeTable),reporter(unit.reporter),frame(unit.frame),context(unit.context),mod(unit.mod),builder(unit.context),unit(unit){
 }
 antlrcpp::Any Visitor::visitDoWhile(BasicParser::DoWhileContext *ctx){
-    frame.top().BeginLayer("Loop");
+    frame.back().BeginLayer("Loop");
     auto condition = visit(ctx->exp()).as<Value*>();
-    auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
-    auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
-    auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+    auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
+    auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
+    auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(condBlock);
     builder.CreateCondBr(condition,loop,loopEnd);
@@ -70,16 +109,16 @@ antlrcpp::Any Visitor::visitDoWhile(BasicParser::DoWhileContext *ctx){
     visitBlock(ctx->block);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(loopEnd);
-    frame.top().EndLayer();
+    frame.back().EndLayer();
     return nullptr;
 }
 
 antlrcpp::Any Visitor::visitDoUntil(BasicParser::DoUntilContext *ctx){
-    frame.top().BeginLayer("Loop");
+    frame.back().BeginLayer("Loop");
     auto condition = visit(ctx->exp()).as<Value*>();
-    auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
-    auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
-    auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+    auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
+    auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
+    auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(condBlock);
     builder.CreateCondBr(condition,loopEnd,loop);
@@ -87,16 +126,16 @@ antlrcpp::Any Visitor::visitDoUntil(BasicParser::DoUntilContext *ctx){
     visitBlock(ctx->block);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(loopEnd);
-    frame.top().EndLayer();
+    frame.back().EndLayer();
     return nullptr;
 }
 
 antlrcpp::Any Visitor::visitLoopUntil(BasicParser::LoopUntilContext *ctx){
-    frame.top().BeginLayer("Loop");
+    frame.back().BeginLayer("Loop");
     auto condition = visit(ctx->exp()).as<Value*>();
-    auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
-    auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
-    auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+    auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
+    auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
+    auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(loop);
     builder.SetInsertPoint(condBlock);
     builder.CreateCondBr(condition,loopEnd,loop);
@@ -104,16 +143,16 @@ antlrcpp::Any Visitor::visitLoopUntil(BasicParser::LoopUntilContext *ctx){
     visitBlock(ctx->block);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(loopEnd);
-    frame.top().EndLayer();
+    frame.back().EndLayer();
     return nullptr;
 }
 
 antlrcpp::Any Visitor::visitLoopWhile(BasicParser::LoopWhileContext *ctx){
-    frame.top().BeginLayer("Loop");
+    frame.back().BeginLayer("Loop");
     auto condition = visit(ctx->exp()).as<Value*>();
-    auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
-    auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
-    auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+    auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
+    auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
+    auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(loop);
     builder.SetInsertPoint(condBlock);
     builder.CreateCondBr(condition,loop,loopEnd);
@@ -121,16 +160,16 @@ antlrcpp::Any Visitor::visitLoopWhile(BasicParser::LoopWhileContext *ctx){
     visitBlock(ctx->block);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(loopEnd);
-    frame.top().EndLayer();
+    frame.back().EndLayer();
     return nullptr;
 }
 
 antlrcpp::Any Visitor::visitWhileWend(BasicParser::WhileWendContext *ctx){
-    frame.top().BeginLayer("Loop");
+    frame.back().BeginLayer("Loop");
     auto condition = visit(ctx->exp()).as<Value*>();
-    auto condBlock = BasicBlock::Create(context,frame.top().getBlockName("LoopCondition"),frame.top().function);
-    auto loop = BasicBlock::Create(context,frame.top().getBlockName("Loop"),frame.top().function);
-    auto loopEnd = BasicBlock::Create(context,frame.top().getBlockName("LoopEnd"),frame.top().function);
+    auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
+    auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
+    auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(condBlock);
     builder.CreateCondBr(condition,loop,loopEnd);
@@ -138,7 +177,7 @@ antlrcpp::Any Visitor::visitWhileWend(BasicParser::WhileWendContext *ctx){
     visitBlock(ctx->block);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(loopEnd);
-    frame.top().EndLayer();
+    frame.back().EndLayer();
     return nullptr;
 }
 
@@ -150,7 +189,7 @@ antlrcpp::Any Visitor::visitMutiLineIf(BasicParser::MutiLineIfContext *ctx){
     list<BasicBlock*> trueBlocks;
     for(auto c:ctx->ifBlock())trueBlocks.push_back(visit(c).as<BasicBlock*>());
     for(auto b:ctx->elseBlock)visit(b);
-    auto endBlock = BasicBlock::Create(context,frame.top().getBlockName("IF_End"),frame.top().function);
+    auto endBlock = BasicBlock::Create(context,frame.back().getBlockName("IF_End"),frame.back().function);
     builder.CreateBr(endBlock);
     for(auto b:trueBlocks){
     builder.SetInsertPoint(b);
@@ -161,15 +200,15 @@ antlrcpp::Any Visitor::visitMutiLineIf(BasicParser::MutiLineIfContext *ctx){
 }
 
 antlrcpp::Any Visitor::visitIfBlock(BasicParser::IfBlockContext *ctx){
-    frame.top().BeginLayer("If");
+    frame.back().BeginLayer("If");
     Value* cond = visit(ctx->exp()).as<Value*>();
-    auto trueBlock = BasicBlock::Create(context,frame.top().getBlockName("True"),frame.top().function);
-    auto falseBlock = BasicBlock::Create(context,frame.top().getBlockName("False"),frame.top().function);
+    auto trueBlock = BasicBlock::Create(context,frame.back().getBlockName("True"),frame.back().function);
+    auto falseBlock = BasicBlock::Create(context,frame.back().getBlockName("False"),frame.back().function);
     builder.CreateCondBr(cond,trueBlock,falseBlock);
     builder.SetInsertPoint(trueBlock);
     visitBlock(ctx->block);
     builder.SetInsertPoint(falseBlock);
-    frame.top().EndLayer();
+    frame.back().EndLayer();
     return trueBlock;
 }
 
@@ -179,12 +218,11 @@ antlrcpp::Any Visitor::visitIfBlock(BasicParser::IfBlockContext *ctx){
 antlrcpp::Any Visitor::visitVarDecl(BasicParser::VarDeclContext *ctx){
     for(auto arg:ctx->variable()){
     auto info = visit(arg).as<ArgumentInfo>();
-    auto ptr = builder.CreateAlloca(info.type,nullptr,info.name.c_str());
-    frame.top().varTable.insert(make_pair(info.name,ptr));
+    auto ptr = builder.CreateAlloca(info.type,nullptr,info.name);
+    frame.back().varTable.insert(make_pair(info.name,ptr));
     if(info.initial!=nullptr){
-    //TODO: 写一个Variant容器解决Any无法转换类型的问题
-    auto value = visit(info.initial).as<Value*>();
-    builder.CreateStore(value,ptr);
+        auto value = visit(info.initial).as<Value*>();
+        builder.CreateStore(value,ptr);
     }
     }
     return visitChildren(ctx);
@@ -194,8 +232,8 @@ antlrcpp::Any Visitor::visitTypeDecl(BasicParser::TypeDeclContext *ctx){
     vector<Type*> paramList;
     vector<ArgumentInfo> arguments;
     for(auto arg:ctx->variable()){
-    arguments.push_back(visit(arg).as<ArgumentInfo>());
-    paramList.push_back(arguments.back().type);
+        arguments.push_back(visit(arg).as<ArgumentInfo>());
+        paramList.push_back(arguments.back().type);
     }
     return StructType::create(paramList,strToLower(ctx->name->getText()));
 }
@@ -209,22 +247,25 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     vector<Type*> paramList;
     vector<ArgumentInfo> arguments;
     for(auto arg:ctx->variable()){
-    arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
-    paramList.push_back(arguments.back().type);
+        arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
+        paramList.push_back(arguments.back().type);
     }
     Type* retType = typeTable.find(ctx->returnType);
     FunctionType *type = FunctionType::get(retType,paramList,false);
     auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-    frame.push(StackFrame(function));
+    frame.push_back(StackFrame(function));
     auto block = BasicBlock::Create(context, "EntryBlock", function);
     builder.SetInsertPoint(block);
     auto param = function->arg_begin();
     for(auto& arg:arguments){
-    param->setName(arg.name);
-    param++;
+        param->setName(arg.name);
+        auto inst = builder.CreateAlloca(arg.type,nullptr);
+        builder.CreateStore(inst,param);
+        frame.back().varTable.insert((make_pair(arg.name,inst)));
+        param++;
     }
     visitBlock(ctx->block);
-    frame.pop();
+    frame.pop_back();
     return function;
 }
 
@@ -238,22 +279,25 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
     FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
     string funcionName = ctx->name->getText();
     auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-    frame.push(StackFrame(function));
+    frame.push_back(StackFrame(function));
     auto block = BasicBlock::Create(context, "EntryBlock", function);
     builder.SetInsertPoint(block);
     auto param = function->arg_begin();
     for(auto& arg:arguments){
-    param->setName(arg.name);
-    param++;
+        param->setName(arg.name);
+        auto inst = builder.CreateAlloca(arg.type,nullptr);
+        builder.CreateStore(inst,param);
+        frame.back().varTable.insert((make_pair(arg.name,inst)));
+        param++;
     }
     visitBlock(ctx->block);
-    frame.pop();
+    frame.pop_back();
     return function;
 }
 //====================================== call statement =========================================
 antlrcpp::Any Visitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
-    for(auto p:ctx->passArg())cout<<p<<endl;
-    return visitChildren(ctx);
+    AllocaInst* inst = unit.findInst(ctx->ID()->getSymbol());
+    return builder.CreateLoad(inst->getType(),inst);
 }
 
 antlrcpp::Any Visitor::visitArgPassValue(BasicParser::ArgPassValueContext *ctx){
@@ -276,9 +320,9 @@ antlrcpp::Any Visitor::visitReturnStmt(BasicParser::ReturnStmtContext *ctx){
 
 antlrcpp::Any Visitor::visitAssignStmt(BasicParser::AssignStmtContext *ctx){
     auto val = visit(ctx->right).as<Value*>();
-    auto ptr = frame.top().varTable.find(strToLower(ctx->left->getText()))->second;
-    builder.CreateStore(val,ptr);
-    return (Value*)ptr;
+    auto inst = unit.findInst(ctx->left);
+    builder.CreateStore(val,inst);
+    return (Value*)inst;
 }
 
 antlrcpp::Any Visitor::visitPluOp(BasicParser::PluOpContext *ctx){
@@ -356,7 +400,7 @@ antlrcpp::Any Visitor::visitPowModOp(BasicParser::PowModOpContext *ctx){
 }
 
 antlrcpp::Any Visitor::visitID(BasicParser::IDContext *ctx){
-    auto p = frame.top().varTable.find(strToLower(ctx->ID()->getText()));
+    auto p = frame.back().varTable.find(strToLower(ctx->ID()->getText()));
     Value* val = builder.CreateLoad(p->second->getType(),p->second);
     return val;//TODO：访问变量
 }

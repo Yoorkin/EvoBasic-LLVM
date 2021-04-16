@@ -1,8 +1,5 @@
-function f(a as integer)as integer
+function f(a as byte,b as byte)as integer
     dim b as Integer
-    if 1+1=2 then
-        return a
-    else
-        return b
-    end if
+    a=10
+    b=100
 end function
