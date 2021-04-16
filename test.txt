@@ -1,5 +1,7 @@
-function f(a as byte,b as byte)as integer
+function f(abcdefg as byte,b as byte)as integer
     dim b as Integer
-    a=10
+    abcdefg=10
     b=100
+    ifufj=1001
+    dim abcdefg as long
 end function

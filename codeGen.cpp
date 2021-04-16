@@ -35,7 +35,7 @@ AllocaInst* GenerateUnit::findInst(Token* id){
             return var->second;
         }
     }
-    reporter.report(id->getLine(),id->getCharPositionInLine(),"Can not find variable "+name);
+    reporter.report(id,"Can not find variable "+name);
     return nullptr;
 }
 
@@ -70,7 +70,7 @@ Type* TypeTable::find(Token* type){
     string name = strToLower(type->getText());
     auto builtIn = builtInTypes.find(name);
     if(builtIn!=builtInTypes.end())return builtIn->second;
-    gen.reporter->report(type->getLine(),type->getCharPositionInLine(),"unexpected type "+type->getText());
+    gen.reporter->report(type,"unexpected type "+type->getText());
     return Type::getInt32Ty(gen.context);
 }
 

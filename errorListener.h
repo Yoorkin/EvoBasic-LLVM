@@ -34,7 +34,8 @@ public:
         in.seekg(ios::beg);
     }
 
-    void report(int row,int column,string error){
+    void report(int row,int column,int span,string error){
+        if(span==0)span=1;
         if(first){
             out<<endl;
             out<<YellowBegin<<"In file "<<path<<":"<<ColorEnd<<endl;
@@ -44,17 +45,17 @@ public:
         out<<RedBegin<<" line "<<row<<','<<column<<":"<<error<<ColorEnd<<endl;
         out<<YellowBegin<<"│"<<ColorEnd;
         out<<"  "<<code[row-1]<<endl;
-        out<<YellowBegin<<"│\t"<<ColorEnd;
+        out<<YellowBegin<<"│"<<ColorEnd;
         for(int i=0;i<column;i++)out<<' ';
-        cout<<"  "<<RedBegin;
-        for(int i=0;i<4;i++)out<<'^';
+        cout<<RedBegin<<"  ^";
+        for(int i=1;i<span;i++)out<<'~';
         out<<ColorEnd<<endl;
     }
-    void report(int row,int column,Error error){
-        report(row,column,errorTable[error]);
+    void report(int row,int column,int span,Error error){
+        report(row,column,span,errorTable[error]);
     }
     void report(Token* token,string error){
-        report(token->getLine(),token->getCharPositionInLine(),error);
+        report(token->getLine(),token->getCharPositionInLine(),token->getText().length(),error);
     }
 };
 
@@ -64,7 +65,7 @@ public:
     BasicErrorListener(Reporter reporter):reporter(reporter){}
     virtual void syntaxError(Recognizer *recognizer, Token * offendingSymbol, size_t line, size_t charPositionInLine,
                              const std::string &msg, std::exception_ptr e) override{
-        reporter.report(line,charPositionInLine,msg);
+        reporter.report(offendingSymbol,msg);
     }
 };
 
