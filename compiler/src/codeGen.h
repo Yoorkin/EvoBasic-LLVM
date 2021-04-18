@@ -10,9 +10,9 @@
 #include<iostream>
 
 #include<antlr4-runtime/antlr4-runtime.h>
-#include"antlr/BasicLexer.h"
-#include"antlr/BasicParser.h"
-#include"antlr/BasicBaseVisitor.h"
+#include"../../antlr/BasicLexer.h"
+#include"../../antlr/BasicParser.h"
+#include"../../antlr/BasicBaseVisitor.h"
 
 #include<llvm/IR/DerivedTypes.h>
 #include<llvm/IR/IRBuilder.h>

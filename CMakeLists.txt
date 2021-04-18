@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(classicBasic VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 14)
 #生成antlr cpp代码
-execute_process(COMMAND antlr4 Basic.g4 -o antlr -Dlanguage=Cpp -visitor -no-listener)
+execute_process(COMMAND antlr4 compiler/grammar/Basic.g4 -o compiler/antlr -Dlanguage=Cpp -visitor -no-listener)
 
 find_package(LLVM REQUIRED CONFIG)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
@@ -25,7 +25,7 @@ add_compile_definitions(LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 
 file(GLOB antlrGrammar "./antlr/*.cpp")
 
-add_executable(classicBasic main.cpp ${antlrGrammar} codeGen.h errorListener.h codeGen.cpp)
+add_executable(classicBasic compiler/src/main.cpp ${antlrGrammar} compiler/src/codeGen.h compiler/src/errorListener.h compiler/src/codeGen.cpp stdlib/cb_stdio.c)
 
 llvm_map_components_to_libnames(llvm_libs Core Interpreter MC MCJIT Support nativecodegen IRReader)
 target_link_libraries(classicBasic antlr4-runtime ${llvm_libs} )

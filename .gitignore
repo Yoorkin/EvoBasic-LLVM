@@ -5,3 +5,5 @@ build
 cmake-build-debug
 main
 antlr
+compiler/antlr
+test.txt
