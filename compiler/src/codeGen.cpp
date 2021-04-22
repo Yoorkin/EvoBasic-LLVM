@@ -263,7 +263,7 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     for(auto& arg:arguments){
         param->setName(arg.name);
         auto inst = builder.CreateAlloca(arg.type,nullptr);
-        builder.CreateStore(inst,param);
+        builder.CreateStore(param,inst);
         unit.addInst(arg.token,inst);
         param++;
     }
@@ -289,7 +289,7 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
     for(auto& arg:arguments){
         param->setName(arg.name);
         auto inst = builder.CreateAlloca(arg.type,nullptr);
-        builder.CreateStore(inst,param);
+        builder.CreateStore(param,inst);
         unit.addInst(arg.token,inst);
         param++;
     }
