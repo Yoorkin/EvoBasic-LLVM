@@ -6,5 +6,7 @@ cmake-build-debug
 main
 antlr
 compiler/antlr
+compiler/cmake-build-debug
+test/cmake-build-debug
 runtime/cmake-build-debug
 cmake-build-debug/test.txt

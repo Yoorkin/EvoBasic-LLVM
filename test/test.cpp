@@ -6,38 +6,43 @@
 #include<sstream>
 #include"src/codeGen.h"
 #include"src/JIT.h"
+#include"testHelper.h"
 using namespace std;
-//
-//void confgure(){
-//    std::ifstream stream;
-//    stream.open("./test.txt");
-//    CodeGenerator generator;
-//    auto mainUnit = generator.CreateUnit("main",stream,cout);
-//    mainUnit->generate();
-//    JIT jit;
-//    jit.addUnit(mainUnit);
-//    int(*ptr)(void) = jit.getFunctionAddress<int()>("add");
-//}
 
-
-bool test(){
+TestCase(getReturn100){
     string code;
     code = code+"function add()as integer\r\n"+
             "return 100\r\n"+
             "end function\r\n";
     stringstream stream(code);
     CodeGenerator generator;
-    auto mainUnit = generator.CreateUnit("main",stream,cout);
     auto unit=generator.CreateUnit("test",stream,cout);
     unit->generate();
     unit->printIR();
     JIT jit;
     jit.addUnit(unit);
     auto func = jit.getFunctionAddress<int(void)>("add");
-    assert(func()==100);
+    return func()==100;
+}
+
+TestCase(passInteger){
+    string code;
+    code = code+"function pass(a as integer)as integer\n"+
+            "return a\n end function\n";
+    stringstream stream(code);
+    CodeGenerator generator;
+    auto unit=generator.CreateUnit("test",stream,cout);
+    unit->generate();
+    unit->printIR();
+    JIT jit;
+    jit.addUnit(unit);
+    auto func =jit.getFunctionAddress<int(int)>("pass");
+    return func(200)==200;
 }
 
 int main(){
-
-    test();
+    Begin;
+    Test(getReturn100);
+    Test(passInteger);
+    Report;
 }
