@@ -110,7 +110,6 @@ antlrcpp::Any Visitor::visitForStmt(BasicParser::ForStmtContext *ctx){
     Value* iter;
     Type* type;
     string name = strToLower(ctx->iterator->getText());
-    if(ctx->)
     if(ctx->Dim()==nullptr){
         iter=unit.findInst(ctx->iterator);
         type=((AllocaInst*)iter)->getAllocatedType();
@@ -146,6 +145,12 @@ antlrcpp::Any Visitor::visitForStmt(BasicParser::ForStmtContext *ctx){
     builder.CreateBr(condition);
 
     builder.SetInsertPoint(after);
+
+    if(ctx->nextFlag!=nullptr){
+        string flag=strToLower(ctx->nextFlag->getText());
+        if(name!=flag)
+            reporter.report(ctx->nextFlag,"Unexpected next flag '"+flag+"',require '"+name+"'");
+    }
     frame.back().EndLayer();
     return nullptr;
 }
