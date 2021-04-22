@@ -24,6 +24,9 @@ void GenerateUnit::generate(){
     parser.addErrorListener(&errorListener);
     tree::ParseTree *tree = parser.moduleBody();
     visitor->visit(tree);
+    //mod.print(outs(),nullptr,false);
+}
+void GenerateUnit::printIR(){
     mod.print(outs(),nullptr,false);
 }
 
@@ -297,7 +300,7 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
 //====================================== call statement =========================================
 antlrcpp::Any Visitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
     AllocaInst* inst = unit.findInst(ctx->ID()->getSymbol());
-    return builder.CreateLoad(inst->getType(),inst);
+    return (Value*)builder.CreateLoad(inst->getAllocatedType(),inst);
 }
 
 antlrcpp::Any Visitor::visitArgPassValue(BasicParser::ArgPassValueContext *ctx){

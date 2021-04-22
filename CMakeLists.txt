@@ -1,39 +1,21 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(classicBasic VERSION 0.1.0)
-set(CMAKE_CXX_STANDARD 14)
-#生成antlr cpp代码
-execute_process(COMMAND cd compiler/grammar &&
-            antlr4 Basic.g4 -o ../antlr -Dlanguage=Cpp -visitor -no-listener &&
-            cd ../../)
 
-add_subdirectory(runtime)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(ANTLR_INCLUDE_DIRS "/usr/include/antlr4-runtime")
 
 find_package(LLVM REQUIRED CONFIG)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
-#set(CMAKE_MAKE_PROGRAM"${CMAKE_MAKE_PROGRAM} -j8")
-
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "${CMAKE_CXX_FLAGS}")
-    
-file(COPY test.txt DESTINATION ${PROJECT_BINARY_DIR})
 
-include(CTest)
+include_directories(${ANTLR_INCLUDE_DIRS} compiler)
+
+add_subdirectory(runtime ${CMAKE_BINARY_DIR}/runtime)
+add_subdirectory(compiler ${CMAKE_BINARY_DIR}/compiler)
+add_subdirectory(test ${CMAKE_BINARY_DIR}/test)
+
 enable_testing()
-
-include_directories("/usr/include/antlr4-runtime" ${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
-add_compile_definitions(LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
-
-file(GLOB antlrGrammar "./compiler/antlr/*.cpp")
-
-add_executable(classicBasic compiler/src/main.cpp ${antlrGrammar} compiler/src/codeGen.h compiler/src/errorListener.h compiler/src/codeGen.cpp runtime/cb_stdio.c)
-
-llvm_map_components_to_libnames(llvm_libs Core Interpreter MC MCJIT Support nativecodegen IRReader)
-target_link_libraries(classicBasic antlr4-runtime ${llvm_libs} )
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+set(UNITTEST_OUTPUT_DIR ${CMAKE_BINARY_DIR}/test)
+add_test(NAME test COMMAND cbTest WORKING_DIRECTORY ${UNITTEST_OUTPUT_DIR})

@@ -45,9 +45,11 @@ class Visitor;
 class StackFrame;
 class TypeTable;
 class CodeGenerator;
+class JIT;
 
 class GenerateUnit{
     friend Visitor;
+    friend JIT;
     llvm::Module mod;
     Visitor* visitor;
     list<StackFrame> frame;
@@ -60,6 +62,7 @@ class GenerateUnit{
 public:
     GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
     void generate();
+    void printIR();
     AllocaInst* findInst(Token* id);
     void addInst(Token* id,AllocaInst* inst);
     ~GenerateUnit(){

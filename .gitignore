@@ -7,4 +7,4 @@ main
 antlr
 compiler/antlr
 runtime/cmake-build-debug
-test.txt
+cmake-build-debug/test.txt

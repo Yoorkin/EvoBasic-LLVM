@@ -1,7 +1,7 @@
 #include<iostream>
 #include"codeGen.h"
-#include"errorListener.h"
 using namespace std;
+
 
 int main(int argc, const char* argv[]){
     std::ifstream stream;
@@ -9,4 +9,5 @@ int main(int argc, const char* argv[]){
     CodeGenerator generator;
     auto mainUnit = generator.CreateUnit("main",stream,cout);
     mainUnit->generate();
+
 }

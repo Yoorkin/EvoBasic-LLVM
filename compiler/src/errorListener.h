@@ -4,7 +4,7 @@
 
 #ifndef CLASSICBASIC_ERRORLISTENER_H
 #define CLASSICBASIC_ERRORLISTENER_H
-#include<antlr4-runtime.h>
+#include<antlr4-runtime/antlr4-runtime.h>
 #include<antlr4-runtime/BaseErrorListener.h>
 #include<ostream>
 #include<map>
