@@ -33,7 +33,7 @@
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include<llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/Interpreter.h>
-
+#include"codeGen.h"
 using namespace std;
 class JIT{
     ExecutionEngine* engine=nullptr;
@@ -48,7 +48,7 @@ public:
     }
     template<typename FunctionT>
     FunctionT* getFunctionAddress(string name){
-        return (FunctionT*)engine->getFunctionAddress(name);
+        return (FunctionT*)engine->getFunctionAddress(strToLower(name));
     }
 };
 #endif //CLASSICBASIC_JIT_H
