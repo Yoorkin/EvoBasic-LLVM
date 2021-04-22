@@ -67,8 +67,8 @@ exp: '-' right=exp                                      #NegOp
     | Boolean                                           #Boolean
     ;
 
-foreachStmt: For Each (iterator=exp|Dim name=ID (As type=varType)?) In group=exp LineEnd line* Next nextFlag=exp? LineEnd;
-forStmt: For (iterator=exp|Dim name=ID (As type=varType)?) '=' begin=exp To end=exp (Step step=exp)? LineEnd line* Next nextFlag=exp? LineEnd;
+foreachStmt: For Each (iterator=exp|Dim name=ID (As type=varType)?) In group=exp LineEnd block+=line* Next nextFlag=ID? LineEnd;
+forStmt: For (iterator=ID|Dim iterator=ID (As type=varType)?) '=' begin=exp To end=exp (Step step=exp)? LineEnd block+=line* Next nextFlag=ID? LineEnd;
 
 ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd           #SingleLineIf
         | If ifBlock (ElseIf ifBlock)* (Else LineEnd elseBlock+=line*)? End If LineEnd    #MutiLineIf

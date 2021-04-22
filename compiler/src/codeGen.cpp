@@ -16,6 +16,7 @@ GenerateUnit::GenerateUnit(CodeGenerator& gen,string path,string name,istream& i
 }
 
 void GenerateUnit::generate(){
+    gen.reporter=&this->reporter;
     ANTLRInputStream input(in);
     BasicLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
@@ -24,6 +25,7 @@ void GenerateUnit::generate(){
     parser.addErrorListener(&errorListener);
     tree::ParseTree *tree = parser.moduleBody();
     visitor->visit(tree);
+    gen.reporter=nullptr;
     //mod.print(outs(),nullptr,false);
 }
 void GenerateUnit::printIR(){
@@ -73,7 +75,10 @@ Type* TypeTable::find(Token* type){
     string name = strToLower(type->getText());
     auto builtIn = builtInTypes.find(name);
     if(builtIn!=builtInTypes.end())return builtIn->second;
-    gen.reporter->report(type,"unexpected type "+type->getText());
+    if(gen.reporter!=nullptr)
+        gen.reporter->report(type,"unexpected type "+type->getText());
+    else
+        throw "Can not find reporter.\n";
     return Type::getInt32Ty(gen.context);
 }
 
@@ -99,6 +104,52 @@ Type* TypeTable::find(Token* type){
 Visitor::Visitor(GenerateUnit& unit)
 :typeTable(*unit.gen.typeTable),reporter(unit.reporter),frame(unit.frame),context(unit.context),mod(unit.mod),builder(unit.context),unit(unit){
 }
+
+antlrcpp::Any Visitor::visitForStmt(BasicParser::ForStmtContext *ctx){
+    frame.back().BeginLayer("For");
+    Value* iter;
+    Type* type;
+    string name = strToLower(ctx->iterator->getText());
+    if(ctx->)
+    if(ctx->Dim()==nullptr){
+        iter=unit.findInst(ctx->iterator);
+        type=((AllocaInst*)iter)->getAllocatedType();
+    }
+    else{
+        type = visit(ctx->type).as<Type*>();//TODO: 支持数组与结构体
+        iter = builder.CreateAlloca(type,nullptr,name);
+        unit.addInst(ctx->iterator,(AllocaInst*)iter);
+    }
+
+    auto begin=visit(ctx->begin).as<Value*>(),span=visit(ctx->end).as<Value*>();
+    auto end=builder.CreateAdd(begin,span);
+    Value* step;
+    if(ctx->Step() == nullptr) step=ConstantInt::get(Type::getInt32Ty(context),1);
+    else step=visit(ctx->step).as<Value*>();
+    builder.CreateStore(begin,iter);
+
+
+    auto condition = BasicBlock::Create(context,frame.back().getBlockName("condition"),frame.back().function);
+    auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
+    auto after = BasicBlock::Create(context,frame.back().getBlockName("After"),frame.back().function);
+    builder.CreateBr(loop);
+
+    builder.SetInsertPoint(condition);
+    auto val = builder.CreateLoad(type,iter);
+    auto added = builder.CreateAdd(val,step);
+    builder.CreateStore(added,iter);
+    auto cond = builder.CreateCmp(CmpInst::Predicate::ICMP_SLE,added,end);
+    builder.CreateCondBr(cond,loop,after);
+
+    builder.SetInsertPoint(loop);
+    visitBlock(ctx->block);
+    builder.CreateBr(condition);
+
+    builder.SetInsertPoint(after);
+    frame.back().EndLayer();
+    return nullptr;
+}
+
 antlrcpp::Any Visitor::visitDoWhile(BasicParser::DoWhileContext *ctx){
     frame.back().BeginLayer("Loop");
     auto condition = visit(ctx->exp()).as<Value*>();

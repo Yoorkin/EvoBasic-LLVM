@@ -156,6 +156,7 @@ public:
 //    template<typename T>
 //    void storeValue(Token* token,T value);
     //=========================================== flow-control =================================================
+    virtual antlrcpp::Any visitForStmt(BasicParser::ForStmtContext *ctx) override;
     virtual antlrcpp::Any visitDoWhile(BasicParser::DoWhileContext *ctx) override;
     virtual antlrcpp::Any visitDoUntil(BasicParser::DoUntilContext *ctx) override;
     virtual antlrcpp::Any visitLoopUntil(BasicParser::LoopUntilContext *ctx) override;

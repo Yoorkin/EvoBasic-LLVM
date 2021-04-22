@@ -63,14 +63,16 @@ TestCase(forLoop){
     string code=R"code(
     function forLoop(i as integer)as integer
         dim a as integer
-        for a=0 to 9
+        for a=0 to 9 step 2
             i=i+1
         next
+        return i
     end function
+
     )code";
     ConfigureModule("forLoop",code);
     auto func=jit.getFunctionAddress<int(int)>("forLoop");
-    return func(5)==15;
+    return func(5)==10;
 }
 
 TestCase(returnBigger) {

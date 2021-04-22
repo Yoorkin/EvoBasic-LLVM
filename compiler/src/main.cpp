@@ -9,5 +9,5 @@ int main(int argc, const char* argv[]){
     CodeGenerator generator;
     auto mainUnit = generator.CreateUnit("main",stream,cout);
     mainUnit->generate();
-
+    mainUnit->printIR();
 }
