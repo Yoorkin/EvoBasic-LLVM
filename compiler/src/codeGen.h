@@ -64,6 +64,7 @@ public:
     void generate();
     void printIR();
     AllocaInst* findInst(Token* id);
+    Function* findFunction(Token* id);
     void addInst(Token* id,AllocaInst* inst);
     ~GenerateUnit(){
         delete visitor;

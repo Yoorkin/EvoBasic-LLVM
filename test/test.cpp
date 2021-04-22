@@ -80,11 +80,11 @@ TestCase(returnBigger) {
     function returnBigger(a as integer,b as integer)as integer
         dim c as integer
         if a>b then
-            c = a
+            return a
         else
-            c = b
+            return b
         end if
-        'return c
+        return c
     end function
     )code";
     ConfigureModule("returnBigger", code);
@@ -92,6 +92,36 @@ TestCase(returnBigger) {
     return func(10, 0) == 10 && func(100, 99999) == 99999;
 }
 
+TestCase(functionCall){
+    string code = R"code(
+    function add()as integer
+        return 10
+    end function
+    function functionCall(x as integer)as integer
+        return add+5
+    end function
+    )code";
+    ConfigureModule("functionCall",code);
+    auto f=jit.getFunctionAddress<int(int)>("functionCall");
+    return f(20)==35;
+}
+
+TestCase(Fibonacci){
+    string code = R"code(
+    function Fibonacci(x as integer)as integer
+        If x=0 then
+            return 0
+        elseIf x=1 then
+            return 1
+        else
+            return Fibonacci(x-1)+Fibonacci(x-2)
+        End If
+    end function
+    )code";
+    ConfigureModule("Fibonacci",code);
+    auto f=jit.getFunctionAddress<int(int)>("Fibonacci");
+    return f(0)==0 && f(1)==1 && f(4)==3;
+}
 
 int main(){
     Begin;
@@ -101,6 +131,8 @@ int main(){
     Test(plus10);
     Test(variableAssignReturn);
     Test(forLoop);
-    //Test(returnBigger);
+    Test(returnBigger);
+    Test(functionCall);
+    Test(Fibonacci);
     Report;
 }

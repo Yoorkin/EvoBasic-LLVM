@@ -32,6 +32,12 @@ void GenerateUnit::printIR(){
     mod.print(outs(),nullptr,false);
 }
 
+Function* GenerateUnit::findFunction(Token* id){
+    string name = strToLower(id->getText());
+    Function* func = mod.getFunction(name);
+    return func;
+}
+
 AllocaInst* GenerateUnit::findInst(Token* id){
     string name = strToLower(id->getText());
     for(auto iter=frame.rbegin();iter!=frame.rend();iter++){
@@ -40,7 +46,6 @@ AllocaInst* GenerateUnit::findInst(Token* id){
             return var->second;
         }
     }
-    reporter.report(id,"Can not find variable "+name);
     return nullptr;
 }
 
@@ -356,7 +361,15 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
 //====================================== call statement =========================================
 antlrcpp::Any Visitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
     AllocaInst* inst = unit.findInst(ctx->ID()->getSymbol());
-    return (Value*)builder.CreateLoad(inst->getAllocatedType(),inst);
+    if(inst==nullptr){
+        Function* func = unit.findFunction(ctx->ID()->getSymbol());
+        if(func == nullptr)
+            reporter.report(ctx->ID()->getSymbol(),"'"+ctx->ID()->getSymbol()->getText()+"' is undefined");
+        vector<Value*> args;
+        //TODO 读取参数
+        return (Value*)builder.CreateCall(func,args); //TODO 需要从错误中恢复
+    }
+    else return (Value*)builder.CreateLoad(inst->getAllocatedType(),inst);
 }
 
 antlrcpp::Any Visitor::visitArgPassValue(BasicParser::ArgPassValueContext *ctx){
