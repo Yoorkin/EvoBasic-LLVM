@@ -96,9 +96,11 @@ public:
 class TypeTable{
     CodeGenerator& gen;
     map<string,llvm::Type*> builtInTypes;
+    map<string,Value*> defaultValue;
 public:
     explicit TypeTable(CodeGenerator& generator);
     Type* find(Token* type);
+    Value* getDefaultValue(Token* type);
 };
 
 class ArgumentInfo{
@@ -121,9 +123,13 @@ class StackFrame{
     stack<string> layers;
     map<string,AllocaInst*> varTable;
 public:
+    enum Enum{BasicFunction,BasicSub,BasicLoop};
+    stack<Enum> stmtState;//标记当前所在语句，用于语法检查
+    BasicBlock* afterBlock=nullptr; //当前状态下跳出语句（函数、过程、循环）所需要最后执行的block
     llvm::Function* function;
-    StackFrame(llvm::Function* function){
+    StackFrame(llvm::Function* function,bool isSub){
         this->function=function;
+        stmtState.push(isSub?BasicSub:BasicFunction);
         layers.push("");
     }
     void BeginLayer(string prefix){
@@ -166,6 +172,7 @@ public:
     virtual antlrcpp::Any visitSingleLineIf(BasicParser::SingleLineIfContext *ctx) override;
     virtual antlrcpp::Any visitMutiLineIf(BasicParser::MutiLineIfContext *ctx) override;
     virtual antlrcpp::Any visitIfBlock(BasicParser::IfBlockContext *ctx) override;
+    virtual antlrcpp::Any visitExitStmt(BasicParser::ExitStmtContext *ctx) override;
     //============================================ declare ====================================================
     virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override;
     virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override;

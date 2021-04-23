@@ -30,8 +30,8 @@ statement:forStmt
         ;
 
 callStmt: Call ID '('(passArg(','passArg)*) ')' LineEnd
-        | Call ID ('('')')? LineEnd
-        | ID (passArg(','passArg)*)  LineEnd
+        | Call ID '('')' LineEnd
+        | ID  (passArg(','passArg)*)  LineEnd
         | ID LineEnd
         ;
 

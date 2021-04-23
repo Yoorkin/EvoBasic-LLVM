@@ -73,6 +73,14 @@ TypeTable::TypeTable(CodeGenerator& generator):gen(generator){
             {"long",Type::getInt64Ty(gen.context)},
             {"byte",Type::getInt8Ty(gen.context)}
         });
+        defaultValue.operator=({
+           {"integer",ConstantInt::get(builtInTypes["integer"],1)},
+           {"single",ConstantFP::get(builtInTypes["single"],0)},
+           {"double",ConstantFP::get(builtInTypes["double"],0)},
+           {"boolean",ConstantInt::get(builtInTypes["boolean"],0)},
+           {"long",ConstantInt::get(builtInTypes["long"],0)},
+           {"byte",ConstantInt::get(builtInTypes["byte"],0)}
+        });
 }
 
 
@@ -85,6 +93,16 @@ Type* TypeTable::find(Token* type){
     else
         throw "Can not find reporter.\n";
     return Type::getInt32Ty(gen.context);
+}
+
+Value* TypeTable::getDefaultValue(Token* type){
+    string name = strToLower(type->getText());
+    auto ret = defaultValue.find(name);
+    if(ret==defaultValue.end()){
+        //必不可以是找不到默认值的情况
+        gen.reporter->report(type,"默认初始化失败，找不到该类型的默认值");
+    }
+    return ret->second;
 }
 
 //===================================== visitor =========================================================================
@@ -105,6 +123,10 @@ Type* TypeTable::find(Token* type){
 //    reporter.report(token->getLine(),token->getCharPositionInLine(),"Can not find variable "+name);
 //    return nullptr;
 //}
+
+antlrcpp::Any Visitor::visitExitStmt(BasicParser::ExitStmtContext *ctx){
+    unit.
+}
 
 Visitor::Visitor(GenerateUnit& unit)
 :typeTable(*unit.gen.typeTable),reporter(unit.reporter),frame(unit.frame),context(unit.context),mod(unit.mod),builder(unit.context),unit(unit){
@@ -317,9 +339,14 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     Type* retType = typeTable.find(ctx->returnType);
     FunctionType *type = FunctionType::get(retType,paramList,false);
     auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-    frame.push_back(StackFrame(function));
+    frame.push_back(StackFrame(function,false));
     auto block = BasicBlock::Create(context, "EntryBlock", function);
     builder.SetInsertPoint(block);
+
+    //将函数名作为变量存入栈表,变量类型为返回类型
+    auto retInst = builder.CreateAlloca(retType);
+    unit.addInst(ctx->name,retInst);
+
     auto param = function->arg_begin();
     for(auto& arg:arguments){
         param->setName(arg.name);
@@ -329,6 +356,13 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
         param++;
     }
     visitBlock(ctx->block);
+
+    //在函数结尾将函数名同名变量返回
+    auto retVal = builder.CreateLoad(retType,retInst);
+    builder.CreateRet(retVal);
+
+    builder.CreateRet();
+
     frame.pop_back();
     return function;
 }
@@ -343,7 +377,7 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
     FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
     string funcionName = ctx->name->getText();
     auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-    frame.push_back(StackFrame(function));
+    frame.push_back(StackFrame(function,true));
     auto block = BasicBlock::Create(context, "EntryBlock", function);
     builder.SetInsertPoint(block);
     auto param = function->arg_begin();
@@ -355,6 +389,7 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
         param++;
     }
     visitBlock(ctx->block);
+    builder.CreateRetVoid();
     frame.pop_back();
     return function;
 }
