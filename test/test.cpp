@@ -157,6 +157,17 @@ TestCase(Fibonacci){
     return f(0)==0 && f(1)==1 && f(4)==3;
 }
 
+TestCase(nonReturn){
+    string code = R"code(
+    function nonReturn(x as integer)as integer
+
+    end function
+    )code";
+    ConfigureModule("Fibonacci",code);
+    auto f=jit.getFunctionAddress<int(int)>("nonReturn");
+    return f(10)==0;
+}
+
 int main(){
     Begin;
     Test(getReturn100);
@@ -169,5 +180,6 @@ int main(){
     Test(functionCall);
     Test(singleIF);
     Test(mutiIF);
+    Test(nonReturn);
     Report;
 }

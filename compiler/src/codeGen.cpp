@@ -353,17 +353,24 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     }
     visitBlock(ctx->block);
 
+    auto funcEnd = BasicBlock::Create(context,"FunctionEnd",frame.back().function);
+    builder.CreateBr(funcEnd);
+    builder.SetInsertPoint(funcEnd);
     //TODO:如果函数没有返回，在函数结尾将返回默认值
-    //builder.CreateRet(typeTable.getDefaultValue(ctx->returnType));
-    builder.CreateRetVoid();//此处返回void可能是未定义行为！
+    builder.CreateRet(typeTable.getDefaultValue(ctx->returnType));
+
+    //builder.CreateRetVoid();//此处返回void可能是未定义行为！
     /* 草 我不知道为什么返回defaultTable里的Value
      * 在JIT里跑会出现奇怪的segmentation fault,要么就
      * : CommandLine Error: Option 'propagate-attrs' registered more than once!
      * LLVM ERROR: inconsistency in registered CommandLine options
      * 而且生成出来同样的IR用lldb调试是没有问题的
      * 所以先return void吧 反正这个代码也执行不到
+     *
+     * 第二次编辑：
+     * 增加了一个FunctionEnd BasicBlock专门用于返回默认值
      */
-    frame.pop_back();
+        frame.pop_back();
     return function;
 }
 
