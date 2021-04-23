@@ -108,6 +108,18 @@ TestCase(functionCall){
     return f(20)==30;
 }
 
+TestCase(subCall){
+    string code = R"code(
+    sub subCall()
+
+    end sub
+    )code";
+    ConfigureModule("subCall",code);
+    auto f=jit.getFunctionAddress<void()>("subCall");
+    f();
+    return true;
+}
+
 TestCase(singleIF){
     string code = R"code(
     function isNeg(x as integer)as Boolean
@@ -129,6 +141,7 @@ TestCase(mutiIF){
             return 1
         elseIf x=1 then
             return 2
+            return 114514
         else
             return 0
         End If
@@ -178,8 +191,9 @@ int main(){
     Test(forLoop);
     Test(returnBigger);
     Test(functionCall);
+    Test(subCall);
     Test(singleIF);
     Test(mutiIF);
     Test(nonReturn);
-    Report;
+    Report("BasicStmtTest");
 }
