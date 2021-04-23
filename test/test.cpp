@@ -99,12 +99,12 @@ TestCase(functionCall){
     end function
 
     function functionCall(x as integer)as integer
-        return add+x
+        dim a as integer
+        return x+add
     end function
     )code";
     ConfigureModule("functionCall",code);
     auto f=jit.getFunctionAddress<int(int)>("functionCall");
-    cout<<"functionCall result:"<<f(20)<<endl;
     return f(20)==30;
 }
 
@@ -118,7 +118,7 @@ TestCase(singleIF){
     end function
     )code";
     ConfigureModule("isNeg",code);
-    auto f=jit.getFunctionAddress<int(int)>("isNeg");
+    auto f=jit.getFunctionAddress<bool(int)>("isNeg");
     return f(0)==false && f(-10)==true && f(4)==false;
 }
 
@@ -168,6 +168,6 @@ int main(){
     Test(returnBigger);
     Test(functionCall);
     Test(singleIF);
-    //Test(Fibonacci);
+    Test(mutiIF);
     Report;
 }

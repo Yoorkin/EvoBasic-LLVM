@@ -74,7 +74,7 @@ TypeTable::TypeTable(CodeGenerator& generator):gen(generator){
             {"byte",Type::getInt8Ty(gen.context)}
         });
         defaultValue.operator=({
-           {"integer",ConstantInt::get(builtInTypes["integer"],1)},
+           {"integer",ConstantInt::get(builtInTypes["integer"],0)},
            {"single",ConstantFP::get(builtInTypes["single"],0)},
            {"double",ConstantFP::get(builtInTypes["double"],0)},
            {"boolean",ConstantInt::get(builtInTypes["boolean"],0)},
@@ -125,7 +125,7 @@ Value* TypeTable::getDefaultValue(Token* type){
 //}
 
 antlrcpp::Any Visitor::visitExitStmt(BasicParser::ExitStmtContext *ctx){
-    unit.
+    return nullptr;
 }
 
 Visitor::Visitor(GenerateUnit& unit)
@@ -343,10 +343,6 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     auto block = BasicBlock::Create(context, "EntryBlock", function);
     builder.SetInsertPoint(block);
 
-    //将函数名作为变量存入栈表,变量类型为返回类型
-    auto retInst = builder.CreateAlloca(retType);
-    unit.addInst(ctx->name,retInst);
-
     auto param = function->arg_begin();
     for(auto& arg:arguments){
         param->setName(arg.name);
@@ -357,12 +353,16 @@ antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     }
     visitBlock(ctx->block);
 
-    //在函数结尾将函数名同名变量返回
-    auto retVal = builder.CreateLoad(retType,retInst);
-    builder.CreateRet(retVal);
-
-    builder.CreateRet();
-
+    //TODO:如果函数没有返回，在函数结尾将返回默认值
+    //builder.CreateRet(typeTable.getDefaultValue(ctx->returnType));
+    builder.CreateRetVoid();//此处返回void可能是未定义行为！
+    /* 草 我不知道为什么返回defaultTable里的Value
+     * 在JIT里跑会出现奇怪的segmentation fault,要么就
+     * : CommandLine Error: Option 'propagate-attrs' registered more than once!
+     * LLVM ERROR: inconsistency in registered CommandLine options
+     * 而且生成出来同样的IR用lldb调试是没有问题的
+     * 所以先return void吧 反正这个代码也执行不到
+     */
     frame.pop_back();
     return function;
 }
