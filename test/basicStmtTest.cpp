@@ -174,6 +174,7 @@ TestCase(nonReturn){
     string code = R"code(
     function nonReturn(x as integer)as integer
 
+
     end function
     )code";
     ConfigureModule("Fibonacci",code);
