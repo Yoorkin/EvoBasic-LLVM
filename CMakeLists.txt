@@ -8,6 +8,7 @@ set(ANTLR_INCLUDE_DIRS "/usr/include/antlr4-runtime")
 find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Using LLVM Include from: ${LLVM_INCLUDE_DIRS}")
 message(STATUS "${CMAKE_CXX_FLAGS}")
 
 include_directories(${ANTLR_INCLUDE_DIRS} compiler)
