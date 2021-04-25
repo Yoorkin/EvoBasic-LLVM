@@ -7,7 +7,7 @@
 本阶段将尝试复刻vb6的基础语法。
 
 # 构建
-见 [如何构建](wiki/HowToBuild)
+见 [如何构建](../../wiki/HowToBuild)
 
 # 文档
-见 [classicBasic wiki](https://github.com/Yoorkin/classicBasic/wiki)
+见 [classicBasic wiki](../../wiki)
