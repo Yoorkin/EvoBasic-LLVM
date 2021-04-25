@@ -1,20 +1,19 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(classicBasic VERSION 0.1.0)
-
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-message(
-        FATAL_ERROR "Vcpkg toolchain file undefined. "
-        "please add argument like:\n"
-        "-DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake\n"
-        "For more information in http://basdf.net"
-)
-else()
-
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
-message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
-include(${CMAKE_TOOLCHAIN_FILE})
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+message(
+        WARNING "Vcpkg toolchain file undefined. "
+        "please add argument like:\n"
+        "   -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake\n"
+        "For more information in https://github.com/Yoorkin/classicBasic/wiki/HowToBuild"
+)
+else()
+    message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+    include(${CMAKE_TOOLCHAIN_FILE})
+endif()
 
 find_library(ANTLR_LIB NAMES libantlr4-runtime.so libantlr4-runtime.a PATH_SUFFIXES vcpkg)
 find_path(ANTLR_INCLUDE NAMES antlr4-runtime.h PATH_SUFFIXES vcpkg antlr4-runtime)
@@ -47,5 +46,3 @@ add_subdirectory(test ${CMAKE_BINARY_DIR}/test)
 enable_testing()
 set(UNITTEST_OUTPUT_DIR ${CMAKE_BINARY_DIR}/test)
 add_test(NAME test COMMAND cbTest WORKING_DIRECTORY ${UNITTEST_OUTPUT_DIR})
-
-endif()
