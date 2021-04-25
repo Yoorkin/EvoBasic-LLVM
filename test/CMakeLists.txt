@@ -1,6 +1,5 @@
 #compiler test
-
-message(STATUS "Test include ${INCLUDE_DIRS}")
+#message(STATUS "Test include ${INCLUDE_DIRS}")
 
 file(GLOB COMPILER_SOURCE "${CMAKE_SOURCE_DIR}/compiler/antlr/*.cpp" "${CMAKE_SOURCE_DIR}/compiler/src/codeGen.cpp")
 
