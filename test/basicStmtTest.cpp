@@ -223,12 +223,41 @@ TestCase(doUntilLoop){
     return f(10)==100 && f(-100)==100;
 }
 
+TestCase(doLoopUntil){
+    string code = R"code(
+    function doLoopUntil(x as integer)as integer
+        do
+            x=x+1
+        loop until x=100
+        return x
+    end function
+    )code";
+    ConfigureModule("doLoopUntil",code);
+    auto f=jit.getFunctionAddress<int(int)>("doLoopUntil");
+    return f(10)==100 && f(-100)==100;
+}
+
+TestCase(doLoopWhile){
+    string code = R"code(
+    function doLoopWhile(x as integer)as integer
+        do
+            x=x+1
+        loop while x<100
+        return x
+    end function
+    )code";
+    ConfigureModule("doLoopWhile",code);
+    auto f=jit.getFunctionAddress<int(int)>("doLoopWhile");
+    return f(10)==100 && f(-100)==100;
+}
+
+
 TestCase(doLoopUntilRunOnce){
     string code = R"code(
     function doLoopUntilRunOnce(x as integer)as integer
         do
             x=50
-        until true
+        loop until true
         return x
     end function
     )code";
@@ -242,7 +271,7 @@ TestCase(doLoopWhileRunOnce){
     function doLoopWhileRunOnce(x as integer)as integer
         do
             x=50
-        while false
+        loop while false
         return x
     end function
     )code";
@@ -269,6 +298,8 @@ int main(){
     Test(nonReturn);
     Test(doWhileLoop);
     Test(doUntilLoop);
+    Test(doLoopWhile);
+    Test(doLoopUntil);
     Test(doLoopUntilRunOnce);
     Test(doLoopWhileRunOnce);
     Report("BasicStmtTest");

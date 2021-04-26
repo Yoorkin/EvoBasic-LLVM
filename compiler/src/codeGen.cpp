@@ -184,12 +184,12 @@ antlrcpp::Any Visitor::visitForStmt(BasicParser::ForStmtContext *ctx){
 
 antlrcpp::Any Visitor::visitDoWhile(BasicParser::DoWhileContext *ctx){
     frame.back().BeginLayer("Loop");
-    auto condition = visit(ctx->exp()).as<Value*>();
     auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
     auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
     auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(condBlock);
+    auto condition = visit(ctx->exp()).as<Value*>();
     builder.CreateCondBr(condition,loop,loopEnd);
     builder.SetInsertPoint(loop);
     visitBlock(ctx->block);
@@ -201,12 +201,12 @@ antlrcpp::Any Visitor::visitDoWhile(BasicParser::DoWhileContext *ctx){
 
 antlrcpp::Any Visitor::visitDoUntil(BasicParser::DoUntilContext *ctx){
     frame.back().BeginLayer("Loop");
-    auto condition = visit(ctx->exp()).as<Value*>();
     auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
     auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
     auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(condBlock);
     builder.SetInsertPoint(condBlock);
+    auto condition = visit(ctx->exp()).as<Value*>();
     builder.CreateCondBr(condition,loopEnd,loop);
     builder.SetInsertPoint(loop);
     visitBlock(ctx->block);
@@ -218,12 +218,12 @@ antlrcpp::Any Visitor::visitDoUntil(BasicParser::DoUntilContext *ctx){
 
 antlrcpp::Any Visitor::visitLoopUntil(BasicParser::LoopUntilContext *ctx){
     frame.back().BeginLayer("Loop");
-    auto condition = visit(ctx->exp()).as<Value*>();
     auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
     auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
     auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(loop);
     builder.SetInsertPoint(condBlock);
+    auto condition = visit(ctx->exp()).as<Value*>();
     builder.CreateCondBr(condition,loopEnd,loop);
     builder.SetInsertPoint(loop);
     visitBlock(ctx->block);
@@ -235,12 +235,12 @@ antlrcpp::Any Visitor::visitLoopUntil(BasicParser::LoopUntilContext *ctx){
 
 antlrcpp::Any Visitor::visitLoopWhile(BasicParser::LoopWhileContext *ctx){
     frame.back().BeginLayer("Loop");
-    auto condition = visit(ctx->exp()).as<Value*>();
     auto loop = BasicBlock::Create(context,frame.back().getBlockName("Loop"),frame.back().function);
     auto condBlock = BasicBlock::Create(context,frame.back().getBlockName("LoopCondition"),frame.back().function);
     auto loopEnd = BasicBlock::Create(context,frame.back().getBlockName("LoopEnd"),frame.back().function);
     builder.CreateBr(loop);
     builder.SetInsertPoint(condBlock);
+    auto condition = visit(ctx->exp()).as<Value*>();
     builder.CreateCondBr(condition,loop,loopEnd);
     builder.SetInsertPoint(loop);
     visitBlock(ctx->block);
