@@ -22,8 +22,14 @@ message(STATUS "Using Antlr4 include from: ${ANTLR_INCLUDE}")
 
 execute_process(COMMAND cmake -P ${CMAKE_SOURCE_DIR}/cmake/antlrCppGen.cmake)
 
-find_package(LLVM 11.1 REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+if(NOT ${LLVM_PACKAGE_VERSION} EQUAL "11.1.0")
+    message(WARNING "The recommended LLVM version is 11.1.0 . This version of LLVM may have different interfaces and cause unexpected behavior."
+            "If you want to download and built LLVM 11.1.0 automatically,try:"
+            "cmake -P <path to this project>/cmake/configureLLVM.cmake"
+            )
+endif()
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using LLVM Library from: ${LLVM_LIBRARY_DIRS}")
 message(STATUS "Using LLVM Include from: ${LLVM_INCLUDE_DIRS}")
