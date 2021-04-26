@@ -16,7 +16,7 @@ else()
 endif()
 
 find_library(ANTLR_LIB NAMES libantlr4-runtime.so libantlr4-runtime.a PATH_SUFFIXES vcpkg)
-find_path(ANTLR_INCLUDE NAMES antlr4-runtime.h PATH_SUFFIXES vcpkg antlr4-runtime)
+find_path(ANTLR_INCLUDE NAMES antlr4-runtime/antlr4-runtime.h)
 message(STATUS "Using Antlr4 library: ${ANTLR_LIB}")
 message(STATUS "Using Antlr4 include from: ${ANTLR_INCLUDE}")
 
@@ -30,12 +30,13 @@ message(STATUS "Using LLVM Include from: ${LLVM_INCLUDE_DIRS}")
 
 set(ANTLR_INCLUDE_DIRS
         ${ANTLR_INCLUDE}
-        ${ANTLR_INCLUDE}/atn
-        ${ANTLR_INCLUDE}/dfa
-        ${ANTLR_INCLUDE}/misc
-        ${ANTLR_INCLUDE}/support
-        ${ANTLR_INCLUDE}/tree
-        ${ANTLR_INCLUDE}/utf8
+        ${ANTLR_INCLUDE}/antlr4-runtime
+        ${ANTLR_INCLUDE}/antlr4-runtime/atn
+        ${ANTLR_INCLUDE}/antlr4-runtime/dfa
+        ${ANTLR_INCLUDE}/antlr4-runtime/misc
+        ${ANTLR_INCLUDE}/antlr4-runtime/support
+        ${ANTLR_INCLUDE}/antlr4-runtime/tree
+        ${ANTLR_INCLUDE}/antlr4-runtime/utf8
 )
 set(INCLUDE_DIRS ${ANTLR_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} compiler)
 include_directories(${INCLUDE_DIRS})
