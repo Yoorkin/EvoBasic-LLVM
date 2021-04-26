@@ -4,7 +4,7 @@ project(cbCompiler VERSION 1.0.1)
 message(STATUS "Compiler include ${INCLUDE_DIRS}")
 
 add_definitions(${LLVM_DEFINITIONS})
-add_compile_definitions(LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
+add_definitions(-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 
 file(GLOB COMPILER_SOURCE "src/*.cpp" "antlr/*.cpp")
 add_executable(cbCompiler ${COMPILER_SOURCE})
