@@ -174,13 +174,84 @@ TestCase(nonReturn){
     string code = R"code(
     function nonReturn(x as integer)as integer
 
-
     end function
     )code";
     ConfigureModule("Fibonacci",code);
     auto f=jit.getFunctionAddress<int(int)>("nonReturn");
     return f(10)==0;
 }
+
+TestCase(whileLoop){
+    string code = R"code(
+    function whileLoop(x as integer)as integer
+        while x<100
+            x=x+1
+        loop
+        return x
+    end function
+    )code";
+    ConfigureModule("whileLoop",code);
+    auto f=jit.getFunctionAddress<int(int)>("whileLoop");
+    return f(10)==100 && f(-100)==100;
+}
+
+TestCase(doWhileLoop){
+    string code = R"code(
+    function doWhileLoop(x as integer)as integer
+        do while x<100
+            x=x+1
+        loop
+        return x
+    end function
+    )code";
+    ConfigureModule("doWhileLoop",code);
+    auto f=jit.getFunctionAddress<int(int)>("doWhileLoop");
+    return f(10)==100 && f(-100)==100;
+}
+
+TestCase(doUntilLoop){
+    string code = R"code(
+    function doUntilLoop(x as integer)as integer
+        do until x=100
+            x=x+1
+        loop
+        return x
+    end function
+    )code";
+    ConfigureModule("doUntilLoop",code);
+    auto f=jit.getFunctionAddress<int(int)>("doUntilLoop");
+    return f(10)==100 && f(-100)==100;
+}
+
+TestCase(doLoopUntilRunOnce){
+    string code = R"code(
+    function doLoopUntilRunOnce(x as integer)as integer
+        do
+            x=50
+        until true
+        return x
+    end function
+    )code";
+    ConfigureModule("doLoopUntilRunOnce",code);
+    auto f=jit.getFunctionAddress<int(int)>("doLoopUntilRunOnce");
+    return f(10)==50 && f(-100)==50;
+}
+
+TestCase(doLoopWhileRunOnce){
+    string code = R"code(
+    function doLoopWhileRunOnce(x as integer)as integer
+        do
+            x=50
+        while false
+        return x
+    end function
+    )code";
+    ConfigureModule("doLoopWhileRunOnce",code);
+    auto f=jit.getFunctionAddress<int(int)>("doLoopWhileRunOnce");
+    return f(10)==50 && f(-100)==50;
+}
+
+
 
 int main(){
     Begin;
@@ -196,5 +267,9 @@ int main(){
     Test(singleIF);
     Test(mutiIF);
     Test(nonReturn);
+    Test(doWhileLoop);
+    Test(doUntilLoop);
+    Test(doLoopUntilRunOnce);
+    Test(doLoopWhileRunOnce);
     Report("BasicStmtTest");
 }
