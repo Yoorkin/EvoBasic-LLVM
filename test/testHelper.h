@@ -4,6 +4,12 @@
 
 #ifndef CLASSICBASIC_TESTHELPER_H
 #define CLASSICBASIC_TESTHELPER_H
+#include<list>
+#include<string>
+struct TestCaseInfo{
+    string testName;
+    bool pass;
+};
 const string RedBegin = "\033[31m";
 const string YellowBegin = "\033[33m";
 const string ColorEnd = "\033[0m";
@@ -21,6 +27,7 @@ const string ColorEnd = "\033[0m";
                                     unit->printIR();\
                                     JIT jit;\
                                     jit.addUnit(unit)
+
 
 
 #endif //CLASSICBASIC_TESTHELPER_H

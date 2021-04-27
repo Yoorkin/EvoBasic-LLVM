@@ -408,6 +408,7 @@ antlrcpp::Any Visitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
         if(func == nullptr)
             reporter.report(ctx->ID()->getSymbol(),"'"+ctx->ID()->getSymbol()->getText()+"' is undefined");
         vector<Value*> args;
+
         //TODO 读取参数
         return (Value*)builder.CreateCall(func,args); //TODO 需要从错误中恢复
     }

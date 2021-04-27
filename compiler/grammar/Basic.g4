@@ -10,9 +10,13 @@ varDecl: Dim variable (','variable)* LineEnd;
 
 variable: name=ID As type=varType ('=' initial=exp)?;
 
-functionDecl:Function name=ID '(' (variable (','variable)*)? ')' As returnType=ID LineEnd block+=line* End Function LineEnd;
+parameter: passFlag=(Byref|Byval)? name=ID As type=varType #necessaryParameter
+         | Optional passFlag=(Byref|Byval)? name=ID As type=varType ('=' initial=exp)? #OptionalParameter
+         ;
 
-subDecl: Sub name=ID ('(' (variable (','variable)*)? ')')? LineEnd block+=line* End Sub LineEnd;
+functionDecl:Function name=ID '(' (parameter (','parameter)*)? ')' As returnType=ID LineEnd block+=line* End Function LineEnd;
+
+subDecl: Sub name=ID ('(' (parameter (','parameter)*)? ')')? LineEnd block+=line* End Sub LineEnd;
 
 varType: (ID);
 
