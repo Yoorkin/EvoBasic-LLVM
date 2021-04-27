@@ -63,9 +63,9 @@ public:
     GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
     void generate();
     void printIR();
-    AllocaInst* findInst(Token* id);
+    Value * findVariable(Token* id);
     Function* findFunction(Token* id);
-    void addInst(Token* id,AllocaInst* inst);
+    void addVariableInStack(Token* id, Value* variable);
     ~GenerateUnit(){
         delete visitor;
     }
@@ -96,20 +96,43 @@ public:
 class TypeTable{
     CodeGenerator& gen;
     map<string,llvm::Type*> builtInTypes;
+    map<string,llvm::Type*> builtInTypesPtr;
     map<string,Value*> defaultValue;
 public:
     explicit TypeTable(CodeGenerator& generator);
-    Type* find(Token* type);
+    Type* find(Token* type,bool ptr=false);
     Value* getDefaultValue(Token* type);
 };
 
-class ArgumentInfo{
+class ParameterInfo{
+public:
+    string name;
+    Type* type;
+    Token* token;
+    bool byref;
+    antlr4::tree::ParseTree* initial=nullptr;
+    ParameterInfo(BasicParser::NecessaryParameterContext *ctx,TypeTable& typeTable){
+        name=strToLower(ctx->name->getText());
+        this->token=ctx->name;
+        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
+        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
+    }
+    ParameterInfo(BasicParser::OptionalParameterContext *ctx,TypeTable& typeTable){
+        name=strToLower(ctx->name->getText());
+        this->token=ctx->name;
+        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
+        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
+        initial=ctx->initial;
+    }
+};
+
+class VariableInfo{
 public:
     string name;
     Type* type;
     Token* token;
     antlr4::tree::ParseTree* initial;
-    ArgumentInfo(BasicParser::VariableContext *ctx,TypeTable& typeTable){
+    VariableInfo(BasicParser::VariableContext *ctx, TypeTable& typeTable){
         token=ctx->name;
         name=strToLower(ctx->name->getText());
         type=typeTable.find(ctx->type->ID()->getSymbol());
@@ -121,7 +144,7 @@ class StackFrame{
     friend GenerateUnit;
     int index=0;
     stack<string> layers;
-    map<string,AllocaInst*> varTable;
+    map<string,Value*> varTable;
 public:
     enum Enum{BasicFunction,BasicSub,BasicLoop};
     stack<Enum> stmtState;//标记当前所在语句，用于语法检查
@@ -177,6 +200,8 @@ public:
     virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override;
     virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override;
     virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override;
+    virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override;
+    virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override;
     virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
     virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
     //====================================== call-statement =========================================

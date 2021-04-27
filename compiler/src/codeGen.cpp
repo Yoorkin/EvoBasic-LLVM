@@ -38,7 +38,7 @@ Function* GenerateUnit::findFunction(Token* id){
     return func;
 }
 
-AllocaInst* GenerateUnit::findInst(Token* id){
+Value* GenerateUnit::findVariable(Token* id){
     string name = strToLower(id->getText());
     for(auto iter=frame.rbegin();iter!=frame.rend();iter++){
         auto var=iter->varTable.find(name);
@@ -49,13 +49,13 @@ AllocaInst* GenerateUnit::findInst(Token* id){
     return nullptr;
 }
 
-void GenerateUnit::addInst(Token* id,AllocaInst* inst){
+void GenerateUnit::addVariableInStack(Token* id, Value* variable){
     string name = strToLower(id->getText());
     auto p = frame.back().varTable.find(name);
     if(p!=frame.back().varTable.end())
         reporter.report(id,"redefinition of '"+name+"'");
     else
-        frame.back().varTable.insert(make_pair(name,inst));
+        frame.back().varTable.insert(make_pair(name,variable));
 }
 
 CodeGenerator::CodeGenerator(){
@@ -73,6 +73,14 @@ TypeTable::TypeTable(CodeGenerator& generator):gen(generator){
             {"long",Type::getInt64Ty(gen.context)},
             {"byte",Type::getInt8Ty(gen.context)}
         });
+        builtInTypesPtr.operator=({
+            {"integer",Type::getInt32PtrTy(gen.context)},
+            {"single",Type::getFloatPtrTy(gen.context)},
+            {"double",Type::getDoublePtrTy(gen.context)},
+            {"boolean",Type::getInt1PtrTy(gen.context)},
+            {"long",Type::getInt64PtrTy(gen.context)},
+            {"byte",Type::getInt8PtrTy(gen.context)}
+        });
         defaultValue.operator=({
            {"integer",ConstantInt::get(builtInTypes["integer"],0)},
            {"single",ConstantFP::get(builtInTypes["single"],0)},
@@ -83,11 +91,11 @@ TypeTable::TypeTable(CodeGenerator& generator):gen(generator){
         });
 }
 
-
-Type* TypeTable::find(Token* type){
+Type* TypeTable::find(Token* type,bool ptr){
+    map<string,llvm::Type*> &table = ptr?builtInTypesPtr:builtInTypes;
     string name = strToLower(type->getText());
-    auto builtIn = builtInTypes.find(name);
-    if(builtIn!=builtInTypes.end())return builtIn->second;
+    auto builtIn = table.find(name);
+    if(builtIn!=table.end())return builtIn->second;
     if(gen.reporter!=nullptr)
         gen.reporter->report(type,"unexpected type "+type->getText());
     else
@@ -106,24 +114,6 @@ Value* TypeTable::getDefaultValue(Token* type){
 }
 
 //===================================== visitor =========================================================================
-
-//void Visitor::storeValue(Token* token){
-//    string name = strToLower(token->getText());
-//    for(auto iter=frame.rbegin();iter!=frame.rend();iter++){
-//        auto var=iter->varTable.find(name);
-//        if(var!=iter->varTable.end()){
-//            return builder.CreateLoad(var->second->getType(),var->second);
-//        }
-//        auto arg=iter->argTable.find(name);
-//        if(arg!=iter->argTable.end()){
-//            return arg->second;
-//        }
-//    }
-//    builder.Creat
-//    reporter.report(token->getLine(),token->getCharPositionInLine(),"Can not find variable "+name);
-//    return nullptr;
-//}
-
 antlrcpp::Any Visitor::visitExitStmt(BasicParser::ExitStmtContext *ctx){
     return nullptr;
 }
@@ -138,13 +128,13 @@ antlrcpp::Any Visitor::visitForStmt(BasicParser::ForStmtContext *ctx){
     Type* type;
     string name = strToLower(ctx->iterator->getText());
     if(ctx->Dim()==nullptr){
-        iter=unit.findInst(ctx->iterator);
+        iter= unit.findVariable(ctx->iterator);
         type=((AllocaInst*)iter)->getAllocatedType();
     }
     else{
         type = visit(ctx->type).as<Type*>();//TODO: 支持数组与结构体
         iter = builder.CreateAlloca(type,nullptr,name);
-        unit.addInst(ctx->iterator,(AllocaInst*)iter);
+        unit.addVariableInStack(ctx->iterator, (AllocaInst *) iter);
     }
 
     auto begin=visit(ctx->begin).as<Value*>(),span=visit(ctx->end).as<Value*>();
@@ -303,9 +293,9 @@ antlrcpp::Any Visitor::visitIfBlock(BasicParser::IfBlockContext *ctx){
 
 antlrcpp::Any Visitor::visitVarDecl(BasicParser::VarDeclContext *ctx){
     for(auto arg:ctx->variable()){
-        auto info = visit(arg).as<ArgumentInfo>();
+        auto info = visit(arg).as<VariableInfo>();
         auto ptr = builder.CreateAlloca(info.type,nullptr,info.name);
-        unit.addInst(info.token,ptr);
+        unit.addVariableInStack(info.token, ptr);
         if(info.initial!=nullptr){
             auto value = visit(info.initial).as<Value*>();
             builder.CreateStore(value,ptr);
@@ -316,69 +306,83 @@ antlrcpp::Any Visitor::visitVarDecl(BasicParser::VarDeclContext *ctx){
 
 antlrcpp::Any Visitor::visitTypeDecl(BasicParser::TypeDeclContext *ctx){
     vector<Type*> paramList;
-    vector<ArgumentInfo> arguments;
+    vector<VariableInfo> arguments;
     for(auto arg:ctx->variable()){
-        arguments.push_back(visit(arg).as<ArgumentInfo>());
+        arguments.push_back(visit(arg).as<VariableInfo>());
         paramList.push_back(arguments.back().type);
     }
     return StructType::create(paramList,strToLower(ctx->name->getText()));
 }
 
 antlrcpp::Any Visitor::visitVariable(BasicParser::VariableContext *ctx){
-    ArgumentInfo info(ctx,typeTable);
+    VariableInfo info(ctx, typeTable);
+    return info;
+}
+
+antlrcpp::Any Visitor::visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx){
+    ParameterInfo info(ctx,typeTable);
+    return info;
+}
+
+antlrcpp::Any Visitor::visitOptionalParameter(BasicParser::OptionalParameterContext *ctx){
+    ParameterInfo info(ctx,typeTable);
     return info;
 }
 
 antlrcpp::Any Visitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
     vector<Type*> paramList;
-    vector<ArgumentInfo> arguments;
-    for(auto arg:ctx->variable()){
-        arguments.push_back(visitVariable(arg).as<ArgumentInfo>());
-        paramList.push_back(arguments.back().type);
+    vector<ParameterInfo> parameters;
+    for(auto arg:ctx->parameter()){
+        auto info = visit(arg).as<ParameterInfo>();
+        parameters.push_back(info);
+        paramList.push_back(info.type);
     }
     Type* retType = typeTable.find(ctx->returnType);
     FunctionType *type = FunctionType::get(retType,paramList,false);
-    auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-    frame.push_back(StackFrame(function,false));
-    auto block = BasicBlock::Create(context, "EntryBlock", function);
-    builder.SetInsertPoint(block);
+
+    Function* function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
+    frame.emplace_back(function,false);
+    BasicBlock* entryBlock = BasicBlock::Create(context, "EntryBlock", function);
+    builder.SetInsertPoint(entryBlock);
 
     auto param = function->arg_begin();
-    for(auto& arg:arguments){
-        param->setName(arg.name);
-        auto inst = builder.CreateAlloca(arg.type,nullptr);
-        builder.CreateStore(param,inst);
-        unit.addInst(arg.token,inst);
+    for(auto& info:parameters){
+        param->setName(info.name);
+        //判断是否是按值传递
+        if(!info.byref)param->addAttr(Attribute::AttrKind::ByVal);
+        //判断是否是可选参数
+        if(info.initial!=nullptr){
+            BasicBlock* initBlock = BasicBlock::Create(context,info.name+"_Optional_Init");
+            Value* initCond = builder.CreateCmp(CmpInst::Predicate::ICMP_EQ,param,ConstantPointerNull::get((PointerType*)info.type));
+            builder.CreateCondBr(initCond,)
+        }
+        unit.addVariableInStack(info.token,param);
+        if(info.byref){
+
+        }
+        else{
+            auto inst = builder.CreateAlloca(info.type, nullptr);
+            builder.CreateStore(param,inst);
+            unit.addVariableInStack(info.token, inst);
+        }
         param++;
     }
     visitBlock(ctx->block);
 
-    auto funcEnd = BasicBlock::Create(context,"FunctionEnd",frame.back().function);
+    BasicBlock* funcEnd = BasicBlock::Create(context,"FunctionEnd",frame.back().function);
     builder.CreateBr(funcEnd);
     builder.SetInsertPoint(funcEnd);
-    //TODO:如果函数没有返回，在函数结尾将返回默认值
     builder.CreateRet(typeTable.getDefaultValue(ctx->returnType));
 
-    //builder.CreateRetVoid();//此处返回void可能是未定义行为！
-    /* 草 我不知道为什么返回defaultTable里的Value
-     * 在JIT里跑会出现奇怪的segmentation fault,要么就
-     * : CommandLine Error: Option 'propagate-attrs' registered more than once!
-     * LLVM ERROR: inconsistency in registered CommandLine options
-     * 而且生成出来同样的IR用lldb调试是没有问题的
-     * 所以先return void吧 反正这个代码也执行不到
-     *
-     * 第二次编辑：
-     * 增加了一个FunctionEnd BasicBlock专门用于返回默认值
-     */
-        frame.pop_back();
+    frame.pop_back();
     return function;
 }
 
 antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
     vector<Type*> paramList;
-    vector<ArgumentInfo> arguments;
-    for(auto& arg:ctx->variable()){
-        arguments.push_back(visit(arg).as<ArgumentInfo>());
+    vector<ParameterInfo> arguments;
+    for(auto& arg:ctx->parameter()){
+        arguments.push_back(visit(arg).as<ParameterInfo>());
         paramList.push_back(arguments.back().type);
     }
     FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
@@ -388,11 +392,16 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
     auto block = BasicBlock::Create(context, "EntryBlock", function);
     builder.SetInsertPoint(block);
     auto param = function->arg_begin();
-    for(auto& arg:arguments){
-        param->setName(arg.name);
-        auto inst = builder.CreateAlloca(arg.type,nullptr);
-        builder.CreateStore(param,inst);
-        unit.addInst(arg.token,inst);
+    for(auto& info:arguments){
+        param->setName(info.name);
+        if(info.byref){
+            unit.addVariableInStack(info.token,param);
+        }
+        else {
+            auto inst = builder.CreateAlloca(info.type, nullptr);
+            builder.CreateStore(param, inst);
+            unit.addVariableInStack(info.token, inst);
+        }
         param++;
     }
     visitBlock(ctx->block);
@@ -402,8 +411,8 @@ antlrcpp::Any Visitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
 }
 //====================================== call statement =========================================
 antlrcpp::Any Visitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
-    AllocaInst* inst = unit.findInst(ctx->ID()->getSymbol());
-    if(inst==nullptr){
+    Value* value = unit.findVariable(ctx->ID()->getSymbol());
+    if(value == nullptr){
         Function* func = unit.findFunction(ctx->ID()->getSymbol());
         if(func == nullptr)
             reporter.report(ctx->ID()->getSymbol(),"'"+ctx->ID()->getSymbol()->getText()+"' is undefined");
@@ -412,7 +421,7 @@ antlrcpp::Any Visitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
         //TODO 读取参数
         return (Value*)builder.CreateCall(func,args); //TODO 需要从错误中恢复
     }
-    else return (Value*)builder.CreateLoad(inst->getAllocatedType(),inst);
+    else return (Value*)builder.CreateLoad(value-(), value);
 }
 
 antlrcpp::Any Visitor::visitArgPassValue(BasicParser::ArgPassValueContext *ctx){
@@ -435,7 +444,7 @@ antlrcpp::Any Visitor::visitReturnStmt(BasicParser::ReturnStmtContext *ctx){
 
 antlrcpp::Any Visitor::visitAssignStmt(BasicParser::AssignStmtContext *ctx){
     auto val = visit(ctx->right).as<Value*>();
-    auto inst = unit.findInst(ctx->left);
+    auto inst = unit.findVariable(ctx->left);
     builder.CreateStore(val,inst);
     return (Value*)inst;
 }
@@ -449,17 +458,6 @@ antlrcpp::Any Visitor::visitPluOp(BasicParser::PluOpContext *ctx){
     else
     return builder.CreateSub(l,r);
 }
-
-//map<string,CmpInst::Predicate> cmpIntSigned={
-//        {"=",CmpInst::Predicate::ICMP_EQ},
-//        {"<>",CmpInst::Predicate::ICMP_NE},
-//        {"<",CmpInst::Predicate::ICMP_SLT},
-//        {"<=",CmpInst::Predicate::ICMP_SLE},
-//        {"=<",CmpInst::Predicate::ICMP_SLE},
-//        {">",CmpInst::Predicate::ICMP_SGT},
-//        {">=",CmpInst::Predicate::ICMP_SGE},
-//        {"=>",CmpInst::Predicate::ICMP_SGE}
-//};
 
 antlrcpp::Any Visitor::visitCmpOp(BasicParser::CmpOpContext *ctx){
     auto l = visit(ctx->left).as<llvm::Value*>();

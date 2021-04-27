@@ -1,0 +1,8 @@
+//
+// Created by yorkin on 4/27/21.
+//
+
+#ifndef CLASSICBASIC_GENUTILITY_H
+#define CLASSICBASIC_GENUTILITY_H
+
+#endif //CLASSICBASIC_GENUTILITY_H
