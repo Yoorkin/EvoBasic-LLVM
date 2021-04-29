@@ -4,20 +4,20 @@ moduleBody: (declare|LineEnd)* EOF;
 
 declare: /*(Public|Private|Friend)? Static?*/ functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl;
 
-enumDecl: Enum ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
+enumDecl: Enum name=ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
 
-propertyDecl:Property Get parameterList As returnType=ID LineEnd block+=line* End Property LineEnd  #propertyGet
-            |Property Set parameterList LineEnd block+=line* End Property LineEnd                   #propertySet
-            |Property Let parameterList LineEnd block+=line* End Property LineEnd                   #propertyLet
+propertyDecl:Property Get name=ID parameterList As returnType=ID LineEnd block+=line* End Property LineEnd  #propertyGet
+            |Property Set name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertySet
+            |Property Let name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertyLet
             ;
 
-enumPair: name=ID ('=' value=exp)?;
+enumPair: name=ID ('=' value=Integer)?;
 
 externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList LineEnd #externalSub
-            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? As returnType=ID LineEnd #externalFunction
+            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=ID LineEnd #externalFunction
             ;
 
-typeDecl:Type name=ID LineEnd (variable? LineEnd)* End Type LineEnd;
+typeDecl:Type name=ID LineEnd (nameTypePair? LineEnd)* End Type LineEnd;
 
 varDecl: varFlag=(Dim|Static) variable (','variable)* LineEnd;
 
@@ -40,8 +40,8 @@ optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=ex
 
 paramArrayParameter: ParamArray nameTypePair;
 
-nameTypePair: name=ID (As typeLocation)?
-            | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As typeLocation)?
+nameTypePair: name=ID (As typeLocation)?                                            #NormalNameTypePair
+            | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As typeLocation)?  #ArrayNameTypePair
             ;
 
 typeLocation: (path+=ID'.')*?ID;
