@@ -66,9 +66,9 @@ string strToLower(string str);
         class ParameterInfo: public Info{
         public:
             bool byval=false;
-            bool optional=false;
             bool array=false;
             bool paramArray=false;
+            BasicParser::ExpContext* initial=nullptr;
             llvm::Type* type;
             std::string name;
             virtual Enum getType()override{return Info::Argument;}
@@ -84,14 +84,16 @@ string strToLower(string str);
 
         class FunctionInfo:public Info{
         public:
+            std::string name;
             llvm::Function* function;
-            std::map<std::string,ParameterInfo*> parameterInfoList;
+            std::list<ParameterInfo*> parameterInfoList;
             ParameterInfo* retInfo=nullptr;
             virtual Enum getType()override{return Info::Function;}
         };
 
         class TypeInfo:public Info{
         public:
+            std::string name;
             llvm::StructType* structure;
             std::map<std::string,llvm::Type*> memberInfoList;
             virtual Enum getType()override{return Info::Type;}
@@ -99,6 +101,7 @@ string strToLower(string str);
 
         class EnumInfo:public Info{
         public:
+            std::string name;
             std::map<std::string,Value*> memberList;
             virtual Enum getType()override{return Info::Enum_;}
         };
@@ -195,6 +198,7 @@ class TypeTable{
 public:
     static void LoadTable(CodeGenerator& generator);
     static Type* find(Token* type,bool ptr=false);
+    static Type* find(BasicParser::TypeLocationContext* type,bool ptr=false);
     static Value* getDefaultValue(Token* type);
 };
 
