@@ -43,6 +43,7 @@ using namespace llvm;
 using namespace std;
 using namespace antlr4;
 namespace classicBasic {
+
     class StructureVisitor : public BasicBaseVisitor {
     public:
         virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
@@ -52,6 +53,61 @@ namespace classicBasic {
         virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
             return visitChildren(ctx);
         }
+
+        virtual antlrcpp::Any visitExternalSub(BasicParser::ExternalSubContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitExternalFunction(BasicParser::ExternalFunctionContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitPropertyGet(BasicParser::PropertyGetContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitPropertySet(BasicParser::PropertySetContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitPropertyLet(BasicParser::PropertyLetContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitEnumDecl(BasicParser::EnumDeclContext *ctx) override {
+            return visitChildren(ctx);
+        }
+        virtual antlrcpp::Any visitEnumPair(BasicParser::EnumPairContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override {
+            return visitChildren(ctx);
+        }
+        virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override {
+            return visitChildren(ctx);
+        }
+        virtual antlrcpp::Any visitNameTypePair(BasicParser::NameTypePairContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
+        virtual antlrcpp::Any visitParameterList(BasicParser::ParameterListContext *ctx) override {
+            return visitChildren(ctx);
+        }
+        virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override {
+            return visitChildren(ctx);
+        }
+        virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override {
+            return visitChildren(ctx);
+        }
+        virtual antlrcpp::Any visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx) override {
+            return visitChildren(ctx);
+        }
+
 
     };
 }

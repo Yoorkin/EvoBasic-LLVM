@@ -114,6 +114,11 @@ string strToLower(string str);
             std::map<std::string,Info*> memberInfoList;
             virtual Enum getType()override{return Info::Module_;}
         };
+
+        class Global{
+        public:
+            static std::map<std::string,Info*> memberInfoList;
+        };
     }
 //}
 
