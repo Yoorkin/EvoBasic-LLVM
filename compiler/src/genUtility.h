@@ -54,37 +54,39 @@ class VariableInfo;
 string strToLower(string str);
 
 //namespace classicBasic{
-    namespace declarationInfo{
+    namespace structure{
         class Info{
         public:
-            enum Enum{Argument,Variable,Function,Type,Property,Module_,Enum_};
+            enum Enum{Argument,Variable,Function,Type,Property,Module_,Enum_,Namespace};
             virtual Enum getType()=0;
             template<typename T>
             T* as(Enum t){return (T*)this;}
         };
 
-        class ArgumentInfo:public Info{
+        class ParameterInfo: public Info{
         public:
             bool byval=false;
             bool optional=false;
             bool array=false;
             bool paramArray=false;
-            std::string typeName;
+            llvm::Type* type;
+            std::string name;
             virtual Enum getType()override{return Info::Argument;}
-
         };
+
 
         class VariableInfo:public Info{
         public:
             llvm::Value* variable;
+            std::string type,name;
             virtual Enum getType()override{return Info::Variable;}
         };
 
         class FunctionInfo:public Info{
         public:
             llvm::Function* function;
-            std::map<std::string,ArgumentInfo*> argumentInfoList;
-            ArgumentInfo* retInfo=nullptr;
+            std::map<std::string,ParameterInfo*> parameterInfoList;
+            ParameterInfo* retInfo=nullptr;
             virtual Enum getType()override{return Info::Function;}
         };
 
@@ -104,7 +106,7 @@ string strToLower(string str);
         class PropertyInfo:public Info{
         public:
             FunctionInfo *getter=nullptr,*setter=nullptr,*let=nullptr;
-            ArgumentInfo* valueInfo;
+            ParameterInfo* valueInfo;
             virtual Enum getType()override{return Info::Property;}
         };
 
@@ -115,10 +117,25 @@ string strToLower(string str);
             virtual Enum getType()override{return Info::Module_;}
         };
 
-        class Global{
+        class Scope:public Info{
         public:
-            static std::map<std::string,Info*> memberInfoList;
+            std::string name;
+            Scope* parent=nullptr;
+            std::map<std::string,Scope*> childScope;
+            std::map<std::string,Info*> memberInfoList;
+
+            virtual Enum getType()override{return Info::Namespace;}
+            //动作类似using namespace scope
+            void extend(Scope* scope){
+                childScope.insert(make_pair(scope->name,scope));
+                for(auto p:scope->memberInfoList){
+                    //TODO:添加合并命名空间时命名冲突的错误处理
+                    memberInfoList.insert(p);
+                }
+            }
         };
+
+        Scope globalScope;
     }
 //}
 
@@ -172,37 +189,37 @@ public:
 
 class TypeTable{
     CodeGenerator& gen;
-    map<string,llvm::Type*> builtInTypes;
-    map<string,llvm::Type*> builtInTypesPtr;
-    map<string,Value*> defaultValue;
+    static map<string,llvm::Type*> builtInTypes;
+    static map<string,llvm::Type*> builtInTypesPtr;
+    static map<string,Value*> defaultValue;
 public:
-    explicit TypeTable(CodeGenerator& generator);
-    Type* find(Token* type,bool ptr=false);
-    Value* getDefaultValue(Token* type);
+    static void LoadTable(CodeGenerator& generator);
+    static Type* find(Token* type,bool ptr=false);
+    static Value* getDefaultValue(Token* type);
 };
 
-class ParameterInfo{
-public:
-    string name;
-    Type* type;
-    Token* token;
-    bool byref;
-    Argument* argument;
-    antlr4::tree::ParseTree* initial=nullptr;
-    ParameterInfo(BasicParser::NecessaryParameterContext *ctx,TypeTable& typeTable){
-        name=strToLower(ctx->name->getText());
-        this->token=ctx->name;
-        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
-        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
-    }
-    ParameterInfo(BasicParser::OptionalParameterContext *ctx,TypeTable& typeTable){
-        name=strToLower(ctx->name->getText());
-        this->token=ctx->name;
-        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
-        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
-        initial=ctx->initial;
-    }
-};
+//class ParameterInfo{
+//public:
+//    string name;
+//    Type* type;
+//    Token* token;
+//    bool byref;
+//    Argument* argument;
+//    antlr4::tree::ParseTree* initial=nullptr;
+//    ParameterInfo(BasicParser::NecessaryParameterContext *ctx,TypeTable& typeTable){
+//        name=strToLower(ctx->name->getText());
+//        this->token=ctx->name;
+//        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
+//        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
+//    }
+//    ParameterInfo(BasicParser::OptionalParameterContext *ctx,TypeTable& typeTable){
+//        name=strToLower(ctx->name->getText());
+//        this->token=ctx->name;
+//        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
+//        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
+//        initial=ctx->initial;
+//    }
+//};
 
 class VariableInfo{
 public:

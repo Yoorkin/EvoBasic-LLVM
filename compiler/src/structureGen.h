@@ -39,6 +39,9 @@
 #include<llvm/ExecutionEngine/SectionMemoryManager.h>
 #include<llvm/IR/DataLayout.h>
 #include<llvm/ExecutionEngine/ExecutionEngine.h>
+
+#include"genUtility.h"
+
 using namespace llvm;
 using namespace std;
 using namespace antlr4;
@@ -46,7 +49,9 @@ namespace classicBasic {
 
     class StructureVisitor : public BasicBaseVisitor {
     public:
+
         virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
+            vector<structure::ParameterInfo*> paramList = visit(ctx->parameterList());
 
         }
 
@@ -96,9 +101,22 @@ namespace classicBasic {
         }
 
         virtual antlrcpp::Any visitParameterList(BasicParser::ParameterListContext *ctx) override {
-            return visitChildren(ctx);
+            map<string,structure::ParameterInfo*> args;
+            for(auto child:ctx->necessaryParameter()){
+                auto arg=visit(child).as<structure::ParameterInfo*>();
+                args.insert(make_pair(arg->name,arg));
+            }
+            for(auto child:ctx->optionalParameter()){
+                auto arg=visit(child).as<structure::ParameterInfo*>();
+                args.insert(make_pair(arg->name,arg));
+            }
+            auto arg=visit(ctx->paramArrayParameter()).as<structure::ParameterInfo*>();
+            args.insert(make_pair(arg->name,arg));
+            return args;
         }
         virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override {
+            auto info = new structure::ParameterInfo();
+            info->type=TypeTable::find()
             return visitChildren(ctx);
         }
         virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override {
