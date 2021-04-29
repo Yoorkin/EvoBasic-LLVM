@@ -42,8 +42,17 @@
 using namespace llvm;
 using namespace std;
 using namespace antlr4;
+namespace classicBasic {
+    class StructureVisitor : public BasicBaseVisitor {
+    public:
+        virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override {
 
-class StructureVisitor:public Basic
+        }
 
+        virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override {
+            return visitChildren(ctx);
+        }
 
+    };
+}
 #endif //CLASSICBASIC_STRUCTUREGEN_H
