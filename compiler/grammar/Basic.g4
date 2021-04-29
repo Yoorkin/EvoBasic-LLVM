@@ -25,6 +25,13 @@ redimDecl: Redim preserveFlag=Preserve? nameTypePair (','nameTypePair)* LineEnd;
 
 variable: nameTypePair ('=' initial=exp)?;
 
+
+functionDecl:Function name=ID parameterList As returnType=ID LineEnd block+=line* End Function LineEnd;
+
+subDecl: Sub name=ID parameterList LineEnd block+=line* End Sub LineEnd;
+
+
+
 parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? ','paramArrayParameter ')';
 
 necessaryParameter: passFlag=(Byref|Byval)? nameTypePair ;
@@ -33,15 +40,11 @@ optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=ex
 
 paramArrayParameter: ParamArray nameTypePair;
 
-nameTypePair: name=ID (As type=varType)?
-            | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As type=varType)?
+nameTypePair: name=ID (As typeLocation)?
+            | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As typeLocation)?
             ;
 
-functionDecl:Function name=ID parameterList As returnType=ID LineEnd block+=line* End Function LineEnd;
-
-subDecl: Sub name=ID parameterList LineEnd block+=line* End Sub LineEnd;
-
-varType: (ID);
+typeLocation: (path+=ID'.')*ID;
 
 line:statement|LineEnd;
 
@@ -95,8 +98,8 @@ exp: '-' right=exp                                      #NegOp
     | Boolean                                           #Boolean
     ;
 
-foreachStmt: For Each (iterator=exp|Dim name=ID (As type=varType)?) In group=exp LineEnd block+=line* Next nextFlag=ID? LineEnd;
-forStmt: For (iterator=ID|Dim iterator=ID (As type=varType)?) '=' begin=exp To end=exp (Step step=exp)? LineEnd block+=line* Next nextFlag=ID? LineEnd;
+foreachStmt: For Each (iterator=ID|Dim nameTypePair) In group=exp LineEnd block+=line* Next nextFlag=ID? LineEnd;
+forStmt: For (iterator=ID|Dim nameTypePair) '=' begin=exp To end=exp (Step step=exp)? LineEnd block+=line* Next nextFlag=ID? LineEnd;
 
 ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd           #SingleLineIf
         | If ifBlock (ElseIf ifBlock)* (Else LineEnd elseBlock+=line*)? End If LineEnd    #MutiLineIf
