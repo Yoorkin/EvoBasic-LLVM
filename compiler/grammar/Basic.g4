@@ -2,21 +2,44 @@ grammar Basic;
 
 moduleBody: (declare|LineEnd)* EOF;
 
-declare: /*(Public|Private|Friend)?*/ functionDecl|subDecl|varDecl|typeDecl;
+declare: /*(Public|Private|Friend)? Static?*/ functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl;
+
+enumDecl: Enum ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
+
+propertyDecl:Property Get parameterList As returnType=ID LineEnd block+=line* End Property LineEnd  #propertyGet
+            |Property Set parameterList LineEnd block+=line* End Property LineEnd                   #propertySet
+            |Property Let parameterList LineEnd block+=line* End Property LineEnd                   #propertyLet
+            ;
+
+enumPair: name=ID ('=' value=exp)?;
+
+externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList LineEnd #externalSub
+            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? As returnType=ID LineEnd #externalFunction
+            ;
 
 typeDecl:Type name=ID LineEnd (variable? LineEnd)* End Type LineEnd;
 
-varDecl: Dim variable (','variable)* LineEnd;
+varDecl: varFlag=(Dim|Static) variable (','variable)* LineEnd;
 
-variable: name=ID As type=varType ('=' initial=exp)?;
+redimDecl: Redim preserveFlag=Preserve? nameTypePair (','nameTypePair)* LineEnd;
 
-parameter: passFlag=(Byref|Byval)? name=ID As type=varType #necessaryParameter
-         | Optional passFlag=(Byref|Byval)? name=ID As type=varType ('=' initial=exp)? #OptionalParameter
-         ;
+variable: nameTypePair ('=' initial=exp)?;
 
-functionDecl:Function name=ID '(' (parameter (','parameter)*)? ')' As returnType=ID LineEnd block+=line* End Function LineEnd;
+parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? ','paramArrayParameter ')';
 
-subDecl: Sub name=ID ('(' (parameter (','parameter)*)? ')')? LineEnd block+=line* End Sub LineEnd;
+necessaryParameter: passFlag=(Byref|Byval)? nameTypePair ;
+
+optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=exp)?;
+
+paramArrayParameter: ParamArray nameTypePair;
+
+nameTypePair: name=ID (As type=varType)?
+            | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As type=varType)?
+            ;
+
+functionDecl:Function name=ID parameterList As returnType=ID LineEnd block+=line* End Function LineEnd;
+
+subDecl: Sub name=ID parameterList LineEnd block+=line* End Sub LineEnd;
 
 varType: (ID);
 
@@ -31,6 +54,7 @@ statement:forStmt
         |assignStmt
         |callStmt
         |varDecl
+        |redimDecl
         ;
 
 callStmt: Call ID '('(passArg(','passArg)*) ')' LineEnd
@@ -50,7 +74,7 @@ passArg:value=exp                       #ArgPassValue
 
 assignStmt: left=ID '=' right=exp LineEnd;
 
-exitStmt:Exit exitFlag=(For|Do|Sub|Function) LineEnd;
+exitStmt:Exit exitFlag=(For|Do|Sub|Function|Property) LineEnd;
 
 returnStmt:Return exp LineEnd;
 
@@ -99,6 +123,12 @@ BlockComment: '\'*' .*? '*\'' -> skip;
 LineEnd: [\n\r];
 WS: [ \t]->skip;
 
+Preserve:P R E S E R V E;
+Redim:R E D I M;
+ParamArray:P A R A M A R R A Y;
+Declare:D E C L A R E;
+Lib:L I B;
+Enum:E N U M;
 If:I F;
 ElseIf:E L S E I F;
 Wend:W E N D;
