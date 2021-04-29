@@ -26,13 +26,13 @@ redimDecl: Redim preserveFlag=Preserve? nameTypePair (','nameTypePair)* LineEnd;
 variable: nameTypePair ('=' initial=exp)?;
 
 
-functionDecl:Function name=ID parameterList As returnType=ID LineEnd block+=line* End Function LineEnd;
+functionDecl:Function name=ID parameterList As returnType=typeLocation LineEnd block+=line* End Function LineEnd;
 
 subDecl: Sub name=ID parameterList LineEnd block+=line* End Sub LineEnd;
 
 
 
-parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? ','paramArrayParameter ')';
+parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? (','paramArrayParameter)? ')';
 
 necessaryParameter: passFlag=(Byref|Byval)? nameTypePair ;
 
@@ -44,7 +44,7 @@ nameTypePair: name=ID (As typeLocation)?
             | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As typeLocation)?
             ;
 
-typeLocation: (path+=ID'.')*ID;
+typeLocation: (path+=ID'.')*?ID;
 
 line:statement|LineEnd;
 
