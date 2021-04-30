@@ -9,22 +9,25 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
 
-#include"codeGen.h"
-using namespace std;
-class JIT{
-    ExecutionEngine* engine=nullptr;
-public:
-    JIT(){}
-    void addUnit(GenerateUnit* unit){
-        unique_ptr<llvm::Module> ptr(&unit->mod);
-        if(engine==nullptr)
-            engine=EngineBuilder(std::move(ptr)).create();
-        else
-            engine->addModule(std::move(ptr));
-    }
-    template<typename FunctionT>
-    FunctionT* getFunctionAddress(string name){
-        return (FunctionT*)engine->getFunctionAddress(strToLower(name));
-    }
-};
+#include"genUtility.h"
+namespace classicBasic{
+    using namespace std;
+    class JIT{
+        ExecutionEngine* engine=nullptr;
+    public:
+        JIT(){}
+        void addUnit(GenerateUnit* unit){
+            unique_ptr<llvm::Module> ptr(&unit->mod);
+            if(engine==nullptr)
+                engine=EngineBuilder(std::move(ptr)).create();
+            else
+                engine->addModule(std::move(ptr));
+        }
+        template<typename FunctionT>
+        FunctionT* getFunctionAddress(string name){
+            return (FunctionT*)engine->getFunctionAddress(strToLower(name));
+        }
+    };
+}
+
 #endif //CLASSICBASIC_JIT_H

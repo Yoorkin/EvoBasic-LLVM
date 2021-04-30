@@ -39,21 +39,78 @@
 #include<llvm/ExecutionEngine/SectionMemoryManager.h>
 #include<llvm/IR/DataLayout.h>
 #include<llvm/ExecutionEngine/ExecutionEngine.h>
+
 using namespace llvm;
 using namespace std;
 using namespace antlr4;
 
-class Visitor;
-class StackFrame;
-class TypeTable;
-class CodeGenerator;
-class JIT;
-class ArgumentInfo;
-class VariableInfo;
+namespace classicBasic{
+    class CodeGenVisitor;
+    class StackFrame;
+    class TypeTable;
+    class CodeGenerator;
+    class JIT;
+    class StructureVisitor;
 
-string strToLower(string str);
+    string strToLower(string str);
 
-//namespace classicBasic{
+    class GenerateUnit{
+        friend CodeGenVisitor;
+        friend JIT;
+        friend StructureVisitor;
+        llvm::Module mod;
+        list<StackFrame> frame;
+        LLVMContext& context;
+        Reporter reporter;
+        BasicErrorListener errorListener;
+        CodeGenerator& gen;
+        istream& in;
+        ostream& out;
+        tree::ParseTree *tree = nullptr;
+
+    public:
+
+        GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
+        void scan();
+        void generate();
+        void printIR();
+        Value * findVariable(Token* id);
+        Function* findFunction(Token* id);
+        void addVariableInStack(Token* id, Value* variable);
+    };
+
+    class CodeGenerator{
+        friend GenerateUnit;
+        friend StackFrame;
+        friend TypeTable;
+        friend CodeGenVisitor;
+        LLVMContext context;
+        list<GenerateUnit*> units;
+        Reporter* reporter=nullptr;
+    public:
+        CodeGenerator();
+        ~CodeGenerator(){
+            for(auto u:units)delete u;
+        }
+        GenerateUnit* CreateUnit(string path,istream& in,ostream& out){
+            auto unit=new GenerateUnit(*this,path,path,in,out);
+            units.push_back(unit);
+            return unit;
+        }
+    };
+
+    class TypeTable{
+        static CodeGenerator* gen;
+        static map<string,llvm::Type*> builtInTypes;
+        static map<string,llvm::Type*> builtInTypesPtr;
+        static map<string,Value*> defaultValue;
+    public:
+        static void SetGenerator(CodeGenerator* gen);
+        static Type* find(Token* type,bool ptr=false);
+        static Type* find(BasicParser::TypeLocationContext* type,bool ptr=false);
+        static Value* getDefaultValue(Token* type);
+    };
+
     namespace structure{
         class Info{
         public:
@@ -74,11 +131,11 @@ string strToLower(string str);
             virtual Enum getType()override{return Info::Argument;}
         };
 
-
         class VariableInfo:public Info{
         public:
-            llvm::Value* variable;
-            std::string type,name;
+            llvm::GlobalVariable* variable;
+            llvm::Type* type;
+            std::string name;
             virtual Enum getType()override{return Info::Variable;}
         };
 
@@ -113,13 +170,6 @@ string strToLower(string str);
             virtual Enum getType()override{return Info::Property;}
         };
 
-        class ModuleInfo:public Info{
-        public:
-            llvm::Module* module_;
-            std::map<std::string,Info*> memberInfoList;
-            virtual Enum getType()override{return Info::Module_;}
-        };
-
         class Scope:public Info{
         public:
             std::string name;
@@ -129,78 +179,12 @@ string strToLower(string str);
 
             virtual Enum getType()override{return Info::Namespace;}
             //动作类似using namespace scope
-            void extend(Scope* scope){
-                childScope.insert(make_pair(scope->name,scope));
-                for(auto p:scope->memberInfoList){
-                    //TODO:添加合并命名空间时命名冲突的错误处理
-                    memberInfoList.insert(p);
-                }
-            }
+            void extend(Scope* scope);
         };
 
         Scope globalScope;
     }
-//}
 
-class GenerateUnit{
-    friend Visitor;
-    friend JIT;
-    llvm::Module mod;
-    Visitor* visitor;
-    list<StackFrame> frame;
-    LLVMContext& context;
-    Reporter reporter;
-    BasicErrorListener errorListener;
-    CodeGenerator& gen;
-    istream& in;
-    ostream& out;
-public:
-
-    GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
-    void generate();
-    void printIR();
-    Value * findVariable(Token* id);
-    Function* findFunction(Token* id);
-    void addVariableInStack(Token* id, Value* variable);
-    ~GenerateUnit(){
-        delete visitor;
-    }
-};
-
-class CodeGenerator{
-    friend GenerateUnit;
-    friend StackFrame;
-    friend TypeTable;
-    friend Visitor;
-    LLVMContext context;
-    TypeTable* typeTable;
-    list<GenerateUnit*> units;
-    Reporter* reporter=nullptr;
-public:
-    CodeGenerator();
-    ~CodeGenerator(){
-        delete typeTable;
-        for(auto u:units)delete u;
-    }
-    GenerateUnit* CreateUnit(string path,istream& in,ostream& out){
-        auto unit=new GenerateUnit(*this,path,path,in,out);
-        units.push_back(unit);
-        return unit;
-    }
-};
-
-
-class TypeTable{
-    CodeGenerator& gen;
-    static map<string,llvm::Type*> builtInTypes;
-    static map<string,llvm::Type*> builtInTypesPtr;
-    static map<string,Value*> defaultValue;
-public:
-    static void LoadTable(CodeGenerator& generator);
-    static Type* find(Token* type,bool ptr=false);
-    static Type* find(BasicParser::TypeLocationContext* type,bool ptr=false);
-    static Value* getDefaultValue(Token* type);
-};
 
 //class ParameterInfo{
 //public:
@@ -225,47 +209,53 @@ public:
 //    }
 //};
 
-class VariableInfo{
-public:
-    string name;
-    Type* type;
-    Token* token;
-    antlr4::tree::ParseTree* initial;
-    VariableInfo(BasicParser::VariableContext *ctx, TypeTable& typeTable){
-        token=ctx->name;
-        name=strToLower(ctx->name->getText());
-        type=typeTable.find(ctx->type->ID()->getSymbol());
-        initial=ctx->initial;
-    }
-};
+//class VariableInfo{
+//public:
+//    string name;
+//    Type* type;
+//    Token* token;
+//    antlr4::tree::ParseTree* initial;
+//    VariableInfo(BasicParser::VariableContext *ctx, TypeTable& typeTable){
+//        token=ctx->name;
+//        name=strToLower(ctx->name->getText());
+//        type=typeTable.find(ctx->type->ID()->getSymbol());
+//        initial=ctx->initial;
+//    }
+//};
 
-class StackFrame{
-    friend GenerateUnit;
-    int index=0;
-    stack<string> layers;
-    map<string,Value*> varTable;
-public:
-    enum Enum{BasicFunction,BasicSub,BasicLoop};
-    stack<Enum> stmtState;//标记当前所在语句，用于语法检查
-    BasicBlock* afterBlock=nullptr; //当前状态下跳出语句（函数、过程、循环）所需要最后执行的block
-    llvm::Function* function;
-    StackFrame(llvm::Function* function,bool isSub){
-        this->function=function;
-        stmtState.push(isSub?BasicSub:BasicFunction);
-        layers.push("");
-    }
-    void BeginLayer(string prefix){
-        layers.push(prefix + "_" + std::to_string(index) + "_");
-        index++;
-    }
-    string getBlockName(string suffix){
-        return layers.top()+suffix;
-    }
-    void EndLayer(){
-        layers.pop();
-    }
+    class StackFrame{
+        friend GenerateUnit;
+        int index=0;
+        stack<string> layers;
+        map<string,Value*> varTable;
+    public:
+        enum Enum{BasicFunction,BasicSub,BasicLoop};
+        stack<Enum> stmtState;//标记当前所在语句，用于语法检查
+        BasicBlock* afterBlock=nullptr; //当前状态下跳出语句（函数、过程、循环）所需要最后执行的block
+        llvm::Function* function;
+        StackFrame(llvm::Function* function,bool isSub){
+            this->function=function;
+            stmtState.push(isSub?BasicSub:BasicFunction);
+            layers.push("");
+        }
+        void BeginLayer(string prefix){
+            layers.push(prefix + "_" + std::to_string(index) + "_");
+            index++;
+        }
+        string getBlockName(string suffix){
+            return layers.top()+suffix;
+        }
+        void EndLayer(){
+            layers.pop();
+        }
 
-};
+    };
+}
 
+
+#include "structureGen.h"
+#include "codeGen.h"
 
 #endif //CLASSICBASIC_GENUTILITY_H
+
+

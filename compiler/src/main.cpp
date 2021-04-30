@@ -2,7 +2,7 @@
 #include"codeGen.h"
 #include"JIT.h"
 using namespace std;
-
+using namespace classicBasic;
 
 int main(int argc, const char* argv[]){
     std::ifstream stream;
