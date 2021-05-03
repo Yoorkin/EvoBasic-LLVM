@@ -21,6 +21,11 @@ namespace classicBasic {
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
@@ -37,6 +42,11 @@ namespace classicBasic {
         FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
@@ -56,6 +66,11 @@ namespace classicBasic {
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
@@ -72,6 +87,11 @@ namespace classicBasic {
         FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
@@ -91,6 +111,11 @@ namespace classicBasic {
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
@@ -107,6 +132,11 @@ namespace classicBasic {
         FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
@@ -122,6 +152,11 @@ namespace classicBasic {
         FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
         info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        auto arg_iter=info->function->arg_begin();
+        for(auto p:info->parameterInfoList){
+            arg_iter->setName(p->name);
+            arg_iter++;
+        }
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
@@ -176,7 +211,7 @@ namespace classicBasic {
         NameTypePairTmp tmp;
         tmp.isArray=false;
         tmp.name=strToLower(ctx->name->getText());
-        tmp.type=TypeTable::find(ctx->typeLocation());
+        tmp.type=TypeTable::find(ctx->typeLocation(),true);
         return tmp;
     }
     antlrcpp::Any StructureVisitor::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
@@ -207,6 +242,7 @@ namespace classicBasic {
         auto p = visit(ctx->nameTypePair()).as<NameTypePairTmp>();
         info->type=p.type;
         info->name=p.name;
+        info->array=p.isArray;
         info->byval = !(ctx->passFlag==nullptr||strToLower(ctx->passFlag->getText())=="byref");
         return info;
     }
@@ -215,6 +251,7 @@ namespace classicBasic {
         auto p = visit(ctx->nameTypePair()).as<NameTypePairTmp>();
         info->type=p.type;
         info->name=p.name;
+        info->array=p.isArray;
         info->initial=ctx->initial;
         return info;
     }

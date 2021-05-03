@@ -20,7 +20,6 @@ namespace classicBasic{
         parser.addErrorListener(&errorListener);
         tree = parser.moduleBody();
         StructureVisitor visitor(*this,gen.globalScope);
-//        CodeGenVisitor visitor(*this,gen.globalScope);
         visitor.visit(tree);
     }
     void GenerateUnit::scan(){
@@ -33,7 +32,7 @@ namespace classicBasic{
         //mod.print(outs(),nullptr,false);
     }
     void GenerateUnit::printIR(){
-        mod.print(outs(),nullptr,false);
+        mod.print(outs(),nullptr,false,true);
     }
 
     Function* GenerateUnit::findFunction(Token* id){
@@ -115,7 +114,7 @@ namespace classicBasic{
         return Type::getInt32Ty(gen->context);
     }
     Type* TypeTable::find(BasicParser::TypeLocationContext* type,bool ptr){
-        return find(type->target);
+        return find(type->target,ptr);
         //TODO TypeTable::find
     }
     Value* TypeTable::getDefaultValue(Token* type){
