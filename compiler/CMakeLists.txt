@@ -5,8 +5,8 @@ message(STATUS "Compiler include ${INCLUDE_DIRS}")
 
 add_definitions(${LLVM_DEFINITIONS})
 add_definitions(-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
-file(GLOB COMPILER_SOURCE main.cpp "antlr/*.cpp")
-#file(GLOB COMPILER_SOURCE "src/*.cpp" "src/*.h" "antlr/*.cpp")
+
+file(GLOB COMPILER_SOURCE "src/*.cpp" "src/*.h" "antlr/*.cpp")
 add_executable(cbCompiler ${COMPILER_SOURCE})
 
 llvm_map_components_to_libnames(llvm_libs Core Interpreter MC mcdisassembler MCJIT Support nativecodegen IRReader)
