@@ -147,6 +147,7 @@ namespace classicBasic {
         for(auto pctx:ctx->nameTypePair()){
             NameTypePairTmp p = visit(pctx).as<NameTypePairTmp>();
             info->memberInfoList.insert(make_pair(p.name,p.type));
+            members.push_back(p.type);
         }
         info->structure=llvm::StructType::create(members,info->name);
         scope->memberInfoList.insert(make_pair(info->name,info));
@@ -195,8 +196,10 @@ namespace classicBasic {
             auto arg=visit(child).as<structure::ParameterInfo*>();
             args.push_back(arg);
         }
-        auto arg=visit(ctx->paramArrayParameter()).as<structure::ParameterInfo*>();
-        args.push_back(arg);
+        if(ctx->paramArrayParameter()!=nullptr) {
+            auto arg = visit(ctx->paramArrayParameter()).as<structure::ParameterInfo *>();
+            args.push_back(arg);
+        }
         return args;
     }
     antlrcpp::Any StructureVisitor::visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx){

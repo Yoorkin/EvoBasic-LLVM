@@ -51,7 +51,7 @@ namespace classicBasic{
     class CodeGenerator;
     class JIT;
     class StructureVisitor;
-
+    namespace structure{class Scope;}
     string strToLower(string str);
 
     class GenerateUnit{
@@ -97,6 +97,7 @@ namespace classicBasic{
             units.push_back(unit);
             return unit;
         }
+        structure::Scope* globalScope;
     };
 
     class TypeTable{
@@ -181,8 +182,6 @@ namespace classicBasic{
             //动作类似using namespace scope
             void extend(Scope* scope);
         };
-
-        //Scope globalScope;
     }
 
 

@@ -19,10 +19,12 @@ namespace classicBasic{
         parser.removeErrorListeners();
         parser.addErrorListener(&errorListener);
         tree = parser.moduleBody();
+        StructureVisitor visitor(*this,gen.globalScope);
+//        CodeGenVisitor visitor(*this,gen.globalScope);
+        visitor.visit(tree);
     }
     void GenerateUnit::scan(){
-        //StructureVisitor visitor(*this,&structure::globalScope);
-        //visitor.visit(tree);
+
     }
     void GenerateUnit::generate(){
         //CodeGenVisitor visitor(*this,&structure::globalScope);
@@ -64,6 +66,7 @@ namespace classicBasic{
         LLVMInitializeNativeTarget();
         LLVMInitializeNativeAsmPrinter();
         TypeTable::SetGenerator(this);
+        globalScope=new structure::Scope();
     }
 
 
@@ -112,8 +115,8 @@ namespace classicBasic{
         return Type::getInt32Ty(gen->context);
     }
     Type* TypeTable::find(BasicParser::TypeLocationContext* type,bool ptr){
+        return find(type->target);
         //TODO TypeTable::find
-        return nullptr;
     }
     Value* TypeTable::getDefaultValue(Token* type){
         string name = strToLower(type->getText());

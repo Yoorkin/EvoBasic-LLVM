@@ -44,7 +44,7 @@ nameTypePair: name=ID (As typeLocation)?                                        
             | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As typeLocation)?  #ArrayNameTypePair
             ;
 
-typeLocation: (path+=ID'.')*?ID;
+typeLocation: (path+=ID'.')*?target=ID;
 
 line:statement|LineEnd;
 
