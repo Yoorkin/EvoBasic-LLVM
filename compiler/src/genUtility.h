@@ -182,7 +182,7 @@ namespace classicBasic{
             void extend(Scope* scope);
         };
 
-        Scope globalScope;
+        //Scope globalScope;
     }
 
 
@@ -252,10 +252,7 @@ namespace classicBasic{
     };
 }
 
+#endif //CLASSICBASIC_GENUTILITY_H
 
 #include "structureGen.h"
 #include "codeGen.h"
-
-#endif //CLASSICBASIC_GENUTILITY_H
-
-

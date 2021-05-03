@@ -7,6 +7,7 @@
 #include"src/codeGen.h"
 #include"src/JIT.h"
 #include"testHelper.h"
+using namespace classicBasic;
 using namespace std;
 
 TestCase(getReturn100){

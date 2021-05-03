@@ -21,12 +21,12 @@ namespace classicBasic{
         tree = parser.moduleBody();
     }
     void GenerateUnit::scan(){
-        StructureVisitor visitor(*this,&structure::globalScope);
-        visitor.visit(tree);
+        //StructureVisitor visitor(*this,&structure::globalScope);
+        //visitor.visit(tree);
     }
     void GenerateUnit::generate(){
-        CodeGenVisitor visitor(*this,&structure::globalScope);
-        visitor.visit(tree);
+        //CodeGenVisitor visitor(*this,&structure::globalScope);
+        //visitor.visit(tree);
         //gen.reporter=nullptr;
         //mod.print(outs(),nullptr,false);
     }
