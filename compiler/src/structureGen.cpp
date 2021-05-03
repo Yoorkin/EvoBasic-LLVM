@@ -24,6 +24,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
@@ -45,6 +46,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         scope->memberInfoList.insert(make_pair(info->name,info));
@@ -69,6 +71,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
@@ -90,6 +93,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         scope->memberInfoList.insert(make_pair(info->name,info));
@@ -114,6 +118,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
@@ -135,6 +140,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         scope->memberInfoList.insert(make_pair(info->name,info));
@@ -155,6 +161,7 @@ namespace classicBasic {
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
+            if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
         scope->memberInfoList.insert(make_pair(info->name,info));
