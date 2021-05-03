@@ -66,6 +66,10 @@ namespace classicBasic{
         CodeGenerator& gen;
         istream& in;
         ostream& out;
+        ANTLRInputStream input;
+        BasicLexer lexer;
+        CommonTokenStream tokens;
+        BasicParser parser;
         tree::ParseTree *tree = nullptr;
 
     public:

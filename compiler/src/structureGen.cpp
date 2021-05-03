@@ -112,7 +112,7 @@ namespace classicBasic {
         auto retT = TypeTable::find(ctx->returnType);
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_get",mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
         auto arg_iter=info->function->arg_begin();
@@ -136,7 +136,7 @@ namespace classicBasic {
         }
         FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_set",mod);
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -157,7 +157,7 @@ namespace classicBasic {
         }
         FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_let",mod);
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);

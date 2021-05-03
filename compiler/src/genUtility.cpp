@@ -10,26 +10,20 @@ namespace classicBasic{
     }
 
     GenerateUnit::GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out)
-            :gen(gen),in(in),out(out),context(gen.context),mod(name,gen.context),reporter(out,in,path),errorListener(reporter){
+            :gen(gen),in(in),out(out),context(gen.context),mod(name,gen.context),reporter(out,in,path),
+            errorListener(reporter),input(in),lexer(&input),tokens(&lexer),parser(&tokens){
         gen.reporter=&this->reporter;
-        ANTLRInputStream input(in);
-        BasicLexer lexer(&input);
-        CommonTokenStream tokens(&lexer);
-        BasicParser parser(&tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(&errorListener);
         tree = parser.moduleBody();
+    }
+    void GenerateUnit::scan(){
         StructureVisitor visitor(*this,gen.globalScope);
         visitor.visit(tree);
     }
-    void GenerateUnit::scan(){
-
-    }
     void GenerateUnit::generate(){
-        //CodeGenVisitor visitor(*this,&structure::globalScope);
-        //visitor.visit(tree);
-        //gen.reporter=nullptr;
-        //mod.print(outs(),nullptr,false);
+        CodeGenVisitor visitor(*this,gen.globalScope);
+        visitor.visit(tree);
     }
     void GenerateUnit::printIR(){
         mod.print(outs(),nullptr,false,true);

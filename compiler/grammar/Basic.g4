@@ -2,7 +2,7 @@ grammar Basic;
 
 moduleBody: (declare|LineEnd)* EOF;
 
-declare: /*(Public|Private|Friend)? Static?*/ functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl;
+declare: /*(Public|Private|Friend)? Static?*/ functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl;
 
 enumDecl: Enum name=ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
 
