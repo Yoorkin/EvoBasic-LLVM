@@ -76,7 +76,7 @@ namespace classicBasic{
     map<string,Value*> TypeTable::defaultValue;
 
     void TypeTable::SetGenerator(CodeGenerator* gen){
-        gen=gen;
+        TypeTable::gen=gen;
         builtInTypes.operator=({
                                        {"integer",Type::getInt32Ty(gen->context)},
                                        {"single",Type::getFloatTy(gen->context)},

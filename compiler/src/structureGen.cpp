@@ -43,7 +43,7 @@ namespace classicBasic {
 
     antlrcpp::Any StructureVisitor::visitExternalFunction(BasicParser::ExternalFunctionContext *ctx){
         auto info = new structure::FunctionInfo();
-        info->parameterInfoList = std::move(visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>());
+        info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         vector<Type*> typelist;
         bool hasParamArray=false;
         for(auto p:info->parameterInfoList){

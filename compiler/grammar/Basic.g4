@@ -41,7 +41,7 @@ optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=ex
 paramArrayParameter: ParamArray nameTypePair;
 
 nameTypePair: name=ID (As typeLocation)?                                            #NormalNameTypePair
-            | name=ID '('(size=exp|lbound=exp To ubound=exp)')' (As typeLocation)?  #ArrayNameTypePair
+            | name=ID '('(size=exp|lbound=exp To ubound=exp)?')' (As typeLocation)?  #ArrayNameTypePair
             ;
 
 typeLocation: (path+=ID'.')*?target=ID;
