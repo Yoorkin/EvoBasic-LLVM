@@ -23,6 +23,7 @@ private:
     const string ColorEnd = "\033[0m";
     string path;
     bool first=true;
+    Token* handling=nullptr;
 public:
 
     Reporter(ostream& out,istream& in,string filePath):out(out),path(filePath){
@@ -57,15 +58,19 @@ public:
     void report(Token* token,string error){
         report(token->getLine(),token->getCharPositionInLine(),token->getText().length(),error);
     }
+    void report(string error){
+        if(handling==nullptr)throw "error";
+        report(handling,error);
+        handling=nullptr;
+    }
+    static Reporter* singleton;
 };
 
 class BasicErrorListener:public BaseErrorListener{
-    Reporter reporter;
 public:
-    BasicErrorListener(Reporter reporter):reporter(reporter){}
     virtual void syntaxError(Recognizer *recognizer, Token * offendingSymbol, size_t line, size_t charPositionInLine,
                              const std::string &msg, std::exception_ptr e) override{
-        reporter.report(offendingSymbol,msg);
+        Reporter::singleton->report(offendingSymbol,msg);
     }
 };
 

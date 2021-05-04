@@ -46,6 +46,7 @@ namespace classicBasic {
     using namespace llvm;
     using namespace std;
     using namespace antlr4;
+
     namespace structure{
         class Scope;
     }
@@ -55,6 +56,7 @@ namespace classicBasic {
         llvm::Module& mod;
         Reporter& reporter;
         structure::Scope* scope;
+        CodeGenerator& gen;
     public:
         StructureVisitor(GenerateUnit& unit,structure::Scope* scope);
 

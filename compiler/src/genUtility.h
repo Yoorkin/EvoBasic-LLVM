@@ -61,7 +61,6 @@ namespace classicBasic{
         llvm::Module mod;
         list<StackFrame> frame;
         LLVMContext& context;
-        Reporter reporter;
         BasicErrorListener errorListener;
         CodeGenerator& gen;
         istream& in;
@@ -101,26 +100,15 @@ namespace classicBasic{
             units.push_back(unit);
             return unit;
         }
-        structure::Scope* globalScope;
-    };
-
-    class TypeTable{
-        static CodeGenerator* gen;
-        static map<string,llvm::Type*> builtInTypes;
-        static map<string,llvm::Type*> builtInTypesPtr;
-        static map<string,Value*> defaultValue;
-    public:
-        static void SetGenerator(CodeGenerator* gen);
-        static Type* find(Token* type,bool ptr=false);
-        static Type* find(BasicParser::TypeLocationContext* type,bool ptr=false);
-        static Value* getDefaultValue(Token* type);
+        list<string> linkTargetPaths;
     };
 
     namespace structure{
         class Info{
         public:
-            enum Enum{Argument,Variable,Function,Type,Property,Module_,Enum_,Namespace};
-            virtual Enum getType()=0;
+            enum Enum{Argument,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Namespace};
+            virtual Enum getKind()=0;
+            llvm::Type* type;
             template<typename T>
             T* as(Enum t){return (T*)this;}
         };
@@ -131,17 +119,15 @@ namespace classicBasic{
             bool array=false;
             bool paramArray=false;
             BasicParser::ExpContext* initial=nullptr;
-            llvm::Type* type;
             std::string name;
-            virtual Enum getType()override{return Info::Argument;}
+            virtual Enum getKind()override{return Info::Argument;}
         };
 
         class VariableInfo:public Info{
         public:
             llvm::GlobalVariable* variable;
-            llvm::Type* type;
             std::string name;
-            virtual Enum getType()override{return Info::Variable;}
+            virtual Enum getKind()override{return Info::Variable;}
         };
 
         class FunctionInfo:public Info{
@@ -150,7 +136,7 @@ namespace classicBasic{
             llvm::Function* function;
             std::list<ParameterInfo*> parameterInfoList;
             ParameterInfo* retInfo=nullptr;
-            virtual Enum getType()override{return Info::Function;}
+            virtual Enum getKind()override{return Info::Function;}
         };
 
         class TypeInfo:public Info{
@@ -158,21 +144,28 @@ namespace classicBasic{
             std::string name;
             llvm::StructType* structure;
             std::map<std::string,llvm::Type*> memberInfoList;
-            virtual Enum getType()override{return Info::Type;}
+            virtual Enum getKind()override{return Info::Type;}
         };
 
         class EnumInfo:public Info{
         public:
             std::string name;
+            llvm::Type* type;
             std::map<std::string,Value*> memberList;
-            virtual Enum getType()override{return Info::Enum_;}
+            virtual Enum getKind()override{return Info::Enum_;}
         };
 
         class PropertyInfo:public Info{
         public:
             FunctionInfo *getter=nullptr,*setter=nullptr,*let=nullptr;
             ParameterInfo* valueInfo;
-            virtual Enum getType()override{return Info::Property;}
+            virtual Enum getKind()override{return Info::Property;}
+        };
+
+        class BuiltInType:public Info{
+        public:
+            BuiltInType(llvm::Type* type){this->type=type;}
+            virtual Enum getKind()override{return Info::BuiltIn;}
         };
 
         class Scope:public Info{
@@ -182,49 +175,14 @@ namespace classicBasic{
             std::map<std::string,Scope*> childScope;
             std::map<std::string,Info*> memberInfoList;
 
-            virtual Enum getType()override{return Info::Namespace;}
+            virtual Enum getKind()override{return Info::Namespace;}
             //动作类似using namespace scope
             void extend(Scope* scope);
+            Info* lookUp(vector<string>& path);
+            Info* lookUp(string name);
+            static Scope* global;
         };
     }
-
-
-//class ParameterInfo{
-//public:
-//    string name;
-//    Type* type;
-//    Token* token;
-//    bool byref;
-//    Argument* argument;
-//    antlr4::tree::ParseTree* initial=nullptr;
-//    ParameterInfo(BasicParser::NecessaryParameterContext *ctx,TypeTable& typeTable){
-//        name=strToLower(ctx->name->getText());
-//        this->token=ctx->name;
-//        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
-//        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
-//    }
-//    ParameterInfo(BasicParser::OptionalParameterContext *ctx,TypeTable& typeTable){
-//        name=strToLower(ctx->name->getText());
-//        this->token=ctx->name;
-//        byref = ctx->passFlag == nullptr || strToLower(ctx->passFlag->getText()) == "byref";
-//        type=typeTable.find(ctx->type->ID()->getSymbol(),true);//TODO 支持数组
-//        initial=ctx->initial;
-//    }
-//};
-
-//class VariableInfo{
-//public:
-//    string name;
-//    Type* type;
-//    Token* token;
-//    antlr4::tree::ParseTree* initial;
-//    VariableInfo(BasicParser::VariableContext *ctx, TypeTable& typeTable){
-//        token=ctx->name;
-//        name=strToLower(ctx->name->getText());
-//        type=typeTable.find(ctx->type->ID()->getSymbol());
-//        initial=ctx->initial;
-//    }
-//};
 
     class StackFrame{
         friend GenerateUnit;

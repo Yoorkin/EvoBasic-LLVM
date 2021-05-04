@@ -4,7 +4,7 @@
 #include"structureGen.h"
 namespace classicBasic {
     StructureVisitor::StructureVisitor(GenerateUnit& unit,structure::Scope* scope)
-    :mod(unit.mod),context(unit.context),reporter(unit.reporter),scope(scope){}
+    :mod(unit.mod),context(unit.context),reporter(unit.reporter),scope(scope),gen(unit.gen){}
 
     antlrcpp::Any StructureVisitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
         auto info = new structure::FunctionInfo();
@@ -74,6 +74,8 @@ namespace classicBasic {
             if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
+        string libPath = strToLower(ctx->libPath->getText());
+        gen.linkTargetPaths.push_back(libPath.substr(0,libPath.length()-2));
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
         scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
@@ -179,6 +181,7 @@ namespace classicBasic {
             index++;
         }
         scope->memberInfoList.insert(make_pair(info->name,info));
+
         return info;
     }
 

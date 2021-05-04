@@ -9,20 +9,23 @@ namespace classicBasic{
         return str;
     }
 
+    void strToLowerByRef(string& str){
+        transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
+    }
+
     GenerateUnit::GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out)
-            :gen(gen),in(in),out(out),context(gen.context),mod(name,gen.context),reporter(out,in,path),
-            errorListener(reporter),input(in),lexer(&input),tokens(&lexer),parser(&tokens){
-        gen.reporter=&this->reporter;
+            :gen(gen),in(in),out(out),context(gen.context),mod(name,gen.context),input(in),lexer(&input),tokens(&lexer),parser(&tokens){
+        Reporter::singleton=new Reporter(out,in,path);
         parser.removeErrorListeners();
         parser.addErrorListener(&errorListener);
         tree = parser.moduleBody();
     }
     void GenerateUnit::scan(){
-        StructureVisitor visitor(*this,gen.globalScope);
+        StructureVisitor visitor(*this,structure::Scope::global);
         visitor.visit(tree);
     }
     void GenerateUnit::generate(){
-        CodeGenVisitor visitor(*this,gen.globalScope);
+        CodeGenVisitor visitor(*this,structure::Scope::global);
         visitor.visit(tree);
     }
     void GenerateUnit::printIR(){
@@ -58,76 +61,51 @@ namespace classicBasic{
     CodeGenerator::CodeGenerator(){
         LLVMInitializeNativeTarget();
         LLVMInitializeNativeAsmPrinter();
-        TypeTable::SetGenerator(this);
-        globalScope=new structure::Scope();
-    }
-
-
-    CodeGenerator* TypeTable::gen=nullptr;
-    map<string,llvm::Type*> TypeTable::builtInTypes;
-    map<string,llvm::Type*> TypeTable::builtInTypesPtr;
-    map<string,Value*> TypeTable::defaultValue;
-
-    void TypeTable::SetGenerator(CodeGenerator* gen){
-        TypeTable::gen=gen;
-        builtInTypes.operator=({
-                                       {"integer",Type::getInt32Ty(gen->context)},
-                                       {"single",Type::getFloatTy(gen->context)},
-                                       {"double",Type::getDoubleTy(gen->context)},
-                                       {"boolean",Type::getInt1Ty(gen->context)},
-                                       {"long",Type::getInt64Ty(gen->context)},
-                                       {"byte",Type::getInt8Ty(gen->context)}
-                               });
-        builtInTypesPtr.operator=({
-                                          {"integer",Type::getInt32PtrTy(gen->context)},
-                                          {"single",Type::getFloatPtrTy(gen->context)},
-                                          {"double",Type::getDoublePtrTy(gen->context)},
-                                          {"boolean",Type::getInt1PtrTy(gen->context)},
-                                          {"long",Type::getInt64PtrTy(gen->context)},
-                                          {"byte",Type::getInt8PtrTy(gen->context)}
-                                  });
-        defaultValue.operator=({
-                                       {"integer",ConstantInt::get(builtInTypes["integer"],0)},
-                                       {"single",ConstantFP::get(builtInTypes["single"],0)},
-                                       {"double",ConstantFP::get(builtInTypes["double"],0)},
-                                       {"boolean",ConstantInt::get(builtInTypes["boolean"],0)},
-                                       {"long",ConstantInt::get(builtInTypes["long"],0)},
-                                       {"byte",ConstantInt::get(builtInTypes["byte"],0)}
-                               });
-    }
-
-    Type* TypeTable::find(Token* type,bool ptr){
-        map<string,llvm::Type*> &table = ptr?builtInTypesPtr:builtInTypes;
-        string name = strToLower(type->getText());
-        auto builtIn = table.find(name);
-        if(builtIn!=table.end())return builtIn->second;
-        if(gen->reporter!=nullptr)
-            gen->reporter->report(type,"unexpected type "+type->getText());
-        else
-            throw "Can not find reporter.\n";
-        return Type::getInt32Ty(gen->context);
-    }
-    Type* TypeTable::find(BasicParser::TypeLocationContext* type,bool ptr){
-        return find(type->target,ptr);
-        //TODO TypeTable::find
-    }
-    Value* TypeTable::getDefaultValue(Token* type){
-        string name = strToLower(type->getText());
-        auto ret = defaultValue.find(name);
-        if(ret==defaultValue.end()){
-            //必不可以是找不到默认值的情况
-            gen->reporter->report(type,"默认初始化失败，找不到该类型的默认值");
-        }
-        return ret->second;
+        using namespace structure;
+        Scope::global->memberInfoList.operator=({
+            {"integer",new BuiltInType(Type::getInt32Ty(context))},
+            {"single",new BuiltInType(Type::getFloatTy(context))},
+            {"double",new BuiltInType(Type::getDoubleTy(context))},
+            {"boolean",new BuiltInType(Type::getInt1Ty(context))},
+            {"long",new BuiltInType(Type::getInt64Ty(context))},
+            {"byte",new BuiltInType(Type::getInt8Ty(context))}
+        });
     }
 
     namespace structure {
+        Scope* Scope::global=new Scope();
+
         void Scope::extend(Scope* scope){
             childScope.insert(make_pair(scope->name,scope));
             for(auto p:scope->memberInfoList){
                 //TODO:添加合并命名空间时命名冲突的错误处理
                 memberInfoList.insert(p);
             }
+        }
+
+        Info* Scope::lookUp(vector<string>& path){
+            Scope* p=this;
+            for(int i=0;i<path.size();i++){
+                if(i<path.size()-1){
+                    auto next = p->childScope.find(path[i]);
+                    if(next==p->childScope.end())return nullptr;
+                    p=next->second;
+                }
+                else{
+                    auto target = p->memberInfoList.find(path[i]);
+                    if(target==p->memberInfoList.end())return nullptr;
+                    return target->second;
+                }
+            }
+        }
+
+        Info* Scope::lookUp(string name){
+            Scope* p=this;
+            while(p->parent!=nullptr){
+                auto target = memberInfoList.find(strToLower(name));
+                if(target!=memberInfoList.end())return target->second;
+            }
+
         }
     }
 }

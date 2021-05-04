@@ -224,53 +224,18 @@ namespace classicBasic{
     }
 
     antlrcpp::Any CodeGenVisitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
-//        vector<Type*> paramList;
-//        vector<ParameterInfo> parameters;
-//        for(auto arg:ctx->parameter()){
-//            auto info = visit(arg).as<ParameterInfo>();
-//            parameters.push_back(info);
-//            paramList.push_back(info.type);
-//        }
-//        Type* retType = typeTable.find(ctx->returnType);
-//        FunctionType *type = FunctionType::get(retType,paramList,false);
-//
-//        Function* function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-//        frame.emplace_back(function,false);
-//        BasicBlock* entryBlock = BasicBlock::Create(context, "EntryBlock", function);
-//        builder.SetInsertPoint(entryBlock);
-//
-//        auto param = function->arg_begin();
-//        for(auto& info:parameters){
-//            param->setName(info.name);
-//            //判断是否是按值传递
-//            if(!info.byref)param->addAttr(Attribute::AttrKind::ByVal);
-//            //判断是否是可选参数
-//            if(info.initial!=nullptr){
-//                BasicBlock* initBlock = BasicBlock::Create(context,info.name+"_Optional_Init");
-//                Value* initCond = builder.CreateCmp(CmpInst::Predicate::ICMP_EQ,param,ConstantPointerNull::get((PointerType*)info.type));
-//                builder.CreateCondBr(initCond,)
-//            }
-//            unit.addVariableInStack(info.token,param);
-//            if(info.byref){
-//
-//            }
-//            else{
-//                auto inst = builder.CreateAlloca(info.type, nullptr);
-//                builder.CreateStore(param,inst);
-//                unit.addVariableInStack(info.token, inst);
-//            }
-//            param++;
-//        }
-//        visitBlock(ctx->block);
-//
-//        BasicBlock* funcEnd = BasicBlock::Create(context,"FunctionEnd",frame.back().function);
-//        builder.CreateBr(funcEnd);
-//        builder.SetInsertPoint(funcEnd);
-//        builder.CreateRet(typeTable.getDefaultValue(ctx->returnType));
-//
-//        frame.pop_back();
-//        return function;
-        return nullptr;
+        string name = strToLower(ctx->name->getText());
+        structure::FunctionInfo* info = (structure::FunctionInfo*)scope->memberInfoList.find(name)->second;
+        frame.emplace_back(info->function,false);
+        BasicBlock* entryBlock = BasicBlock::Create(context,"Entry",info->function);
+        builder.SetInsertPoint(entryBlock);
+        visitBlock(ctx->block);
+        BasicBlock* funcEnd = BasicBlock::Create(context,"FunctionEnd",frame.back().function);
+        builder.CreateBr(funcEnd);
+        builder.SetInsertPoint(funcEnd);
+        //builder.CreateRet(TypeTable::getDefaultValue(info->retInfo->type));
+        frame.pop_back();
+        return info;
     }
 
     antlrcpp::Any CodeGenVisitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
