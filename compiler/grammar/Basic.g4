@@ -6,7 +6,7 @@ declare: /*(Public|Private|Friend)? Static?*/ functionDecl|subDecl|propertyDecl|
 
 enumDecl: Enum name=ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
 
-propertyDecl:Property Get name=ID parameterList As returnType=ID LineEnd block+=line* End Property LineEnd  #propertyGet
+propertyDecl:Property Get name=ID parameterList As returnType=typeLocation LineEnd block+=line* End Property LineEnd  #propertyGet
             |Property Set name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertySet
             |Property Let name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertyLet
             ;
@@ -14,7 +14,7 @@ propertyDecl:Property Get name=ID parameterList As returnType=ID LineEnd block+=
 enumPair: name=ID ('=' value=Integer)?;
 
 externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList LineEnd #externalSub
-            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=ID LineEnd #externalFunction
+            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=typeLocation LineEnd #externalFunction
             ;
 
 typeDecl:Type name=ID LineEnd (nameTypePair? LineEnd)* End Type LineEnd;
