@@ -66,6 +66,8 @@ public:
     static Reporter* singleton;
 };
 
+
+
 class BasicErrorListener:public BaseErrorListener{
 public:
     virtual void syntaxError(Recognizer *recognizer, Token * offendingSymbol, size_t line, size_t charPositionInLine,

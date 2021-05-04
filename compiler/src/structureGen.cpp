@@ -3,8 +3,7 @@
 //
 #include"structureGen.h"
 namespace classicBasic {
-    StructureVisitor::StructureVisitor(GenerateUnit& unit,structure::Scope* scope)
-    :mod(unit.mod),context(unit.context),reporter(unit.reporter),scope(scope),gen(unit.gen){}
+    StructureVisitor::StructureVisitor(GenerateUnit& unit):unit(unit),gen(unit.gen){}
 
     antlrcpp::Any StructureVisitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
         auto info = new structure::FunctionInfo();
@@ -15,10 +14,10 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        auto retT = TypeTable::find(ctx->returnType);
+        auto retT = visit(ctx->returnType).as<structure::Info*>()->type;
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
         auto arg_iter=info->function->arg_begin();
@@ -28,7 +27,7 @@ namespace classicBasic {
             arg_iter++;
         }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
     antlrcpp::Any StructureVisitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
@@ -40,16 +39,16 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
             if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
 
@@ -62,10 +61,10 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        auto retT = TypeTable::find(ctx->returnType);
+        auto retT = structure::Scope::global->lookUp(ctx->returnType->getText())->type;
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
         auto arg_iter=info->function->arg_begin();
@@ -77,7 +76,7 @@ namespace classicBasic {
         string libPath = strToLower(ctx->libPath->getText());
         gen.linkTargetPaths.push_back(libPath.substr(0,libPath.length()-2));
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
     antlrcpp::Any StructureVisitor::visitExternalSub(BasicParser::ExternalSubContext *ctx){
@@ -89,16 +88,16 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
             if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
 
@@ -111,10 +110,10 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        auto retT = TypeTable::find(ctx->returnType);
+        auto retT = structure::Scope::global->lookUp(ctx->returnType->getText())->type;
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_get",mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_get",unit.mod);
         info->retInfo=new structure::ParameterInfo();
         info->retInfo->type=retT;
         auto arg_iter=info->function->arg_begin();
@@ -124,7 +123,7 @@ namespace classicBasic {
             arg_iter++;
         }
         //info->retInfo->array=ctx->returnType TODO:支持返回数组
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
     antlrcpp::Any StructureVisitor::visitPropertySet(BasicParser::PropertySetContext *ctx){
@@ -136,16 +135,16 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_set",mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_set",unit.mod);
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
             if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
     antlrcpp::Any StructureVisitor::visitPropertyLet(BasicParser::PropertyLetContext *ctx){
@@ -157,16 +156,16 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->type);
         }
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
         info->name=strToLower(ctx->name->getText());
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_let",mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name+"_let",unit.mod);
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
             if(p->byval)arg_iter->addAttr(Attribute::AttrKind::ByVal);
             arg_iter++;
         }
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
 
@@ -177,10 +176,10 @@ namespace classicBasic {
         for(auto pctx:ctx->enumPair()){
             string name = strToLower(pctx->name->getText());
             if(pctx->value!=nullptr)index=std::stoi(pctx->value->getText());
-            info->memberList.insert(make_pair(name,ConstantInt::get(Type::getInt32Ty(context),index)));
+            info->memberList.insert(make_pair(name,ConstantInt::get(Type::getInt32Ty(gen.context),index)));
             index++;
         }
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
 
         return info;
     }
@@ -195,24 +194,24 @@ namespace classicBasic {
             members.push_back(p.type);
         }
         info->structure=llvm::StructType::create(members,info->name);
-        scope->memberInfoList.insert(make_pair(info->name,info));
+        unit.scope->memberInfoList.insert(make_pair(info->name,info));
         return info;
     }
 
     antlrcpp::Any StructureVisitor::visitVarDecl(BasicParser::VarDeclContext *ctx){
         for(auto v:ctx->variable()) {
             auto info = visit(v).as<structure::VariableInfo *>();
-            scope->memberInfoList.insert(make_pair(info->name,info));
+            unit.scope->memberInfoList.insert(make_pair(info->name,info));
         }
         return nullptr;
     }
     antlrcpp::Any StructureVisitor::visitVariable(BasicParser::VariableContext *ctx){
         auto info = new structure::VariableInfo();
         NameTypePairTmp p = visit(ctx->nameTypePair()).as<NameTypePairTmp>();
-        mod.getOrInsertGlobal(p.name,p.type);
+        unit.mod.getOrInsertGlobal(p.name,p.type);
         info->type=p.type;
         info->name=p.name;
-        info->variable=mod.getNamedGlobal(p.name);
+        info->variable=unit.mod.getNamedGlobal(p.name);
         info->variable->setLinkage(GlobalValue::CommonLinkage);
         return info;
     }
@@ -221,13 +220,13 @@ namespace classicBasic {
         NameTypePairTmp tmp;
         tmp.isArray=false;
         tmp.name=strToLower(ctx->name->getText());
-        tmp.type=TypeTable::find(ctx->typeLocation(),true);
+        tmp.type=visit(ctx->typeLocation()).as<structure::Info*>()->type;
         return tmp;
     }
     antlrcpp::Any StructureVisitor::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
         NameTypePairTmp tmp;
         tmp.isArray=true;
-        tmp.type=TypeTable::find(ctx->typeLocation(),true);
+        tmp.type=visit(ctx->typeLocation()).as<structure::Info*>()->type;
         return tmp;
     }
 
@@ -256,6 +255,7 @@ namespace classicBasic {
         info->byval = !(ctx->passFlag==nullptr||strToLower(ctx->passFlag->getText())=="byref");
         return info;
     }
+
     antlrcpp::Any StructureVisitor::visitOptionalParameter(BasicParser::OptionalParameterContext *ctx){
         auto info = new structure::ParameterInfo();
         auto p = visit(ctx->nameTypePair()).as<NameTypePairTmp>();
@@ -265,6 +265,7 @@ namespace classicBasic {
         info->initial=ctx->initial;
         return info;
     }
+
     antlrcpp::Any StructureVisitor::visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx){
         auto info = new structure::ParameterInfo();
         auto p = visit(ctx->nameTypePair()).as<NameTypePairTmp>();
@@ -274,4 +275,15 @@ namespace classicBasic {
         return info;
     }
 
+    antlrcpp::Any StructureVisitor::visitTypeLocation(BasicParser::TypeLocationContext *ctx){
+        vector<string> path;
+        for(auto p:ctx->path){
+            cout<<p->getText()<<endl;
+            path.push_back(strToLower(p->getText()));
+        }
+        path.push_back(strToLower(ctx->target->getText()));
+        cout<<ctx->target->getText()<<endl;
+        structure::Info* info = structure::Scope::global->lookUp(path);
+        return info;
+    }
 }

@@ -58,10 +58,6 @@ namespace classicBasic{
         friend CodeGenVisitor;
         friend JIT;
         friend StructureVisitor;
-        llvm::Module mod;
-        list<StackFrame> frame;
-        LLVMContext& context;
-        BasicErrorListener errorListener;
         CodeGenerator& gen;
         istream& in;
         ostream& out;
@@ -70,10 +66,10 @@ namespace classicBasic{
         CommonTokenStream tokens;
         BasicParser parser;
         tree::ParseTree *tree = nullptr;
-
     public:
-
-        GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
+        llvm::Module mod;
+        structure::Scope* scope;
+        GenerateUnit(CodeGenerator& gen,structure::Scope* parentScope,string path,string name,istream& in,ostream& out);
         void scan();
         void generate();
         void printIR();
@@ -87,26 +83,22 @@ namespace classicBasic{
         friend StackFrame;
         friend TypeTable;
         friend CodeGenVisitor;
-        LLVMContext context;
+        BasicErrorListener errorListener;
         list<GenerateUnit*> units;
-        Reporter* reporter=nullptr;
     public:
+        LLVMContext context;
         CodeGenerator();
         ~CodeGenerator(){
             for(auto u:units)delete u;
         }
-        GenerateUnit* CreateUnit(string path,istream& in,ostream& out){
-            auto unit=new GenerateUnit(*this,path,path,in,out);
-            units.push_back(unit);
-            return unit;
-        }
+        GenerateUnit* CreateUnit(string path,istream& in,ostream& out);
         list<string> linkTargetPaths;
     };
 
     namespace structure{
         class Info{
         public:
-            enum Enum{Argument,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Namespace};
+            enum Enum{Argument,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Scope};
             virtual Enum getKind()=0;
             llvm::Type* type;
             template<typename T>
@@ -175,7 +167,7 @@ namespace classicBasic{
             std::map<std::string,Scope*> childScope;
             std::map<std::string,Info*> memberInfoList;
 
-            virtual Enum getKind()override{return Info::Namespace;}
+            virtual Enum getKind()override{return Info::Scope;}
             //动作类似using namespace scope
             void extend(Scope* scope);
             Info* lookUp(vector<string>& path);

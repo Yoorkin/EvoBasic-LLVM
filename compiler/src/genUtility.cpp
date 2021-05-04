@@ -13,20 +13,24 @@ namespace classicBasic{
         transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
     }
 
-    GenerateUnit::GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out)
-            :gen(gen),in(in),out(out),context(gen.context),mod(name,gen.context),input(in),lexer(&input),tokens(&lexer),parser(&tokens){
+    GenerateUnit::GenerateUnit(CodeGenerator& gen,structure::Scope* parentScope,string path,string name,istream& in,ostream& out)
+            :gen(gen),in(in),out(out),mod(name,gen.context),
+            input(in),lexer(&input),tokens(&lexer),parser(&tokens){
+        scope=new structure::Scope();
+        scope->parent=parentScope;
         Reporter::singleton=new Reporter(out,in,path);
         parser.removeErrorListeners();
-        parser.addErrorListener(&errorListener);
+        parser.addErrorListener(&gen.errorListener);
         tree = parser.moduleBody();
     }
+
     void GenerateUnit::scan(){
-        StructureVisitor visitor(*this,structure::Scope::global);
+        StructureVisitor visitor(*this);
         visitor.visit(tree);
     }
     void GenerateUnit::generate(){
-        CodeGenVisitor visitor(*this,structure::Scope::global);
-        visitor.visit(tree);
+//        CodeGenVisitor visitor(*this);
+//        visitor.visit(tree);
     }
     void GenerateUnit::printIR(){
         mod.print(outs(),nullptr,false,true);
@@ -38,25 +42,6 @@ namespace classicBasic{
         return func;
     }
 
-    Value* GenerateUnit::findVariable(Token* id){
-        string name = strToLower(id->getText());
-        for(auto iter=frame.rbegin();iter!=frame.rend();iter++){
-            auto var=iter->varTable.find(name);
-            if(var!=iter->varTable.end()){
-                return var->second;
-            }
-        }
-        return nullptr;
-    }
-
-    void GenerateUnit::addVariableInStack(Token* id, Value* variable){
-        string name = strToLower(id->getText());
-        auto p = frame.back().varTable.find(name);
-        if(p!=frame.back().varTable.end())
-            reporter.report(id,"redefinition of '"+name+"'");
-        else
-            frame.back().varTable.insert(make_pair(name,variable));
-    }
 
     CodeGenerator::CodeGenerator(){
         LLVMInitializeNativeTarget();
@@ -70,6 +55,12 @@ namespace classicBasic{
             {"long",new BuiltInType(Type::getInt64Ty(context))},
             {"byte",new BuiltInType(Type::getInt8Ty(context))}
         });
+    }
+
+    GenerateUnit* CodeGenerator::CreateUnit(string path,istream& in,ostream& out){
+        auto unit=new GenerateUnit(*this,structure::Scope::global,path,path,in,out);
+        units.push_back(unit);
+        return unit;
     }
 
     namespace structure {
@@ -101,11 +92,12 @@ namespace classicBasic{
 
         Info* Scope::lookUp(string name){
             Scope* p=this;
-            while(p->parent!=nullptr){
+            while(p!=nullptr){
                 auto target = memberInfoList.find(strToLower(name));
                 if(target!=memberInfoList.end())return target->second;
+                else p=p->parent;
             }
-
+            Reporter::singleton->report("Undefined Type '"+name+"'");
         }
     }
 }

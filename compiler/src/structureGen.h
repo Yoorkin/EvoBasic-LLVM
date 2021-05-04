@@ -52,13 +52,10 @@ namespace classicBasic {
     }
 
     class StructureVisitor : public BasicBaseVisitor {
-        LLVMContext& context;
-        llvm::Module& mod;
-        Reporter& reporter;
-        structure::Scope* scope;
         CodeGenerator& gen;
+        GenerateUnit& unit;
     public:
-        StructureVisitor(GenerateUnit& unit,structure::Scope* scope);
+        StructureVisitor(GenerateUnit& unit);
 
         virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
         virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
@@ -91,7 +88,7 @@ namespace classicBasic {
         virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override;
         virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override;
         virtual antlrcpp::Any visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx) override;
-
+        virtual antlrcpp::Any visitTypeLocation(BasicParser::TypeLocationContext *ctx) override;
     };
 }
 #endif //CLASSICBASIC_STRUCTUREGEN_H
