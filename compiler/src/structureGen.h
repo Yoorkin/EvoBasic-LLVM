@@ -51,11 +51,11 @@ namespace classicBasic {
         class Scope;
     }
 
-    class StructureVisitor : public BasicBaseVisitor {
+    class StructureScan : public BasicBaseVisitor {
         CodeGenerator& gen;
         GenerateUnit& unit;
     public:
-        StructureVisitor(GenerateUnit& unit);
+        StructureScan(GenerateUnit& unit);
 
         virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
         virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
@@ -77,18 +77,8 @@ namespace classicBasic {
         };
 
         virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override;
-
-        virtual antlrcpp::Any visitVarDecl(BasicParser::VarDeclContext *ctx) override;
-        virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override;
-
-        virtual antlrcpp::Any visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx) override;
-        virtual antlrcpp::Any visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx) override;
-
-        virtual antlrcpp::Any visitParameterList(BasicParser::ParameterListContext *ctx) override;
-        virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override;
-        virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override;
-        virtual antlrcpp::Any visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx) override;
-        virtual antlrcpp::Any visitTypeLocation(BasicParser::TypeLocationContext *ctx) override;
     };
+
+
 }
 #endif //CLASSICBASIC_STRUCTUREGEN_H

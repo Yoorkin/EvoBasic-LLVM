@@ -25,7 +25,7 @@ namespace classicBasic{
     }
 
     void GenerateUnit::scan(){
-        StructureVisitor visitor(*this);
+        StructureScan visitor(*this);
         visitor.visit(tree);
     }
     void GenerateUnit::generate(){
@@ -65,6 +65,7 @@ namespace classicBasic{
 
     namespace structure {
         Scope* Scope::global=new Scope();
+        Info* Info::handling=nullptr;
 
         void Scope::extend(Scope* scope){
             childScope.insert(make_pair(scope->name,scope));
@@ -97,7 +98,7 @@ namespace classicBasic{
                 if(target!=memberInfoList.end())return target->second;
                 else p=p->parent;
             }
-            Reporter::singleton->report("Undefined Type '"+name+"'");
+            return nullptr;
         }
     }
 }
