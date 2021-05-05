@@ -69,6 +69,33 @@ namespace classicBasic {
 
         virtual antlrcpp::Any visitEnumDecl(BasicParser::EnumDeclContext *ctx) override;
 
+        virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override;
+
+        virtual antlrcpp::Any visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx) override;
+        virtual antlrcpp::Any visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx) override;
+
+        virtual antlrcpp::Any visitParameterList(BasicParser::ParameterListContext *ctx) override;
+    };
+
+    class StructureGen : public BasicBaseVisitor{
+    public:
+        CodeGenerator& gen;
+        GenerateUnit& unit;
+    public:
+        StructureGen(GenerateUnit& unit);
+
+        virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
+        virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
+
+        virtual antlrcpp::Any visitExternalFunction(BasicParser::ExternalFunctionContext *ctx) override;
+        virtual antlrcpp::Any visitExternalSub(BasicParser::ExternalSubContext *ctx) override;
+
+        virtual antlrcpp::Any visitPropertyGet(BasicParser::PropertyGetContext *ctx) override;
+        virtual antlrcpp::Any visitPropertySet(BasicParser::PropertySetContext *ctx) override;
+        virtual antlrcpp::Any visitPropertyLet(BasicParser::PropertyLetContext *ctx) override;
+
+        virtual antlrcpp::Any visitEnumDecl(BasicParser::EnumDeclContext *ctx) override;
+
         struct NameTypePairTmp{
             bool isArray;
             int lbound,ubound;
@@ -77,8 +104,14 @@ namespace classicBasic {
         };
 
         virtual antlrcpp::Any visitTypeDecl(BasicParser::TypeDeclContext *ctx) override;
+
+//        virtual antlrcpp::Any visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx) override;
+//        virtual antlrcpp::Any visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx) override;
+
+        virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override;
+        virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override;
+        virtual antlrcpp::Any visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx) override;
+        virtual antlrcpp::Any visitTypeLocation(BasicParser::TypeLocationContext *ctx) override;
     };
-
-
 }
 #endif //CLASSICBASIC_STRUCTUREGEN_H

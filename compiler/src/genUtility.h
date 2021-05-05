@@ -61,7 +61,6 @@ namespace classicBasic{
         friend CodeGenVisitor;
         friend JIT;
         friend StructureScan;
-        CodeGenerator& gen;
         istream& in;
         ostream& out;
         ANTLRInputStream input;
@@ -70,12 +69,13 @@ namespace classicBasic{
         BasicParser parser;
         tree::ParseTree *tree = nullptr;
     public:
+        CodeGenerator& gen;
         /*
          * 未能识别的
          * ParameterInfo
          * VariableInfo
          */
-        list<pair<BasicParser::TypeLocationContext*,structure::Info*>> unrecognized;
+//        list<pair<BasicParser::TypeLocationContext*,structure::Info*>> unrecognized;
         llvm::Module mod;
         structure::Scope* scope;
         GenerateUnit(CodeGenerator& gen,structure::Scope* parentScope,string path,string name,istream& in,ostream& out);
@@ -137,8 +137,10 @@ namespace classicBasic{
             enum Enum{Parameter,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Scope};
             virtual Enum getKind()=0;
             virtual void load(BasicBaseVisitor* visitor)=0;
-            virtual llvm::Type* getType(BasicBaseVisitor* visitor){
+            void setType(llvm::Type* t){type=t;}
+            llvm::Type* getType(BasicBaseVisitor* visitor){
                 if(type==nullptr)load(visitor);
+                if(type==nullptr)throw "";
                 return type;
             };
             template<typename T>
@@ -152,11 +154,13 @@ namespace classicBasic{
             BasicParser::ParamArrayParameterContext* paramArrayParameterCtx=nullptr;
             BasicParser::OptionalParameterContext* optionalParameterCtx=nullptr;
             BasicParser::TypeLocationContext* returnCtx=nullptr;
+            BasicParser::NameTypePairContext* typeMember=nullptr;
 
             ParameterInfo(BasicParser::NecessaryParameterContext* ctx):necessaryParameterCtx(ctx){}
             ParameterInfo(BasicParser::ParamArrayParameterContext* ctx):paramArrayParameterCtx(ctx){}
             ParameterInfo(BasicParser::OptionalParameterContext* ctx):optionalParameterCtx(ctx){}
             ParameterInfo(BasicParser::TypeLocationContext* ctx):returnCtx(ctx){}
+            ParameterInfo(BasicParser::NameTypePairContext* ctx):typeMember(ctx){}
 
             virtual void load(BasicBaseVisitor* visitor)override{
                 Info::handling=this;
@@ -164,6 +168,7 @@ namespace classicBasic{
                 else if(paramArrayParameterCtx!=nullptr)visitor->visit(paramArrayParameterCtx);
                 else if(optionalParameterCtx!=nullptr)visitor->visit(optionalParameterCtx);
                 else if(returnCtx!=nullptr)visitor->visit(returnCtx);
+                else if(typeMember!=nullptr)visitor->visit(typeMember);
                 Info::handling=nullptr;
             }
 
@@ -263,7 +268,9 @@ namespace classicBasic{
         class BuiltInType:public Info{
         public:
             BuiltInType(llvm::Type* type){this->type=type;}
-            virtual void load(BasicBaseVisitor* visitor)override{}
+            virtual void load(BasicBaseVisitor* visitor)override{
+                cout<<"loading bulitin"<<endl;
+            }
             virtual Enum getKind()override{return Info::BuiltIn;}
         };
 

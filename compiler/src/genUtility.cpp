@@ -27,6 +27,8 @@ namespace classicBasic{
     void GenerateUnit::scan(){
         StructureScan visitor(*this);
         visitor.visit(tree);
+        StructureGen v2(*this);
+        v2.visit(tree);
     }
     void GenerateUnit::generate(){
 //        CodeGenVisitor visitor(*this);
@@ -75,7 +77,19 @@ namespace classicBasic{
             }
         }
 
+        Info* Scope::lookUp(string name){
+            Scope* p=this;
+            while(p!=nullptr){
+                auto target = p->memberInfoList.find(strToLower(name));
+                if(target!=p->memberInfoList.end())return target->second;
+                else p=p->parent;
+            }
+            Reporter::singleton->report("Undefined Type or Object '" + name +"'");
+            return p->memberInfoList.find("integer")->second;
+        }
+
         Info* Scope::lookUp(vector<string>& path){
+            if(path.size()==1)return lookUp(path[0]);
             Scope* p=this;
             for(int i=0;i<path.size();i++){
                 if(i<path.size()-1){
@@ -91,15 +105,6 @@ namespace classicBasic{
             }
         }
 
-        Info* Scope::lookUp(string name){
-            Scope* p=this;
-            while(p!=nullptr){
-                auto target = memberInfoList.find(strToLower(name));
-                if(target!=memberInfoList.end())return target->second;
-                else p=p->parent;
-            }
-            return nullptr;
-        }
     }
 }
 
