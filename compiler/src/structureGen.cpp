@@ -216,7 +216,7 @@ namespace classicBasic {
 
     antlrcpp::Any StructureGen::visitPropertyGet(BasicParser::PropertyGetContext *ctx){
         FunctionInfo* info=(FunctionInfo*)Info::handling;
-        if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText()))->second;
+        if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText())+"_get")->second;
 
         vector<Type*> typelist;
         bool hasParamArray=false;
@@ -240,7 +240,7 @@ namespace classicBasic {
     }
     antlrcpp::Any StructureGen::visitPropertySet(BasicParser::PropertySetContext *ctx){
         FunctionInfo* info=(FunctionInfo*)Info::handling;
-        if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText()))->second;
+        if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText())+"_set")->second;
 
         vector<Type*> typelist;
         bool hasParamArray=false;
@@ -262,7 +262,7 @@ namespace classicBasic {
     }
     antlrcpp::Any StructureGen::visitPropertyLet(BasicParser::PropertyLetContext *ctx){
         FunctionInfo* info=(FunctionInfo*)Info::handling;
-        if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText()))->second;
+        if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText())+"_let")->second;
 
         vector<Type*> typelist;
         bool hasParamArray=false;
@@ -319,6 +319,9 @@ namespace classicBasic {
 //        info->setType(visit(ctx->typeLocation()).as<structure::Info*>()->getType(this));
 //        return nullptr;
 //    }
+    antlrcpp::Any StructureGen::visitVarDecl(BasicParser::VarDeclContext *ctx){
+        return nullptr;//skip variable declare
+    }
 
     antlrcpp::Any StructureGen::visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx){
         auto info = (ParameterInfo*)Info::handling;
