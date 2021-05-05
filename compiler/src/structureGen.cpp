@@ -88,13 +88,13 @@ namespace classicBasic {
     antlrcpp::Any StructureScan::visitParameterList(BasicParser::ParameterListContext *ctx){
         list<structure::ParameterInfo*> args;
         for(auto child:ctx->necessaryParameter()){
-            args.push_back(new ParameterInfo(child));
+            args.push_back(visit(child).as<ParameterInfo*>());
         }
         for(auto child:ctx->optionalParameter()){
-            args.push_back(new ParameterInfo(child));
+            args.push_back(visit(child).as<ParameterInfo*>());
         }
         if(ctx->paramArrayParameter()!=nullptr) {
-            args.push_back(new ParameterInfo(ctx->paramArrayParameter()));
+            args.push_back(visit(ctx->paramArrayParameter()).as<ParameterInfo*>());
         }
         return args;
     }
@@ -311,12 +311,13 @@ namespace classicBasic {
 
 //    antlrcpp::Any StructureGen::visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx){
 //        auto info = (TypeInfo*)Info::handling;
-//        info->setType(visit(ctx->typeLocation()).as<structure::Info*>()->getType(this));
+//        info->name=strToLower(ctx->name->getText());
 //        return nullptr;
 //    }
 //    antlrcpp::Any StructureGen::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
 //        auto info = (TypeInfo*)Info::handling;
-//        info->setType(visit(ctx->typeLocation()).as<structure::Info*>()->getType(this));
+//        info->name=strToLower(ctx->name->getText());
+//        visit(ctx->typeLocation());
 //        return nullptr;
 //    }
     antlrcpp::Any StructureGen::visitVarDecl(BasicParser::VarDeclContext *ctx){
