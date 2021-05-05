@@ -78,7 +78,10 @@ namespace classicBasic {
         auto info = new structure::TypeInfo(ctx);
         info->name=strToLower(ctx->name->getText());
         for(auto p:ctx->nameTypePair()){
-            ParameterInfo* m=visit(p).as<ParameterInfo*>();
+            auto namePair = visit(p).as<pair<string,bool>>();
+            ParameterInfo* m=new ParameterInfo(p);
+            m->array=namePair.second;
+            m->name=namePair.first;
             info->memberInfoList.insert(make_pair(m->name,m));
         }
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
@@ -98,16 +101,44 @@ namespace classicBasic {
         }
         return args;
     }
-    antlrcpp::Any StructureScan::visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx){
-        auto info = new structure::ParameterInfo((BasicParser::NameTypePairContext*)ctx);
-        info->name=strToLower(ctx->name->getText());
+
+    antlrcpp::Any StructureScan::visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx){
+        auto info = new structure::ParameterInfo((BasicParser::NecessaryParameterContext*)ctx);
+        pair<string,bool> p = visit(ctx->nameTypePair()).as<pair<string,bool>>();
+        info->name=p.first;
+        info->array=p.second;
         return info;
     }
-    antlrcpp::Any StructureScan::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
-        auto info = new structure::ParameterInfo((BasicParser::NameTypePairContext*)ctx);
-        info->name=strToLower(ctx->name->getText());
-        info->array=true;
+
+    antlrcpp::Any StructureScan::visitOptionalParameter(BasicParser::OptionalParameterContext *ctx){
+        auto info = new structure::ParameterInfo((BasicParser::OptionalParameterContext*)ctx);
+        pair<string,bool> p = visit(ctx->nameTypePair()).as<pair<string,bool>>();
+        info->name=p.first;
+        info->array=p.second;
+        info->initial=ctx->initial;
         return info;
+    }
+
+    antlrcpp::Any StructureScan::visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx){
+        auto info = new structure::ParameterInfo((BasicParser::ParamArrayParameterContext*)ctx);
+        pair<string,bool> p = visit(ctx->nameTypePair()).as<pair<string,bool>>();
+        info->name=p.first;
+        info->array=p.second;
+        info->paramArray=true;
+        return info;
+    }
+
+    antlrcpp::Any StructureScan::visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx){
+        pair<string,bool> p;
+        p.first=strToLower(ctx->name->getText());
+        p.second=false;
+        return p;
+    }
+    antlrcpp::Any StructureScan::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
+        pair<string,bool> p;
+        p.first=strToLower(ctx->name->getText());
+        p.second=true;
+        return p;
     }
 
 
@@ -309,17 +340,18 @@ namespace classicBasic {
     }
 
 
-//    antlrcpp::Any StructureGen::visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx){
-//        auto info = (TypeInfo*)Info::handling;
-//        info->name=strToLower(ctx->name->getText());
-//        return nullptr;
-//    }
-//    antlrcpp::Any StructureGen::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
-//        auto info = (TypeInfo*)Info::handling;
-//        info->name=strToLower(ctx->name->getText());
-//        visit(ctx->typeLocation());
-//        return nullptr;
-//    }
+    antlrcpp::Any StructureGen::visitNormalNameTypePair(BasicParser::NormalNameTypePairContext *ctx){
+        auto info = (TypeInfo*)Info::handling;
+        visit(ctx->typeLocation());
+        return nullptr;
+    }
+    antlrcpp::Any StructureGen::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
+        auto info = (TypeInfo*)Info::handling;
+        visit(ctx->typeLocation());
+        info->setType(info->getType(this)->getPointerTo());
+        return nullptr;
+    }
+
     antlrcpp::Any StructureGen::visitVarDecl(BasicParser::VarDeclContext *ctx){
         return nullptr;//skip variable declare
     }
@@ -327,6 +359,7 @@ namespace classicBasic {
     antlrcpp::Any StructureGen::visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx){
         auto info = (ParameterInfo*)Info::handling;
         visit(ctx->nameTypePair());
+        info->setType(info->getType(this)->getPointerTo());
         info->byval = !(ctx->passFlag==nullptr||strToLower(ctx->passFlag->getText())=="byref");
         return nullptr;
     }
@@ -334,6 +367,7 @@ namespace classicBasic {
     antlrcpp::Any StructureGen::visitOptionalParameter(BasicParser::OptionalParameterContext *ctx){
         auto info = (ParameterInfo*)Info::handling;
         visit(ctx->nameTypePair());
+        info->setType(info->getType(this)->getPointerTo());
         info->initial=ctx->initial;
         return nullptr;
     }
@@ -341,6 +375,7 @@ namespace classicBasic {
     antlrcpp::Any StructureGen::visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx){
         auto info = (ParameterInfo*)Info::handling;
         visit(ctx->nameTypePair());
+        info->setType(info->getType(this)->getPointerTo());
         info->paramArray=true;
         return nullptr;
     }
