@@ -222,7 +222,6 @@ namespace classicBasic{
             BasicParser::TypeDeclContext *ctx=nullptr;
 
             std::string name;
-            llvm::StructType* structure;
             std::map<std::string,ParameterInfo*> memberInfoList;
 
             TypeInfo(BasicParser::TypeDeclContext *ctx):ctx(ctx){}

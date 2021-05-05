@@ -304,7 +304,7 @@ namespace classicBasic {
         for(auto m:info->memberInfoList){
             members.push_back(m.second->getType(this));
         }
-        info->structure=llvm::StructType::create(members,info->name);
+        info->setType(llvm::StructType::create(members,info->name));
         return info;
     }
 
