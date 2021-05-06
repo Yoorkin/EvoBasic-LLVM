@@ -1,8 +1,15 @@
 grammar Basic;
 
-moduleBody: (declare|LineEnd)* EOF;
+body:(globalModule=moduleMember|LineEnd)* EOF;
 
-declare: /*(Public|Private|Friend)? Static?*/ functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl;
+classDecl: Class name=ID (Implements (implements+=typeLocation(','implements+=typeLocation)*))?
+            (classMember|LineEnd)* End Class;
+classMember: controlFlag=(Public|Private)? Static?
+                (importDecl|functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl|factoryDecl|operatorOverride);
+
+moduleDecl: Module name=ID (moduleMember|LineEnd)* End Module;
+moduleMember: controlFlag=(Public|Private)? Static?
+                (importDecl|functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl|moduleDecl|classDecl);
 
 enumDecl: Enum name=ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
 
@@ -11,11 +18,18 @@ propertyDecl:Property Get name=ID parameterList As returnType=typeLocation LineE
             |Property Let name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertyLet
             ;
 
+operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList As returnType=typeLocation (Implements implements=typeLocation)? LineEnd
+            block+=line* End Function LineEnd;
+
+importDecl: Import typeLocation;
+
 enumPair: name=ID ('=' value=Integer)?;
 
 externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList LineEnd #externalSub
             | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=typeLocation LineEnd #externalFunction
             ;
+
+factoryDecl:Factory name=ID parameterList block+=line* End Factory;
 
 typeDecl:Type name=ID LineEnd (nameTypePair? LineEnd)* End Type LineEnd;
 
@@ -26,7 +40,8 @@ redimDecl: Redim preserveFlag=Preserve? nameTypePair (','nameTypePair)* LineEnd;
 variable: nameTypePair ('=' initial=exp)?;
 
 
-functionDecl:Function name=ID parameterList As returnType=typeLocation LineEnd block+=line* End Function LineEnd;
+functionDecl:Function name=ID parameterList As returnType=typeLocation (Implements implements=typeLocation)? LineEnd
+            block+=line* End Function LineEnd;
 
 subDecl: Sub name=ID parameterList LineEnd block+=line* End Sub LineEnd;
 
@@ -126,6 +141,12 @@ BlockComment: '\'*' .*? '*\'' -> skip;
 LineEnd: [\n\r];
 WS: [ \t]->skip;
 
+Operator:O P E R A T O R;
+Clone: C L O N E;
+Factory:F A C T O R Y;
+Implements:I M P L E M E N T S;
+Import:I M P O R T;
+Class:C L A S S;
 Preserve:P R E S E R V E;
 Redim:R E D I M;
 ParamArray:P A R A M A R R A Y;
@@ -136,7 +157,6 @@ If:I F;
 ElseIf:E L S E I F;
 Wend:W E N D;
 From:F O R M;
-Import:I M P O R T;
 Namespace:N A M E S P A C E;
 Implement:I M P L E M E N T;
 Type: T Y P E;
