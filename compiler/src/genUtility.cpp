@@ -13,15 +13,14 @@ namespace classicBasic{
         transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
     }
 
-    GenerateUnit::GenerateUnit(CodeGenerator& gen,structure::Scope* parentScope,string path,string name,istream& in,ostream& out)
+    GenerateUnit::GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out)
             :gen(gen),in(in),out(out),mod(name,gen.context),
             input(in),lexer(&input),tokens(&lexer),parser(&tokens){
-        scope=new structure::Scope();
-        scope->parent=parentScope;
+        this->scope=structure::Scope::global;
         Reporter::singleton=new Reporter(out,in,path);
         parser.removeErrorListeners();
         parser.addErrorListener(&gen.errorListener);
-        tree = parser.moduleBody();
+        tree = parser.body();
     }
 
     void GenerateUnit::scan(){
@@ -57,10 +56,11 @@ namespace classicBasic{
             {"long",new BuiltInType(Type::getInt64Ty(context))},
             {"byte",new BuiltInType(Type::getInt8Ty(context))}
         });
+        Scope::global->name="global";
     }
 
     GenerateUnit* CodeGenerator::CreateUnit(string path,istream& in,ostream& out){
-        auto unit=new GenerateUnit(*this,structure::Scope::global,path,path,in,out);
+        auto unit=new GenerateUnit(*this,path,path,in,out);
         units.push_back(unit);
         return unit;
     }

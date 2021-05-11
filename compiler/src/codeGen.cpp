@@ -4,7 +4,8 @@
 
 #include"codeGen.h"
 
-//namespace classicBasic{
+namespace classicBasic{
+    using namespace structure;
 //    //===================================== visitor =========================================================================
 //    antlrcpp::Any CodeGenVisitor::visitExitStmt(BasicParser::ExitStmtContext *ctx){
 //        return nullptr;
@@ -221,53 +222,29 @@
 //
 //    }
 //
-//    antlrcpp::Any CodeGenVisitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
-//        string name = strToLower(ctx->name->getText());
-//        structure::FunctionInfo* info = (structure::FunctionInfo*)scope->memberInfoList.find(name)->second;
-//        frame.emplace_back(info->function,false);
-//        BasicBlock* entryBlock = BasicBlock::Create(context,"Entry",info->function);
-//        builder.SetInsertPoint(entryBlock);
-//        visitBlock(ctx->block);
-//        BasicBlock* funcEnd = BasicBlock::Create(context,"FunctionEnd",frame.back().function);
-//        builder.CreateBr(funcEnd);
-//        builder.SetInsertPoint(funcEnd);
-//        //builder.CreateRet(TypeTable::getDefaultValue(info->retInfo->type));
-//        frame.pop_back();
-//        return info;
-//    }
-//
-//    antlrcpp::Any CodeGenVisitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
-////        vector<Type*> paramList;
-////        vector<ParameterInfo> arguments;
-////        for(auto& arg:ctx->parameter()){
-////            arguments.push_back(visit(arg).as<ParameterInfo>());
-////            paramList.push_back(arguments.back().type);
-////        }
-////        FunctionType *type = FunctionType::get(Type::getVoidTy(context),paramList,false);
-////        string funcionName = ctx->name->getText();
-////        auto function = Function::Create(type,Function::ExternalLinkage,strToLower(ctx->name->getText()),mod);
-////        frame.push_back(StackFrame(function,true));
-////        auto block = BasicBlock::Create(context, "EntryBlock", function);
-////        builder.SetInsertPoint(block);
-////        auto param = function->arg_begin();
-////        for(auto& info:arguments){
-////            param->setName(info.name);
-////            if(info.byref){
-////                unit.addVariableInStack(info.token,param);
-////            }
-////            else {
-////                auto inst = builder.CreateAlloca(info.type, nullptr);
-////                builder.CreateStore(param, inst);
-////                unit.addVariableInStack(info.token, inst);
-////            }
-////            param++;
-////        }
-////        visitBlock(ctx->block);
-////        builder.CreateRetVoid();
-////        frame.pop_back();
-////        return function;
-//        return nullptr;
-//    }
+    void CodeGenVisitor::handleBlock(vector<BasicParser::LineContext*>& block){
+        for(auto l:block){
+            this->visit(l);
+        }
+    }
+
+    void CodeGenVisitor::handleFunction(string name,vector<BasicParser::LineContext*>& block){
+        Function* function = unit.scope->memberInfoList.find(name)->second->as<FunctionInfo>()->function;
+        BasicBlock* entryBlock = BasicBlock::Create(gen.context,"Entry",function);
+        builder.SetInsertPoint(entryBlock);
+        handleBlock(block);
+        BasicBlock* exitBlock = BasicBlock::Create(gen.context,"Exit",function);
+        builder.CreateBr(exitBlock);
+        builder.CreateRetVoid();
+    }
+
+    antlrcpp::Any CodeGenVisitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
+        handleFunction(ctx->name->getText(),ctx->block);
+    }
+
+    antlrcpp::Any CodeGenVisitor::visitSubDecl(BasicParser::SubDeclContext *ctx){
+        handleFunction(ctx->name->getText(),ctx->block);
+    }
 ////====================================== call statement =========================================
 //    antlrcpp::Any CodeGenVisitor::visitInnerCall(BasicParser::InnerCallContext *ctx){
 //        //TODO
@@ -400,4 +377,4 @@
 //        else if(op=="or")return builder.CreateOr(l,r);
 //        else if(op=="xor")return builder.CreateXor(l,r);
 //    }
-//}
+}

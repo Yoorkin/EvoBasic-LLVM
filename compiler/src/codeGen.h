@@ -38,24 +38,26 @@
 
 #include"genUtility.h"
 
-//namespace classicBasic{
-//    using namespace llvm;
-//    using namespace std;
-//    using namespace antlr4;
-//
-//    class CodeGenVisitor;
-//    class StackFrame;
-//    class TypeTable;
-//    class CodeGenerator;
-//    class JIT;
-//
-//    class CodeGenVisitor: public BasicBaseVisitor{
-//        GenerateUnit& unit;
-//        CodeGenerator& gen;
-//        IRBuilder<> builder;
-//    public:
-//
-//        CodeGenVisitor(GenerateUnit& unit);
+namespace classicBasic{
+    using namespace llvm;
+    using namespace std;
+    using namespace antlr4;
+
+    class CodeGenVisitor;
+    class StackFrame;
+    class TypeTable;
+    class CodeGenerator;
+    class JIT;
+
+    class CodeGenVisitor: public BasicBaseVisitor{
+        GenerateUnit& unit;
+        CodeGenerator& gen;
+        IRBuilder<> builder;
+    public:
+
+        CodeGenVisitor(GenerateUnit& unit);
+        void handleBlock(vector<BasicParser::LineContext*>& block);
+        void handleFunction(string name,vector<BasicParser::LineContext*>& block);
 //        //=========================================== utility =================================================
 //        void visitBlock(vector<BasicParser::LineContext*>& block){
 //            for(auto& line:block)visit(line);
@@ -79,8 +81,8 @@
 //        virtual antlrcpp::Any visitVariable(BasicParser::VariableContext *ctx) override;
 //        virtual antlrcpp::Any visitNecessaryParameter(BasicParser::NecessaryParameterContext *ctx) override;
 //        virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override;
-//        virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
-//        virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
+        virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
+        virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
 //        //====================================== call-statement =========================================
 //        virtual antlrcpp::Any visitInnerCall(BasicParser::InnerCallContext *ctx) override;
 //        virtual antlrcpp::Any visitArgPassValue(BasicParser::ArgPassValueContext *ctx) override;
@@ -112,7 +114,7 @@
 //        virtual antlrcpp::Any visitBoolean(BasicParser::BooleanContext *ctx) override;
 //        virtual antlrcpp::Any visitBitOp(BasicParser::BitOpContext *ctx) override;
 //        virtual antlrcpp::Any visitLogicOp(BasicParser::LogicOpContext *ctx) override;
-//    };
-//}
+    };
+}
 
 #endif

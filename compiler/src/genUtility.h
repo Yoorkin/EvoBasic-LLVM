@@ -78,7 +78,7 @@ namespace classicBasic{
 //        list<pair<BasicParser::TypeLocationContext*,structure::Info*>> unrecognized;
         llvm::Module mod;
         structure::Scope* scope;
-        GenerateUnit(CodeGenerator& gen,structure::Scope* parentScope,string path,string name,istream& in,ostream& out);
+        GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
         void scan();
         void generate();
         void printIR();
@@ -134,7 +134,7 @@ namespace classicBasic{
         protected:
             llvm::Type* type=nullptr;
         public:
-            enum Enum{Parameter,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Scope};
+            enum Enum{Parameter,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Scope,Class,Module};
             virtual Enum getKind()=0;
             virtual void load(BasicBaseVisitor* visitor)=0;
             void setType(llvm::Type* t){type=t;}
@@ -144,7 +144,7 @@ namespace classicBasic{
                 return type;
             };
             template<typename T>
-            T* as(Enum t){return (T*)this;}
+            T* as(){return (T*)this;}
             static Info* handling;
         };
 
@@ -286,6 +286,25 @@ namespace classicBasic{
             Info* lookUp(vector<string>& path);
             Info* lookUp(string name);
             static Scope* global;
+        };
+
+        class ClassInfo: public Scope{
+        public:
+            ClassInfo(string name, Scope* parent_){
+                this->parent=parent_;
+                this->name=strToLower(name);
+                parent_->memberInfoList.insert(make_pair(this->name,this));
+            }
+            virtual Enum getKind()override{return Info::Class;}
+        };
+
+        class ModuleInfo: public Scope{
+        public:
+            ModuleInfo(string name, Scope* parent){
+                this->parent=parent;
+                parent->memberInfoList.insert(make_pair(strToLower(name),this));
+            }
+            virtual Enum getKind()override{return Info::Module;}
         };
     }
 

@@ -56,6 +56,8 @@ namespace classicBasic {
         GenerateUnit& unit;
     public:
         StructureScan(GenerateUnit& unit);
+        virtual antlrcpp::Any visitModuleDecl(BasicParser::ModuleDeclContext *ctx)override;
+        virtual antlrcpp::Any visitClassDecl(BasicParser::ClassDeclContext *ctx)override;
 
         virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
         virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;
@@ -86,6 +88,8 @@ namespace classicBasic {
         GenerateUnit& unit;
     public:
         StructureGen(GenerateUnit& unit);
+        virtual antlrcpp::Any visitModuleDecl(BasicParser::ModuleDeclContext *ctx) override;
+        virtual antlrcpp::Any visitClassDecl(BasicParser::ClassDeclContext *ctx) override;
 
         virtual antlrcpp::Any visitFunctionDecl(BasicParser::FunctionDeclContext *ctx) override;
         virtual antlrcpp::Any visitSubDecl(BasicParser::SubDeclContext *ctx) override;

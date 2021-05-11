@@ -7,6 +7,22 @@ namespace classicBasic {
 
     StructureScan::StructureScan(GenerateUnit& unit): unit(unit), gen(unit.gen){}
 
+    antlrcpp::Any StructureScan::visitModuleDecl(BasicParser::ModuleDeclContext *ctx){
+        ModuleInfo* cbModule=new ModuleInfo(ctx->name->getText(), unit.scope);
+        unit.scope=cbModule;
+        for(auto m:ctx->moduleMember())visit(m);
+        unit.scope=cbModule->parent;
+        return nullptr;
+    }
+
+    antlrcpp::Any StructureScan::visitClassDecl(BasicParser::ClassDeclContext *ctx){
+        ClassInfo* cbClass=new ClassInfo(ctx->name->getText(), unit.scope);
+        unit.scope=cbClass;
+        for(auto m:ctx->classMember())visit(m);
+        unit.scope=cbClass->parent;
+        return nullptr;
+    }
+
     antlrcpp::Any StructureScan::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
         auto info = new structure::FunctionInfo(ctx);
         info->name=strToLower(ctx->name->getText());
@@ -144,6 +160,22 @@ namespace classicBasic {
 
 
     StructureGen::StructureGen(GenerateUnit& unit):unit(unit),gen(unit.gen){}
+
+    antlrcpp::Any StructureGen::visitModuleDecl(BasicParser::ModuleDeclContext *ctx){
+        ModuleInfo* cbModule=unit.scope->lookUp(ctx->name->getText())->as<ModuleInfo>();
+        unit.scope=cbModule;
+        for(auto m:ctx->moduleMember())visit(m);
+        unit.scope=cbModule->parent;
+        return nullptr;
+    }
+
+    antlrcpp::Any StructureGen::visitClassDecl(BasicParser::ClassDeclContext *ctx){
+        ClassInfo* cbClass=unit.scope->lookUp(ctx->name->getText())->as<ClassInfo>();
+        unit.scope=cbClass;
+        for(auto m:ctx->classMember())visit(m);
+        unit.scope=cbClass->parent;
+        return nullptr;
+    }
 
     antlrcpp::Any StructureGen::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){
         FunctionInfo* info=(FunctionInfo*)Info::handling;

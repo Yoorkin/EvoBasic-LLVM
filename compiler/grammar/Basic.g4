@@ -7,7 +7,7 @@ classDecl: Class name=ID (Implements (implements+=typeLocation(','implements+=ty
 classMember: controlFlag=(Public|Private)? Static?
                 (importDecl|functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl|factoryDecl|operatorOverride);
 
-moduleDecl: Module name=ID (moduleMember|LineEnd)* End Module;
+moduleDecl: ModuleInfo name=ID (moduleMember|LineEnd)* End ModuleInfo;
 moduleMember: controlFlag=(Public|Private)? Static?
                 (importDecl|functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl|moduleDecl|classDecl);
 
@@ -163,7 +163,7 @@ Type: T Y P E;
 Alias:A L I A S;
 Self:S E L F;
 Static:S T A T I C;
-Module:M O D U L E;
+ModuleInfo:M O D U L E;
 Public:P U B L I C;
 Private:P R I V A T E;
 Protected:P R O T E C T E D;
