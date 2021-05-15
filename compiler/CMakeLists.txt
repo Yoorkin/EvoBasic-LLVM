@@ -20,26 +20,23 @@ find_path(ANTLR_INCLUDE NAMES antlr4-runtime/antlr4-runtime.h)
 message(STATUS "Using Antlr4 library: ${ANTLR_LIB}")
 message(STATUS "Using Antlr4 include from: ${ANTLR_INCLUDE}")
 
-set(ANTLR_INCLUDE_DIRS
-        ${ANTLR_INCLUDE}
-        ${ANTLR_INCLUDE}/antlr4-runtime
-        ${ANTLR_INCLUDE}/antlr4-runtime/atn
-        ${ANTLR_INCLUDE}/antlr4-runtime/dfa
-        ${ANTLR_INCLUDE}/antlr4-runtime/misc
-        ${ANTLR_INCLUDE}/antlr4-runtime/support
-        ${ANTLR_INCLUDE}/antlr4-runtime/tree
-        ${ANTLR_INCLUDE}/antlr4-runtime/utf8
-        )
-
 add_definitions(${LLVM_DEFINITIONS})
 add_definitions(-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 
-file(GLOB COMPILER_SOURCE "src/*.cpp" "src/*.h" "antlr/*.cpp")
-add_executable(cbCompiler ${COMPILER_SOURCE} src/errorListener.cpp)
+file(GLOB CORE_SOURCE "core/*.cpp" "antlr/*.cpp" "JIT/*.cpp")
+add_library(INBasicCore SHARED ${CORE_SOURCE})
 
 llvm_map_components_to_libnames(llvm_libs Core Interpreter MC mcdisassembler MCJIT Support nativecodegen IRReader)
-target_link_libraries(cbCompiler antlr4-runtime ${llvm_libs})
-target_include_directories(cbCompiler PRIVATE ${ANTLR_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+target_link_libraries(INBasicCore antlr4-runtime ${llvm_libs})
+target_include_directories(INBasicCore PRIVATE ${ANTLR_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 
-get_property(CBCOMPILER_INCLUDE_CHECK TARGET cbCompiler PROPERTY INCLUDE_DIRECTORIES)
-message(STATUS "cbCompiler include ${CBCOMPILER_INCLUDE_CHECK}")
+add_executable(INBasic main.cpp)
+add_dependencies(INBasic INBasicCore)
+target_link_libraries(INBasic INBasicCore)
+target_include_directories(INBasic PRIVATE ${CORE_INCLUDE} ${ANTLR_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+
+get_property(INBASICCORE_INCLUDE_CHECK TARGET INBasicCore PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "INBasicCore include ${INBASICCORE_INCLUDE_CHECK}")
+
+get_property(CBCOMPILER_INCLUDE_CHECK TARGET INBasic PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "INBasic include ${CBCOMPILER_INCLUDE_CHECK}")

@@ -377,10 +377,16 @@ namespace classicBasic {
         visit(ctx->typeLocation());
         return nullptr;
     }
+
     antlrcpp::Any StructureGen::visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx){
-        auto info = (TypeInfo*)Info::handling;
+        auto info = (ParameterInfo*)Info::handling;
         visit(ctx->typeLocation());
         info->setType(info->getType(this)->getPointerTo());
+        info->array=true;
+        if(ctx->size!=nullptr){
+            ConstantInt* i=(ConstantInt*)visit(ctx->size).as<Value*>();
+            info->arraySize=i->getZExtValue();
+        }
         return nullptr;
     }
 

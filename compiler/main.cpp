@@ -1,6 +1,6 @@
 #include<iostream>
-#include"codeGen.h"
-#include"../JIT/JIT.h"
+#include"core/codeGen.h"
+#include"JIT/JIT.h"
 using namespace std;
 using namespace classicBasic;
 

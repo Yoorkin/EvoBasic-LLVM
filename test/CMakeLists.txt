@@ -12,13 +12,15 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 include(GoogleTest)
-add_executable(cbTest basicStmtTest.cpp)
+add_executable(INBasicTest basicStmtTest.cpp basicStructureTest.cpp basicDeclareTest.cpp)
+add_dependencies(INBasicTest INBasicCore)
 
-target_include_directories(cbTest PRIVATE ${gtest_SOURCE_DIR}/include)
-target_link_libraries(cbTest gtest_main)
 
-add_test(NAME test COMMAND cbTest WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-gtest_discover_tests(cbTest)
+target_include_directories(INBasicTest PRIVATE ${gtest_SOURCE_DIR}/include ${CORE_INCLUDE} ${ANTLR_INCLUDE_DIRS})
+target_link_libraries(INBasicTest gtest_main INBasicCore)
 
-get_property(CBTEST_INCLUDE_CHECK TARGET cbTest PROPERTY INCLUDE_DIRECTORIES)
-message(STATUS "cbTest include: ${CBTEST_INCLUDE_CHECK}")
+add_test(NAME test COMMAND INBasicTest WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+gtest_discover_tests(INBasicTest)
+
+get_property(CBTEST_INCLUDE_CHECK TARGET INBasicTest PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "INBasicTest include: ${CBTEST_INCLUDE_CHECK}")

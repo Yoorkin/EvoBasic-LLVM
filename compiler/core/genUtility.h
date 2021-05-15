@@ -134,7 +134,9 @@ namespace classicBasic{
         protected:
             llvm::Type* type=nullptr;
         public:
-            enum Enum{Parameter,Variable,Function,Type,Property,Module_,BuiltIn,Enum_,Scope,Class,Module};
+            std::string name;
+            enum Enum{Parameter,Variable,Function,Type,Property,Module_,
+                    BuiltIn,Enum_,Scope,Class,Module,TypeMember,TypeArrayMember};
             virtual Enum getKind()=0;
             virtual void load(BasicBaseVisitor* visitor)=0;
             void setType(llvm::Type* t){type=t;}
@@ -175,8 +177,8 @@ namespace classicBasic{
             bool byval=false;
             bool array=false;
             bool paramArray=false;
+            uint64_t arraySize=0;
             BasicParser::ExpContext* initial=nullptr;
-            std::string name;
             virtual Enum getKind()override{return Info::Parameter;}
         };
 
@@ -190,7 +192,6 @@ namespace classicBasic{
             BasicParser::PropertySetContext* propertySetCtx=nullptr;
             BasicParser::PropertyLetContext* propertyLetCtx=nullptr;
 
-            std::string name;
             llvm::Function* function;
             std::list<ParameterInfo*> parameterInfoList;
             ParameterInfo* retInfo=nullptr;
@@ -221,7 +222,6 @@ namespace classicBasic{
         public:
             BasicParser::TypeDeclContext *ctx=nullptr;
 
-            std::string name;
             std::map<std::string,ParameterInfo*> memberInfoList;
 
             TypeInfo(BasicParser::TypeDeclContext *ctx):ctx(ctx){}
@@ -233,12 +233,37 @@ namespace classicBasic{
             virtual Enum getKind()override{return Info::Type;}
         };
 
+//        class TypeMemberInfo:public Info{
+//            BasicParser::NormalNameTypePairContext* context;
+//        public:
+//            virtual Enum getKind()override{return Info::TypeMember;}
+//            virtual void load(BasicBaseVisitor* visitor)override{
+//                Info::handling=this;
+//                visitor->visit(context);
+//                Info::handling=nullptr;
+//            }
+//            TypeMemberInfo(BasicParser::NormalNameTypePairContext* ctx):context(ctx){}
+//        };
+//
+//        class TypeArrayMemberInfo:public Info{
+//            BasicParser::ArrayNameTypePairContext* context;
+//        public:
+//            int lbound=0,ubound=0;
+//            virtual Enum getKind()override{return Info::TypeArrayMember;}
+//            virtual void load(BasicBaseVisitor* visitor)override{
+//                Info::handling=this;
+//                visitor->visit(context);
+//                Info::handling=nullptr;
+//            }
+//            int getSize(){return ubound-lbound;}
+//            TypeArrayMemberInfo(BasicParser::ArrayNameTypePairContext* ctx):context(ctx){}
+//        };
+
         class EnumInfo:public Info{
         public:
             BasicParser::EnumDeclContext* ctx=nullptr;
 
-            std::string name;
-            std::map<std::string,Value*> memberList;
+            std::map<std::string,ConstantInt*> memberList;
 
             EnumInfo(BasicParser::EnumDeclContext* ctx):ctx(ctx){}
             virtual void load(BasicBaseVisitor* visitor)override {
@@ -259,7 +284,6 @@ namespace classicBasic{
         class VariableInfo:public Info{
         public:
             llvm::GlobalVariable* variable;
-            std::string name;
             virtual void load(BasicBaseVisitor* visitor)override{}
             virtual Enum getKind()override{return Info::Variable;}
         };
@@ -275,7 +299,6 @@ namespace classicBasic{
 
         class Scope:public Info{
         public:
-            std::string name;
             Scope* parent=nullptr;
             std::map<std::string,Scope*> childScope;
             std::map<std::string,Info*> memberInfoList;
@@ -307,34 +330,6 @@ namespace classicBasic{
             virtual Enum getKind()override{return Info::Module;}
         };
     }
-
-    class StackFrame{
-        friend GenerateUnit;
-        int index=0;
-        stack<string> layers;
-        map<string,Value*> varTable;
-    public:
-        enum Enum{BasicFunction,BasicSub,BasicLoop};
-        stack<Enum> stmtState;//标记当前所在语句，用于语法检查
-        BasicBlock* afterBlock=nullptr; //当前状态下跳出语句（函数、过程、循环）所需要最后执行的block
-        llvm::Function* function;
-        StackFrame(llvm::Function* function,bool isSub){
-            this->function=function;
-            stmtState.push(isSub?BasicSub:BasicFunction);
-            layers.push("");
-        }
-        void BeginLayer(string prefix){
-            layers.push(prefix + "_" + std::to_string(index) + "_");
-            index++;
-        }
-        string getBlockName(string suffix){
-            return layers.top()+suffix;
-        }
-        void EndLayer(){
-            layers.pop();
-        }
-
-    };
 }
 
 #endif //CLASSICBASIC_GENUTILITY_H

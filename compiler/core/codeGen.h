@@ -44,7 +44,6 @@ namespace classicBasic{
     using namespace antlr4;
 
     class CodeGenVisitor;
-    class StackFrame;
     class TypeTable;
     class CodeGenerator;
     class JIT;

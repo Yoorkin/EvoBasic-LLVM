@@ -35,8 +35,6 @@ typeDecl:Type name=ID LineEnd (nameTypePair? LineEnd)* End Type LineEnd;
 
 varDecl: varFlag=(Dim|Static) variable (','variable)* LineEnd;
 
-redimDecl: Redim preserveFlag=Preserve? nameTypePair (','nameTypePair)* LineEnd;
-
 variable: nameTypePair ('=' initial=exp)?;
 
 
@@ -44,7 +42,6 @@ functionDecl:Function name=ID parameterList As returnType=typeLocation (Implemen
             block+=line* End Function LineEnd;
 
 subDecl: Sub name=ID parameterList LineEnd block+=line* End Sub LineEnd;
-
 
 
 parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? (','paramArrayParameter)? ')';
@@ -56,7 +53,7 @@ optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=ex
 paramArrayParameter: ParamArray nameTypePair;
 
 nameTypePair: name=ID (As typeLocation)?                                            #NormalNameTypePair
-            | name=ID '('(size=exp|lbound=exp To ubound=exp)?')' (As typeLocation)?  #ArrayNameTypePair
+            | name=ID '['(size=exp)?']' (As typeLocation)?  #ArrayNameTypePair
             ;
 
 typeLocation: (path+=ID'.')*?target=ID;
@@ -72,7 +69,6 @@ statement:forStmt
         |assignStmt
         |callStmt
         |varDecl
-        |redimDecl
         ;
 
 callStmt: Call ID '('(passArg(','passArg)*) ')' LineEnd
@@ -128,6 +124,15 @@ loopStmt : Do While exp LineEnd block+=line* Loop LineEnd #DoWhile
         | Do LineEnd block+=line* Loop While exp LineEnd #LoopWhile
         | While exp LineEnd block+=line* Wend LineEnd    #WhileWend
         ;
+
+
+
+
+
+
+
+
+
 
 //-234.233e-6
 //Number: [0-9]+('.'[0-9]+)?(('E'|'e') '-'? [0-9]+)?;

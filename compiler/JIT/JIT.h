@@ -9,7 +9,7 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
 
-#include"genUtility.h"
+#include"../core/genUtility.h"
 namespace classicBasic{
     using namespace std;
     class JIT{
