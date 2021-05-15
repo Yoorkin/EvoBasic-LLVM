@@ -1,5 +1,6 @@
 #compiler test
-message(STATUS "Test include ${INCLUDE_DIRS}")
+
+enable_testing()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -10,12 +11,14 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-file(GLOB COMPILER_SOURCE "${CMAKE_SOURCE_DIR}/compiler/antlr/*.cpp" "${CMAKE_SOURCE_DIR}/compiler/src/codeGen.cpp")
-
-add_executable(cbTest basicStmtTest.cpp ${COMPILER_SOURCE} testHelper.h)
-
-llvm_map_components_to_libnames(llvm_libs Core Interpreter MC MCJIT Support mcdisassembler nativecodegen IRReader)
-target_link_libraries(cbTest gtest_main antlr4-runtime ${llvm_libs})
-
 include(GoogleTest)
+add_executable(cbTest basicStmtTest.cpp)
+
+target_include_directories(cbTest PRIVATE ${gtest_SOURCE_DIR}/include)
+target_link_libraries(cbTest gtest_main)
+
+add_test(NAME test COMMAND cbTest WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 gtest_discover_tests(cbTest)
+
+get_property(CBTEST_INCLUDE_CHECK TARGET cbTest PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "cbTest include: ${CBTEST_INCLUDE_CHECK}")
