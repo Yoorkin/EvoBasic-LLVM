@@ -80,6 +80,7 @@ namespace classicBasic {
         virtual antlrcpp::Any visitArrayNameTypePair(BasicParser::ArrayNameTypePairContext *ctx) override;
 
         virtual antlrcpp::Any visitParameterList(BasicParser::ParameterListContext *ctx) override;
+
     };
 
     class StructureGen : public BasicBaseVisitor{
@@ -119,6 +120,8 @@ namespace classicBasic {
         virtual antlrcpp::Any visitOptionalParameter(BasicParser::OptionalParameterContext *ctx) override;
         virtual antlrcpp::Any visitParamArrayParameter(BasicParser::ParamArrayParameterContext *ctx) override;
         virtual antlrcpp::Any visitTypeLocation(BasicParser::TypeLocationContext *ctx) override;
+
+        virtual antlrcpp::Any visitInteger(BasicParser::IntegerContext *ctx) override;
     };
 }
 #endif //CLASSICBASIC_STRUCTUREGEN_H

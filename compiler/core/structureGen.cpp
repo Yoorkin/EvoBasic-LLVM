@@ -431,4 +431,9 @@ namespace classicBasic {
         i->setType(info->getType(this));
         return info;
     }
+
+    antlrcpp::Any StructureGen::visitInteger(BasicParser::IntegerContext *ctx){
+        long number = std::stol(ctx->Integer()->getSymbol()->getText());
+        return ConstantInt::get(Type::getInt64Ty(gen.context),number);
+    }
 }

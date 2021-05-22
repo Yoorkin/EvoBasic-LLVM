@@ -70,12 +70,6 @@ namespace classicBasic{
         tree::ParseTree *tree = nullptr;
     public:
         CodeGenerator& gen;
-        /*
-         * 未能识别的
-         * ParameterInfo
-         * VariableInfo
-         */
-//        list<pair<BasicParser::TypeLocationContext*,structure::Info*>> unrecognized;
         llvm::Module mod;
         structure::Scope* scope;
         GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
@@ -233,32 +227,6 @@ namespace classicBasic{
             virtual Enum getKind()override{return Info::Type;}
         };
 
-//        class TypeMemberInfo:public Info{
-//            BasicParser::NormalNameTypePairContext* context;
-//        public:
-//            virtual Enum getKind()override{return Info::TypeMember;}
-//            virtual void load(BasicBaseVisitor* visitor)override{
-//                Info::handling=this;
-//                visitor->visit(context);
-//                Info::handling=nullptr;
-//            }
-//            TypeMemberInfo(BasicParser::NormalNameTypePairContext* ctx):context(ctx){}
-//        };
-//
-//        class TypeArrayMemberInfo:public Info{
-//            BasicParser::ArrayNameTypePairContext* context;
-//        public:
-//            int lbound=0,ubound=0;
-//            virtual Enum getKind()override{return Info::TypeArrayMember;}
-//            virtual void load(BasicBaseVisitor* visitor)override{
-//                Info::handling=this;
-//                visitor->visit(context);
-//                Info::handling=nullptr;
-//            }
-//            int getSize(){return ubound-lbound;}
-//            TypeArrayMemberInfo(BasicParser::ArrayNameTypePairContext* ctx):context(ctx){}
-//        };
-
         class EnumInfo:public Info{
         public:
             BasicParser::EnumDeclContext* ctx=nullptr;
@@ -273,13 +241,6 @@ namespace classicBasic{
             }
             virtual Enum getKind()override{return Info::Enum_;}
         };
-
-//        class PropertyInfo:public Info{
-//        public:
-//            FunctionInfo *getter=nullptr,*setter=nullptr,*let=nullptr;
-//            ParameterInfo* valueInfo;
-//            virtual Enum getKind()override{return Info::Property;}
-//        };
 
         class VariableInfo:public Info{
         public:
