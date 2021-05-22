@@ -47,8 +47,6 @@ subDecl: Sub name=ID genericDecl? parameterList
         (Override implements=typeLocation?)? LineEnd
         block+=line* End Sub LineEnd;
 
-genericDecl: '<' ID (','ID)* '>';
-
 parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? (','paramArrayParameter)? ')';
 necessaryParameter: passFlag=(Byref|Byval)? nameTypePair ;
 optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=constExp)?;
@@ -97,17 +95,13 @@ constExp: exp;
 
 exp: '-' right=exp                                                  #NegExp
     | (path+=terminateNode LineEnd? '.')+ target=exp                #RefExp
-    | '{'keyValuePair(','keyValuePair)*'}'                          #MapExp
-    | '['exp(','exp)*']'                                            #ArrayExp
-    | '('exp(','exp)*')'                                            #TupleExp
     | left=exp op=('&'|'|')     right=exp                           #BitExp
     | left=exp op=('^'|'mod')       right=exp                       #PowModExp
     | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp
     | left=exp op=('+'|'-')         right=exp                       #PluExp
-    | left=exp op=('=='|'>'|'<'|'<='|'=<'|'<>'|'>=') right=exp       #CmpExp
+    | left=exp op=('=='|'>'|'<'|'<='|'=<'|'<>'|'>=') right=exp      #CmpExp
     | op='not' right=exp                                            #LogicNotExp
     | left=exp op=('and'|'or'|'xor') right=exp                      #LogicExp
-    | left=exp '['right=exp']'                                      #OffsetExp
     | '('exp')'                                                     #BucketExp
     | terminateNode                                                 #TerminateNodeExp
     ;
@@ -118,14 +112,17 @@ terminateNode: Integer                                                      #Int
             | Decimal                                                       #Decimal
             | String                                                        #String
             | Boolean                                                       #Boolean
-            | ID                                                            #ID
+            | ID generic?                                                   #TargetExp
+            | '{'keyValuePair(','keyValuePair)*'}'                          #MapExp
+            | '['exp(','exp)*']'                                            #ArrayExp
+            | '('exp(','exp)*')'                                            #TupleExp
             | array=ID '['index=exp']'                                      #ArrayOffset
-            | target=ID generic? '(' (passArg (','passArg?)*)? ')' #FunctionCall
+            | target=ID generic? '(' (passArg (','passArg?)*)? ')'          #FunctionCall
             | (nameTypePair|'('nameTypePair(','nameTypePair)* ')') '=>' statement #Lambda
             ;
 
-generic: '<'typeLocation(','typeLocation)*'>';
-
+genericDecl: '<' terminateNode (','terminateNode)* '>';
+generic: '<'exp(','exp)*'>';
 
 foreachStmt: For Each (iterator=ID|Dim nameTypePair) In group=exp LineEnd block+=line* Next nextFlag=ID? LineEnd;
 forStmt: For (iterator=ID|Dim nameTypePair) '=' begin=exp To end=exp (Step step=exp)? LineEnd block+=line* Next nextFlag=ID? LineEnd;
