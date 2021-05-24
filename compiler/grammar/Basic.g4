@@ -1,57 +1,56 @@
 grammar Basic;
 
-body:(globalModule=moduleMember|LineEnd)* EOF;
+body:(globalModule=moduleMember)* EOF;
 
 classDecl: Class name=ID genericDecl? ('extend' (implements+=typeLocation(','implements+=typeLocation)*))?
-            (classMember|LineEnd)* End Class;
+            (classMember)* End Class;
 classMember: controlFlag=(Public|Private)? Static?
                 (importDecl|aliasDecl|functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl|factoryDecl|operatorOverride);
 
-moduleDecl: ModuleInfo name=ID genericDecl? genericDecl? (moduleMember|LineEnd)* End ModuleInfo;
+moduleDecl: ModuleInfo name=ID genericDecl? genericDecl? (moduleMember)* End ModuleInfo;
 moduleMember: controlFlag=(Public|Private)? Static?
                 (importDecl|aliasDecl|functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl|moduleDecl|classDecl);
 
 aliasDecl: Alias name=ID genericDecl? '=' typeLocation;
 
-enumDecl: Enum name=ID LineEnd (enumPair? LineEnd)* End Enum LineEnd;
+enumDecl: Enum name=ID (enumPair)* End Enum  ;
 
-propertyDecl:Property Get name=ID parameterList As returnType=typeLocation LineEnd block+=line* End Property LineEnd  #propertyGet
-            |Property Set name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertySet
-            |Property Let name=ID parameterList LineEnd block+=line* End Property LineEnd                   #propertyLet
+propertyDecl:Property Get name=ID parameterList As returnType=typeLocation block+=line* End Property  #propertyGet
+            |Property Set name=ID parameterList block+=line* End Property                   #propertySet
+            |Property Let name=ID parameterList block+=line* End Property                   #propertyLet
             ;
 
-operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList As returnType=typeLocation (Implements implements=typeLocation)? LineEnd
-            block+=line* End Function LineEnd;
+operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList As returnType=typeLocation (Implements implements=typeLocation)?  
+            block+=line* End Function  ;
 
 importDecl: Import typeLocation;
 
 enumPair: name=ID ('=' value=constExp)?;
 
-externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList LineEnd #externalSub
-            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=typeLocation LineEnd #externalFunction
+externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList #externalSub
+            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=typeLocation #externalFunction
             ;
 
 factoryDecl:Factory name=ID parameterList block+=line* End Factory;
 
-typeDecl:Type name=ID genericDecl? LineEnd (nameTypePair? LineEnd)* End Type LineEnd;
+typeDecl:Type name=ID genericDecl? (nameTypePair)* End Type  ;
 
-varDecl: varFlag=(Dim|Static) variable (','variable)* LineEnd;
+varDecl: varFlag=(Dim|Static) variable (','variable)*  ;
 
 variable: nameTypePair ('=' initial=exp)?;
 
 functionDecl:Function name=ID genericDecl? parameterList As returnType=typeLocation
-            (Override implements=typeLocation?)? LineEnd
-            block+=line* End Function LineEnd;
+            (Override implements=typeLocation?)?  
+            block+=line* End Function  ;
 
 subDecl: Sub name=ID genericDecl? parameterList
-        (Override implements=typeLocation?)? LineEnd
-        block+=line* End Sub LineEnd;
+        (Override implements=typeLocation?)?
+        block+=line* End Sub  ;
 
 parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? (','paramArrayParameter)? ')';
 necessaryParameter: passFlag=(Byref|Byval)? nameTypePair ;
 optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=constExp)?;
 paramArrayParameter: ParamArray nameTypePair;
-
 
 
 nameTypePair: name=ID (As typeLocation)?                         #NormalNameTypePair
@@ -67,7 +66,7 @@ lambdaType : Function '(' nameTypePair(','nameTypePair)* ')' As typeLocation
            | Sub'('nameTypePair(','nameTypePair)*')'
            ;
 
-line:statement|LineEnd;
+line:statement;
 
 statement:forStmt
         |foreachStmt
@@ -85,16 +84,16 @@ passArg:value=exp                #ArgPassValue
        ;
 
 
-assignStmt: left=ID '=' right=exp LineEnd;
+assignStmt: left=ID '=' right=exp  ;
 
-exitStmt:Exit exitFlag=(For|Do|Sub|Function|Property) LineEnd;
+exitStmt:Exit exitFlag=(For|Do|Sub|Function|Property)  ;
 
-returnStmt:Return exp LineEnd;
+returnStmt:Return exp  ;
 
 constExp: exp;
 
 exp: '-' right=exp                                                  #NegExp
-    | (path+=terminateNode LineEnd? '.')+ target=exp                #RefExp
+    | (path+=terminateNode  ? '.')+ target=exp                #RefExp
     | left=exp op=('&'|'|')     right=exp                           #BitExp
     | left=exp op=('^'|'mod')       right=exp                       #PowModExp
     | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp
@@ -106,40 +105,39 @@ exp: '-' right=exp                                                  #NegExp
     | terminateNode                                                 #TerminateNodeExp
     ;
 
-keyValuePair: key=exp ':' value=exp;
+keyValuePair: nameTypePair ':' value=exp;
 
 terminateNode: Integer                                                      #Integer
             | Decimal                                                       #Decimal
             | String                                                        #String
             | Boolean                                                       #Boolean
+            | target=ID generic? '(' (passArg (','passArg?)*)? ')'          #FunctionCall
             | ID generic?                                                   #TargetExp
             | '{'keyValuePair(','keyValuePair)*'}'                          #MapExp
             | '['exp(','exp)*']'                                            #ArrayExp
             | '('exp(','exp)*')'                                            #TupleExp
             | array=ID '['index=exp']'                                      #ArrayOffset
-            | target=ID generic? '(' (passArg (','passArg?)*)? ')'          #FunctionCall
             | (nameTypePair|'('nameTypePair(','nameTypePair)* ')') '=>' statement #Lambda
             ;
 
 genericDecl: '<' terminateNode (','terminateNode)* '>';
 generic: '<'exp(','exp)*'>';
 
-foreachStmt: For Each (iterator=ID|Dim nameTypePair) In group=exp LineEnd block+=line* Next nextFlag=ID? LineEnd;
-forStmt: For (iterator=ID|Dim nameTypePair) '=' begin=exp To end=exp (Step step=exp)? LineEnd block+=line* Next nextFlag=ID? LineEnd;
+foreachStmt: For Each (iterator=ID|Dim nameTypePair) In group=exp block+=line* Next nextFlag=ID? ;
+forStmt: For (iterator=ID|Dim nameTypePair) '=' begin=exp To end=exp (Step step=exp)? block+=line* Next nextFlag=ID?;
 
-ifStmt: If condition=exp Then statement (Else elseStatement=statement)? LineEnd           #SingleLineIf
-        | If ifBlock (ElseIf ifBlock)* (Else LineEnd elseBlock+=line*)? End If LineEnd    #MutiLineIf
+ifStmt: If condition=exp Then statement (Else elseStatement=statement)?           #SingleLineIf
+        | If ifBlock (ElseIf ifBlock)* (Else elseBlock+=line*)? End If    #MutiLineIf
         ;
 
-ifBlock: condition=exp Then LineEnd block+=line* ;
+ifBlock: condition=exp Then block+=line* ;
 
-loopStmt : Do While exp LineEnd block+=line* Loop LineEnd #DoWhile
-        | Do Until exp LineEnd block+=line* Loop LineEnd #DoUntil
-        | Do LineEnd block+=line* Loop Until exp LineEnd #LoopUntil
-        | Do LineEnd block+=line* Loop While exp LineEnd #LoopWhile
-        | While exp LineEnd block+=line* Wend LineEnd    #WhileWend
+loopStmt: While exp block+=line* Loop    #DoWhile
+        | Until exp block+=line* Loop    #DoUntil
+        | Do block+=line* Loop Until exp #LoopUntil
+        | Do block+=line* Loop While exp #LoopWhile
+        | While exp block+=line* Wend    #LoopWhile
         ;
-
 
 
 Integer: [0-9]+;
@@ -149,7 +147,7 @@ Boolean: T R U E | F A L S E;
 
 Comment: '\'' ~('\r'|'\n')*  -> skip;
 BlockComment: '\'*' .*? '*\'' -> skip;
-LineEnd: [\n\r];
+LineEnd: [\n\r]->skip;
 WS: [ \t]->skip;
 
 Override:O V E R R I D E;
