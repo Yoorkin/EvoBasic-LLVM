@@ -93,17 +93,29 @@ returnStmt:Return exp  ;
 constExp: exp;
 
 exp: '-' right=exp                                                  #NegExp
-    | (path+=terminateNode  ? '.')+ target=exp                #RefExp
-    | left=exp op=('&'|'|')     right=exp                           #BitExp
+    | (path+=terminateNode  ? '.')+ target=exp                      #RefExp
+    | left=exp (leftShift|rightShift|andBit|orBit) right=exp        #BitExp
     | left=exp op=('^'|'mod')       right=exp                       #PowModExp
     | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp
     | left=exp op=('+'|'-')         right=exp                       #PluExp
-    | left=exp op=('=='|'>'|'<'|'<='|'=<'|'<>'|'>=') right=exp      #CmpExp
+    | left=exp (eqCmp|ltCmp|gtCmp|leCmp|geCmp|nqCmp) right=exp      #CmpExp
     | op='not' right=exp                                            #LogicNotExp
     | left=exp op=('and'|'or'|'xor') right=exp                      #LogicExp
     | '('exp')'                                                     #BucketExp
     | terminateNode                                                 #TerminateNodeExp
     ;
+
+leftShift:'<''<';
+rightShift:'>''>';
+andBit:'&';
+orBit:'|';
+eqCmp:'=''=';
+ltCmp:'<';
+gtCmp:'>';
+leCmp:'=''<'|'<''=';
+geCmp:'>''=';
+nqCmp:'<''>';
+
 
 keyValuePair: nameTypePair ':' value=exp;
 
@@ -122,6 +134,7 @@ terminateNode: Integer                                                      #Int
 
 genericDecl: '<' terminateNode (','terminateNode)* '>';
 generic: '<'exp(','exp)*'>';
+
 
 foreachStmt: For Each (iterator=ID|Dim nameTypePair) In group=exp block+=line* Next nextFlag=ID? ;
 forStmt: For (iterator=ID|Dim nameTypePair) '=' begin=exp To end=exp (Step step=exp)? block+=line* Next nextFlag=ID?;

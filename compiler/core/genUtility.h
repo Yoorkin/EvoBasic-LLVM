@@ -172,7 +172,7 @@ namespace classicBasic{
             bool array=false;
             bool paramArray=false;
             uint64_t arraySize=0;
-            BasicParser::ExpContext* initial=nullptr;
+            BasicParser::ConstExpContext* initial=nullptr;
             virtual Enum getKind()override{return Info::Parameter;}
         };
 
