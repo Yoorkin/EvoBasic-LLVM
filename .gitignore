@@ -7,6 +7,7 @@ main
 antlr
 compiler/antlr
 compiler/cmake-build-debug
+compiler/grammar/test.g4
 test/cmake-build-debug
 runtime/cmake-build-debug
 cmake-build-debug/test.txt

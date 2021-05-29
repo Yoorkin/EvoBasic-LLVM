@@ -35,6 +35,23 @@ public:
         in.seekg(ios::beg);
     }
 
+    void warning(int row,int column,int span,string msg){
+        if(span==0)span=1;
+        if(first){
+            out<<endl;
+            out<<YellowBegin<<"In file "<<path<<":"<<ColorEnd<<endl;
+            first=false;
+        }
+        out<<"│";
+        out<<"warning in line "<<row<<','<<column<<":"<<msg<<ColorEnd<<endl;
+        out<<YellowBegin<<"│"<<ColorEnd;
+        out<<"  "<<code[row-1]<<endl;
+        out<<YellowBegin<<"│"<<ColorEnd;
+        for(int i=0;i<column;i++)out<<' ';
+        cout<<"  ^";
+        for(int i=1;i<span;i++)out<<'~';
+        out<<endl;
+    }
     void report(int row,int column,int span,string error){
         if(span==0)span=1;
         if(first){
@@ -58,9 +75,17 @@ public:
     void report(Token* token,string error){
         report(token->getLine(),token->getCharPositionInLine(),token->getText().length(),error);
     }
+    void warning(Token* token,string msg){
+        warning(token->getLine(),token->getCharPositionInLine(),token->getText().length(),msg);
+    }
     void report(string error){
         if(handling==nullptr)throw "error";
         report(handling,error);
+        handling=nullptr;
+    }
+    void warning(string msg){
+        if(handling==nullptr)throw "error";
+        warning(handling,msg);
         handling=nullptr;
     }
     static Reporter* singleton;

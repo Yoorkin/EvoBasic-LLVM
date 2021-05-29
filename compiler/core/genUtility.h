@@ -258,6 +258,10 @@ namespace classicBasic{
             virtual Enum getKind()override{return Info::BuiltIn;}
         };
 
+        class LambdaInfo:public Info{
+
+        };
+
         class Scope:public Info{
         public:
             Scope* parent=nullptr;

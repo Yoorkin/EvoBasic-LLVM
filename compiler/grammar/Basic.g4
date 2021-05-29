@@ -2,7 +2,7 @@ grammar Basic;
 
 body:(globalModule=moduleMember)* EOF;
 
-classDecl: Class name=ID genericDecl? ('extend' (implements+=typeLocation(','implements+=typeLocation)*))?
+classDecl: Class name=ID genericDecl? (Extend (implements+=typeLocation(','implements+=typeLocation)*))?
             (classMember)* End Class;
 classMember: controlFlag=(Public|Private)? Static?
                 (importDecl|aliasDecl|functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl|factoryDecl|operatorOverride);
@@ -20,7 +20,7 @@ propertyDecl:Property Get name=ID parameterList As returnType=typeLocation block
             |Property Let name=ID parameterList block+=line* End Property                   #propertyLet
             ;
 
-operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList As returnType=typeLocation (Implements implements=typeLocation)?  
+operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList As returnType=typeLocation (Implements implements=typeLocation)?
             block+=line* End Function  ;
 
 importDecl: Import typeLocation;
@@ -40,7 +40,7 @@ varDecl: varFlag=(Dim|Static) variable (','variable)*  ;
 variable: nameTypePair ('=' initial=exp)?;
 
 functionDecl:Function name=ID genericDecl? parameterList As returnType=typeLocation
-            (Override implements=typeLocation?)?  
+            (Override implements=typeLocation?)?
             block+=line* End Function  ;
 
 subDecl: Sub name=ID genericDecl? parameterList
@@ -93,35 +93,41 @@ returnStmt:Return exp  ;
 constExp: exp;
 
 exp: '-' right=exp                                                  #NegExp
-    | (path+=terminateNode  ? '.')+ target=exp                      #RefExp
-    | left=exp (leftShift|rightShift|andBit|orBit) right=exp        #BitExp
-    | left=exp op=('^'|'mod')       right=exp                       #PowModExp
+    | left=exp As right=typeLocation                                #CvtExp
+    | (path+=terminateNode '.')+ target=exp                         #RefExp
+    | left=exp (leftShift|rightShift|andBit|orBit|xorBit) right=exp #BitExp
+    | '!' right=exp                                                 #BitNotExp
+    | left=exp '%' right=exp                                        #PowModExp
     | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp
     | left=exp op=('+'|'-')         right=exp                       #PluExp
-    | left=exp (eqCmp|ltCmp|gtCmp|leCmp|geCmp|nqCmp) right=exp      #CmpExp
+    | left=exp (eqCmp|ltCmp|gtCmp|leCmp|geCmp|neCmp) right=exp additionCmp*  #CmpExp
     | op='not' right=exp                                            #LogicNotExp
     | left=exp op=('and'|'or'|'xor') right=exp                      #LogicExp
     | '('exp')'                                                     #BucketExp
     | terminateNode                                                 #TerminateNodeExp
     ;
 
+additionCmp: op=('and'|'or')(eqCmp|ltCmp|gtCmp|leCmp|geCmp|neCmp)right=exp;
+
 leftShift:'<''<';
 rightShift:'>''>';
 andBit:'&';
 orBit:'|';
+xorBit:'^';
 eqCmp:'=''=';
 ltCmp:'<';
 gtCmp:'>';
 leCmp:'=''<'|'<''=';
 geCmp:'>''=';
-nqCmp:'<''>';
+neCmp:'<''>';
 
 
 keyValuePair: nameTypePair ':' value=exp;
 
 terminateNode: Integer                                                      #Integer
             | Decimal                                                       #Decimal
-            | String                                                        #String
+            | string                                                        #Strings
+            | Character                                                     #Character
             | Boolean                                                       #Boolean
             | target=ID generic? '(' (passArg (','passArg?)*)? ')'          #FunctionCall
             | ID generic?                                                   #TargetExp
@@ -152,16 +158,21 @@ loopStmt: While exp block+=line* Loop    #DoWhile
         | While exp block+=line* Wend    #LoopWhile
         ;
 
+string: String|RowText;
 
-Integer: [0-9]+;
-Decimal: [0-9]+'.'[0-9]+ | [0-9]+('E'|'e')'-'?[0-9]+;
-String: '"' ~('"'|'\r'|'\n')* '"';
+String:'"' ~('"'|'\r'|'\n')* '"';
+RowText:'"""' .* '"""';
+Character:'\'' .* '\'';
+
+Integer: '-'?[0-9]+; //i32
+Decimal: [0-9]+'.'[0-9]+ | [0-9]+('E'|'e')'-'?[0-9]+;//f64
 Boolean: T R U E | F A L S E;
 
 Comment: '\'' ~('\r'|'\n')*  -> skip;
 BlockComment: '\'*' .*? '*\'' -> skip;
 LineEnd: [\n\r]->skip;
 WS: [ \t]->skip;
+
 
 Override:O V E R R I D E;
 Operator:O P E R A T O R;
@@ -250,3 +261,4 @@ fragment W:('w'|'W');
 fragment X:('x'|'X');
 fragment Y:('y'|'Y');
 fragment Z:('z'|'Z');
+
