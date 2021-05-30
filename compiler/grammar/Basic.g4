@@ -93,10 +93,10 @@ returnStmt:Return exp  ;
 constExp: exp;
 
 exp: '-' right=exp                                                  #NegExp
-    | left=exp As right=typeLocation                                #CvtExp
+    | left=exp As right=typeLocation                                #CastExp
     | (path+=terminateNode '.')+ target=exp                         #RefExp
     | left=exp (leftShift|rightShift|andBit|orBit|xorBit) right=exp #BitExp
-    | '!' right=exp                                                 #BitNotExp
+    | '~' right=exp                                                 #BitNotExp
     | left=exp '%' right=exp                                        #PowModExp
     | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp //   /普通除法  \整除
     | left=exp op=('+'|'-')         right=exp                       #PluExp

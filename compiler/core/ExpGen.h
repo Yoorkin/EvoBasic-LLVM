@@ -15,8 +15,8 @@
 #include<cmath>
 #include<functional>
 namespace classicBasic{
-
-    namespace ConstExpCompute{
+    //TODO: 考虑添加INF和NaH https://zh.wikipedia.org/wiki/NaN
+    namespace constExpCompute{
         enum Kind{bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty};
         class expRetValue{
         public:
@@ -232,12 +232,13 @@ namespace classicBasic{
                 e.kind=f64Ty;
             };
         }
+        void doNothing(expRetValue& e){}
 
         Kind promotion(expRetValue& a,expRetValue& b){
-#define N nullptr
+#define N doNothing
             using namespace builtInCast;
             function<void(expRetValue&)> promotion_table[7][7]={
-                    /* b    i8   i16  i32  i64  f32  f64 */
+                         /* b    i8   i16  i32  i64  f32  f64 */
                     /*b*/  {N,   i8_, i16_,i32_,i64_,f32_,f64_},
                     /*i8*/ {i8_, N,   i16_,i32_,i64_,f32_,f64_},
                     /*i16*/{i16_,i16_,N,   i32_,i64_,f32_,f64_},
@@ -248,10 +249,8 @@ namespace classicBasic{
             };
 #undef N
             auto cvt = promotion_table[a.kind][b.kind];
-            if(!cvt){
-                cvt(a);
-                cvt(b);
-            }
+            cvt(a);
+            cvt(b);
             return a.kind;
         }
 
@@ -356,29 +355,33 @@ namespace classicBasic{
                         break;
                 }
             }
-            void div(expRetValue& a,expRetValue& b){
-                switch(promotion(a,b)){
-                    case bTy:
-                        a.data.bval/=b.data.bval;
-                        break;
-                    case i8Ty:
-                        a.data.i8val/=b.data.i8val;
-                        break;
-                    case i16Ty:
-                        a.data.i16val/=b.data.i16val;
-                        break;
-                    case i32Ty:
-                        a.data.i32val/=b.data.i32val;
-                        break;
-                    case i64Ty:
-                        a.data.i64val/=b.data.i64val;
-                        break;
-                    case f32Ty:
-                        a.data.f32val/=b.data.f32val;
-                        break;
-                    case f64Ty:
-                        a.data.f64val/=b.data.f64val;
-                        break;
+            void fpDiv(expRetValue& a,expRetValue& b){
+                //num Kind{bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty};
+                if(a.kind<=f32Ty && b.kind<=f32Ty){
+                    builtInCast::f32_(a);
+                    builtInCast::f32_(b);
+                    a.data.f32val/=b.data.f32val;
+                }
+                else{
+                    builtInCast::f64_(a);
+                    builtInCast::f64_(b);
+                    a.data.f64val/=b.data.f64val;
+                }
+            }
+            void ZDiv(expRetValue& a,expRetValue& b){
+                /* 舍弃小数部分，四舍六入五成双
+                 * 见 https://www.cnblogs.com/freshman0216/archive/2008/08/27/1276991.html
+                 *   https://en.cppreference.com/w/cpp/language/operator_arithmetic
+                 */
+                if(a.kind<=i32Ty && b.kind<=i32Ty){
+                    builtInCast::i32_(a);
+                    builtInCast::i32_(b);
+                    a.data.i32val/=b.data.i32val;
+                }
+                else if(a.kind>i32Ty || b.kind>i32Ty){
+                    builtInCast::i64_(a);
+                    builtInCast::i64_(b);
+                    a.data.i64val/=b.data.i64val;
                 }
             }
             void pow(expRetValue& a,expRetValue& b){
@@ -759,7 +762,14 @@ namespace classicBasic{
             virtual antlrcpp::Any visitMulExp(BasicParser::MulExpContext *ctx) override {
                 expRetValue left = visit(ctx->left).as<expRetValue>();
                 expRetValue right = visit(ctx->right).as<expRetValue>();
-                Compute::mul(left,right);
+                auto op=ctx->op->getText();
+                if(op=="*")
+                    Compute::mul(left,right);
+                else if(op=="\\")//整除
+                    Compute::ZDiv(left,right);
+                else if(op=="/")//普通除
+                    Compute::fpDiv(left,right);
+
                 return left;
             }
             virtual antlrcpp::Any visitNegExp(BasicParser::NegExpContext *ctx) override {
@@ -808,7 +818,10 @@ namespace classicBasic{
             virtual antlrcpp::Any visitPluExp(BasicParser::PluExpContext *ctx) override {
                 expRetValue left = visit(ctx->left).as<expRetValue>();
                 expRetValue right = visit(ctx->right).as<expRetValue>();
-                Compute::add(left,right);
+                if(ctx->op->getText()=="+")
+                    Compute::add(left,right);
+                else
+                    Compute::sub(left,right);
                 return left;
             }
             virtual antlrcpp::Any visitCmpExp(BasicParser::CmpExpContext *ctx) override {
@@ -847,6 +860,9 @@ namespace classicBasic{
                 return visitChildren(ctx);
             }
 
+            virtual antlrcpp::Any visitBucketExp(BasicParser::BucketExpContext *ctx) override {
+                return visit(ctx->exp());
+            }
             virtual antlrcpp::Any visitTargetExp(BasicParser::TargetExpContext *ctx) override {
                 return visitChildren(ctx);
             }

@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(classicBasic VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+if(CMAKE_BUILD_TYPE STREQUAL Debug AND CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    message(STATUS "Option fno-limit-debug-info has been added to CMAKE_CXX_FLAGS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fno-limit-debug-info")
+endif()
 
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 message(

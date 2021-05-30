@@ -12,7 +12,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 include(GoogleTest)
-add_executable(INBasicTest basicStmtTest.cpp basicStructureTest.cpp basicDeclareTest.cpp)
+add_executable(INBasicTest basicStmtTest.cpp basicStructureTest.cpp basicDeclareTest.cpp constExpTest.cpp)
 add_dependencies(INBasicTest INBasicCore)
 
 

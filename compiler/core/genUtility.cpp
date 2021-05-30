@@ -20,16 +20,17 @@ namespace classicBasic{
         Reporter::singleton=new Reporter(out,in,path);
         parser.removeErrorListeners();
         parser.addErrorListener(&gen.errorListener);
-        tree = parser.body();
     }
 
     void GenerateUnit::scan(){
+        if(tree==NULL)tree = parser.body();
         StructureScan visitor(*this);
         visitor.visit(tree);
         StructureGen v2(*this);
         v2.visit(tree);
     }
     void GenerateUnit::generate(){
+        if(tree==NULL)tree = parser.body();
 //        CodeGenVisitor visitor(*this);
 //        visitor.visit(tree);
     }
