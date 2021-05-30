@@ -98,7 +98,7 @@ exp: '-' right=exp                                                  #NegExp
     | left=exp (leftShift|rightShift|andBit|orBit|xorBit) right=exp #BitExp
     | '!' right=exp                                                 #BitNotExp
     | left=exp '%' right=exp                                        #PowModExp
-    | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp
+    | left=exp op=('*'|'/'|'\\')    right=exp                       #MulExp //   /普通除法  \整除
     | left=exp op=('+'|'-')         right=exp                       #PluExp
     | left=exp (eqCmp|ltCmp|gtCmp|leCmp|geCmp|neCmp) right=exp additionCmp*  #CmpExp
     | op='not' right=exp                                            #LogicNotExp
@@ -164,7 +164,7 @@ String:'"' ~('"'|'\r'|'\n')* '"';
 RowText:'"""' .* '"""';
 Character:'\'' .* '\'';
 
-Integer: '-'?[0-9]+; //i32
+Integer: [0-9]+; //i32
 Decimal: [0-9]+'.'[0-9]+ | [0-9]+('E'|'e')'-'?[0-9]+;//f64
 Boolean: T R U E | F A L S E;
 
