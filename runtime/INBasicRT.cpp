@@ -49,15 +49,15 @@ extern "C" {
     char* IBL_getHeader(){
         return R"code(
                 Module _sys
-                    public Declare Function malloc lib"" (size as integer)as integer
-                    public Declare sub free lib""(ptr as integer)
-                    public Declare sub initRT lib""()
-                    public Declare sub terminateRT lib""()
+                    public Declare Function malloc(size as integer)as integer
+                    public Declare sub free(ptr as integer)
+                    public Declare sub initRT()
+                    public Declare sub terminateRT()
                 End Module
 
                 Module Console
-                    public Declare sub puts lib""(c as char)
-                    public Declare Function getChar lib""()as char
+                    public Declare sub puts(c as byte)
+                    public Declare Function getChar()as char
                 End Module
         )code";
     }

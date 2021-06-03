@@ -27,6 +27,7 @@
 #include<llvm/IR/LLVMContext.h>
 #include<llvm/IR/Module.h>
 #include<llvm/IR/Verifier.h>
+#include<llvm/IR/AssemblyAnnotationWriter.h>
 #include<llvm/Support/raw_ostream.h>
 #include<llvm/Target/TargetMachine.h>
 #include<llvm/ExecutionEngine/JITSymbol.h>
@@ -104,7 +105,7 @@ namespace classicBasic{
         friend TypeTable;
         friend CodeGenVisitor;
         BasicErrorListener errorListener;
-        list<SourceUnit*> units;
+        list<Unit*> units;
         LLVMContext* context;
         llvm::Module* mod;
         Reporter* reporter;
@@ -122,7 +123,7 @@ namespace classicBasic{
         Unit* createUnitFromStream(istream& stream);
         Unit* createUnitFromFile(const string& path);
         Unit* createUnitFromIBL(string path);
-        void printLLVMIR();
+        void printLLVMIR(llvm::raw_ostream& stream);
         Reporter& getReporter(){
             return *reporter;
         }
@@ -198,6 +199,7 @@ namespace classicBasic{
                 if(type==nullptr)throw "";
                 return type;
             };
+            //virtual string mangling()=0;
             template<typename T>
             T* as(){return (T*)this;}
             static Info* handling;
@@ -217,15 +219,7 @@ namespace classicBasic{
             ParameterInfo(BasicParser::TypeLocationContext* ctx):returnCtx(ctx){}
             ParameterInfo(BasicParser::NameTypePairContext* ctx):typeMember(ctx){}
 
-            virtual void load(BasicBaseVisitor* visitor)override{
-                Info::handling=this;
-                if(necessaryParameterCtx!=nullptr)visitor->visit(necessaryParameterCtx);
-                else if(paramArrayParameterCtx!=nullptr)visitor->visit(paramArrayParameterCtx);
-                else if(optionalParameterCtx!=nullptr)visitor->visit(optionalParameterCtx);
-                else if(returnCtx!=nullptr)visitor->visit(returnCtx);
-                else if(typeMember!=nullptr)visitor->visit(typeMember);
-                Info::handling=nullptr;
-            }
+            virtual void load(BasicBaseVisitor* visitor)override;
 
             bool byval=false;
             bool array=false;
@@ -257,47 +251,25 @@ namespace classicBasic{
             FunctionInfo(BasicParser::PropertySetContext* ctx):propertySetCtx(ctx){}
             FunctionInfo(BasicParser::PropertyLetContext* ctx):propertyLetCtx(ctx){}
 
-            virtual void load(BasicBaseVisitor* visitor)override{
-                Info::handling=this;
-                if(externalFunctionCtx!=nullptr)visitor->visit(externalFunctionCtx);
-                else if(externalSubCtx!=nullptr)visitor->visit(externalSubCtx);
-                else if(functionDeclCtx!=nullptr)visitor->visit(functionDeclCtx);
-                else if(subDeclCtx!=nullptr)visitor->visit(subDeclCtx);
-                else if(propertyGetCtx!=nullptr)visitor->visit(propertyGetCtx);
-                else if(propertySetCtx!=nullptr)visitor->visit(propertySetCtx);
-                else if(propertyLetCtx!=nullptr)visitor->visit(propertyLetCtx);
-                Info::handling=nullptr;
-            }
+            virtual void load(BasicBaseVisitor* visitor)override;
             virtual Enum getKind()override{return Info::Function;}
         };
 
         class TypeInfo:public Info{
         public:
             BasicParser::TypeDeclContext *ctx=nullptr;
-
             std::map<std::string,ParameterInfo*> memberInfoList;
-
             TypeInfo(BasicParser::TypeDeclContext *ctx):ctx(ctx){}
-            virtual void load(BasicBaseVisitor* visitor)override{
-                Info::handling=this;
-                visitor->visit(ctx);
-                Info::handling=nullptr;
-            }
+            virtual void load(BasicBaseVisitor* visitor)override;
             virtual Enum getKind()override{return Info::Type;}
         };
 
         class EnumInfo:public Info{
         public:
             BasicParser::EnumDeclContext* ctx=nullptr;
-
             std::map<std::string,ConstantInt*> memberList;
-
             EnumInfo(BasicParser::EnumDeclContext* ctx):ctx(ctx){}
-            virtual void load(BasicBaseVisitor* visitor)override {
-                Info::handling=this;
-                visitor->visit(ctx);
-                Info::handling=nullptr;
-            }
+            virtual void load(BasicBaseVisitor* visitor)override;
             virtual Enum getKind()override{return Info::Enum_;}
         };
 
@@ -312,7 +284,7 @@ namespace classicBasic{
         public:
             BuiltInType(llvm::Type* type){this->type=type;}
             virtual void load(BasicBaseVisitor* visitor)override{
-                cout<<"loading bulitin"<<endl;
+                cout<<"loading bulitin"<<endl;//TODO 这tm是干嘛用的？
             }
             virtual Enum getKind()override{return Info::BuiltIn;}
         };
@@ -353,6 +325,7 @@ namespace classicBasic{
             }
             virtual Enum getKind()override{return Info::Module;}
         };
+
     }
 }
 

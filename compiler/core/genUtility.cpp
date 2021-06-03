@@ -77,8 +77,8 @@ namespace classicBasic{
     }
 
 
-    void CodeGenerator::printLLVMIR(){
-        mod->print(outs(),nullptr,false,true);
+    void CodeGenerator::printLLVMIR(llvm::raw_ostream& stream){
+        mod->print(stream,nullptr,false,true);
     }
 
     CodeGenerator::CodeGenerator(ostream& output,string name):logger(new Log(output)),log(*logger){
@@ -111,10 +111,14 @@ namespace classicBasic{
 
     }
     Unit* CodeGenerator::createUnitFromFile(const string& path){
-        return new SourceUnit(this,path);
+        Unit* unit = new SourceUnit(this,path);
+        this->units.push_back(unit);
+        return unit;
     }
-    Unit* CodeGenerator::createUnitFromIBL(string path){
-        return new LibraryUnit(this,path);
+    Unit* CodeGenerator:: createUnitFromIBL(string path){
+        Unit* unit = new LibraryUnit(this,path);
+        this->units.push_back(unit);
+        return unit;
     }
 
     void Log::handling(Unit* u){
@@ -168,6 +172,40 @@ namespace classicBasic{
     namespace structure {
         Scope* Scope::global=new Scope();
         Info* Info::handling=nullptr;
+
+        void ParameterInfo::load(BasicBaseVisitor* visitor){
+            Info::handling=this;
+            if(necessaryParameterCtx!=nullptr)visitor->visit(necessaryParameterCtx);
+            else if(paramArrayParameterCtx!=nullptr)visitor->visit(paramArrayParameterCtx);
+            else if(optionalParameterCtx!=nullptr)visitor->visit(optionalParameterCtx);
+            else if(returnCtx!=nullptr)visitor->visit(returnCtx);
+            else if(typeMember!=nullptr)visitor->visit(typeMember);
+            Info::handling=nullptr;
+        }
+
+        void FunctionInfo::load(BasicBaseVisitor* visitor){
+            Info::handling=this;
+            if(externalFunctionCtx!=nullptr)visitor->visit(externalFunctionCtx);
+            else if(externalSubCtx!=nullptr)visitor->visit(externalSubCtx);
+            else if(functionDeclCtx!=nullptr)visitor->visit(functionDeclCtx);
+            else if(subDeclCtx!=nullptr)visitor->visit(subDeclCtx);
+            else if(propertyGetCtx!=nullptr)visitor->visit(propertyGetCtx);
+            else if(propertySetCtx!=nullptr)visitor->visit(propertySetCtx);
+            else if(propertyLetCtx!=nullptr)visitor->visit(propertyLetCtx);
+            Info::handling=nullptr;
+        }
+
+        void TypeInfo::load(BasicBaseVisitor* visitor){
+            Info::handling=this;
+            visitor->visit(ctx);
+            Info::handling=nullptr;
+        }
+
+        void EnumInfo::load(BasicBaseVisitor* visitor){
+            Info::handling=this;
+            visitor->visit(ctx);
+            Info::handling=nullptr;
+        }
 
         void Scope::extend(Scope* scope){
             childScope.insert(make_pair(scope->name,scope));

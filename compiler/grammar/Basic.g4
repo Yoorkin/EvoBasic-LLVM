@@ -27,8 +27,8 @@ importDecl: Import typeLocation;
 
 enumPair: name=ID ('=' value=constExp)?;
 
-externalDecl: Declare Sub name=ID Lib libPath=String (Alias aliasName=String)? parameterList #externalSub
-            | Declare Function name=ID Lib libPath=String (Alias aliasName=String)? parameterList As returnType=typeLocation #externalFunction
+externalDecl: Declare Sub name=ID (Lib libPath=String)? (Alias aliasName=String)? parameterList #externalSub
+            | Declare Function name=ID (Lib libPath=String)? (Alias aliasName=String)? parameterList As returnType=typeLocation #externalFunction
             ;
 
 factoryDecl:Factory name=ID parameterList block+=line* End Factory;
