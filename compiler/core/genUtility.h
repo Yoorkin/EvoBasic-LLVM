@@ -72,7 +72,6 @@ namespace classicBasic{
         CodeGenerator* gen=nullptr;
         structure::Scope* scope=nullptr;
         IRBuilder<> builder;
-        virtual void scan()=0;
         virtual void generate()=0;
         virtual string getPath()=0;
         virtual string operator[](int line)=0;
@@ -86,7 +85,6 @@ namespace classicBasic{
     public:
         SourceUnit(CodeGenerator* gen, const string& path);
         ~SourceUnit();
-        virtual void scan()override;
         virtual void generate()override;
         virtual string getPath()override;
         virtual string operator[](int line)override;
@@ -95,7 +93,6 @@ namespace classicBasic{
     class LibraryUnit:public Unit{
     public:
         LibraryUnit(CodeGenerator* gen, const string& path);
-        virtual void scan()override;
         virtual void generate()override;
         virtual string getPath()override;
         virtual string operator[](int line)override;

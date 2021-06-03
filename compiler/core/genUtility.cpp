@@ -24,8 +24,6 @@ namespace classicBasic{
         lexer=new BasicLexer(input);
         tokens=new CommonTokenStream(lexer);
         parser=new BasicParser(tokens);
-    }
-    void SourceUnit::scan(){
         StructureScan scan(this);
         scan.visit(parser->body());
         StructureGen genStruct(this);
@@ -67,9 +65,6 @@ namespace classicBasic{
                 visitor.visit(parser.body());
             }
         }
-    }
-    void LibraryUnit::scan(){
-
     }
     void LibraryUnit::generate(){
 

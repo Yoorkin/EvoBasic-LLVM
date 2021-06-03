@@ -9,7 +9,6 @@ int main(int argc, const char* argv[]){
     stream.open("./test.txt");
     CodeGenerator generator(cout,"JIT");
     auto mainUnit = generator.createUnitFromFile("./test.txt");
-    mainUnit->scan();
     mainUnit->generate();
     generator.printLLVMIR();
 }
