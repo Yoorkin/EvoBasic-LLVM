@@ -14,8 +14,8 @@ using namespace classicBasic::constExpCompute;
                         CommonTokenStream tokens(&lexer);\
                         BasicParser parser(&tokens);\
                         BasicParser::ConstExpContext* tree = parser.constExp();\
-                        CodeGenerator gen;\
-                        auto unit=gen.CreateUnit(#name ,stream,cout);
+                        CodeGenerator gen(cout,#name);\
+                        auto unit=gen.createUnitFromStream(stream);
 
 TEST(constExp,AddSubMulDiv){
     string code=R"code(

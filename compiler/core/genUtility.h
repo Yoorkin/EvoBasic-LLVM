@@ -84,7 +84,7 @@ namespace classicBasic{
         CommonTokenStream* tokens;
         BasicParser* parser;
     public:
-        SourceUnit(CodeGenerator* gen, const string& path);
+        SourceUnit(CodeGenerator* gen,const string& path,istream& stream);
         ~SourceUnit();
         virtual void generate()override;
         virtual string getPath()override;
@@ -188,18 +188,15 @@ namespace classicBasic{
         protected:
             llvm::Type* type=nullptr;
         public:
+            Info* parent=nullptr;
             std::string name;
             enum Enum{Parameter,Variable,Function,Type,Property,Module_,
                     BuiltIn,Enum_,Scope,Class,Module,TypeMember,TypeArrayMember};
             virtual Enum getKind()=0;
             virtual void load(BasicBaseVisitor* visitor)=0;
             void setType(llvm::Type* t){type=t;}
-            llvm::Type* getType(BasicBaseVisitor* visitor){
-                if(type==nullptr)load(visitor);
-                if(type==nullptr)throw "";
-                return type;
-            };
-            //virtual string mangling()=0;
+            llvm::Type* getType(BasicBaseVisitor* visitor);
+            virtual string mangling();
             template<typename T>
             T* as(){return (T*)this;}
             static Info* handling;
@@ -220,7 +217,6 @@ namespace classicBasic{
             ParameterInfo(BasicParser::NameTypePairContext* ctx):typeMember(ctx){}
 
             virtual void load(BasicBaseVisitor* visitor)override;
-
             bool byval=false;
             bool array=false;
             bool paramArray=false;
@@ -295,7 +291,7 @@ namespace classicBasic{
 
         class Scope:public Info{
         public:
-            Scope* parent=nullptr;
+            Scope* getParent(){return (Scope*)parent;}
             std::map<std::string,Scope*> childScope;
             std::map<std::string,Info*> memberInfoList;
             virtual void load(BasicBaseVisitor* visitor)override{}
@@ -304,15 +300,15 @@ namespace classicBasic{
             void extend(Scope* scope);
             Info* lookUp(vector<string>& path);
             Info* lookUp(string name);
-            static Scope* global;
         };
 
         class ClassInfo: public Scope{
         public:
-            ClassInfo(string name, Scope* parent_){
-                this->parent=parent_;
+            ClassInfo(string name, Scope* parent){
+                this->parent=parent;
                 this->name=strToLower(name);
-                parent_->memberInfoList.insert(make_pair(this->name,this));
+                parent->childScope.insert(make_pair(strToLower(name),this));
+                parent->memberInfoList.insert(make_pair(this->name,this));
             }
             virtual Enum getKind()override{return Info::Class;}
         };
@@ -321,6 +317,8 @@ namespace classicBasic{
         public:
             ModuleInfo(string name, Scope* parent){
                 this->parent=parent;
+                this->name=name;
+                parent->childScope.insert(make_pair(strToLower(name),this));
                 parent->memberInfoList.insert(make_pair(strToLower(name),this));
             }
             virtual Enum getKind()override{return Info::Module;}

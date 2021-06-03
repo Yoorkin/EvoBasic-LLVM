@@ -10,7 +10,7 @@ using namespace std;
 
 TEST(StructureTest,GlobalMemberTest){
     string code=R"code(
-        sub main(argCount as integer,args() as integer)
+        sub main(argCount as integer,args[] as integer)
 
         end sub
 
@@ -31,9 +31,8 @@ TEST(StructureTest,GlobalMemberTest){
         end enum
     )code";
     stringstream stream(code);
-    CodeGenerator generator;
-    auto unit = generator.CreateUnit("main",stream,cout);
-    unit->scan();
+    CodeGenerator generator(cout,"test");
+    auto unit = generator.createUnitFromStream(stream);
     auto& list = unit->scope->memberInfoList;
     auto cannotFind = list.end();
     auto mainInfo=list.find("main");

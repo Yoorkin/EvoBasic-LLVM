@@ -5,13 +5,11 @@ using namespace std;
 using namespace classicBasic;
 
 int main(int argc, const char* argv[]){
-    std::ifstream stream;
-    stream.open("./test.txt");
     CodeGenerator generator(cout,"main");
     auto mainUnit = generator.createUnitFromFile("./test.txt");
     //generator.createUnitFromIBL("../runtime/libINBasicRT.a");
     mainUnit->generate();
     std::error_code ec;
     llvm::raw_fd_ostream out("output.txt",ec);
-    generator.printLLVMIR(out);
+    generator.printLLVMIR(llvm::outs());
 }

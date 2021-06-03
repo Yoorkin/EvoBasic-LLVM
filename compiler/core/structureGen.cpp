@@ -15,7 +15,7 @@ namespace classicBasic {
         ModuleInfo* cbModule=new ModuleInfo(ctx->name->getText(), unit.scope);
         unit.scope=cbModule;
         for(auto m:ctx->moduleMember())visit(m);
-        unit.scope=cbModule->parent;
+        unit.scope=cbModule->getParent();
         return nullptr;
     }
 
@@ -23,7 +23,7 @@ namespace classicBasic {
         ClassInfo* cbClass=new ClassInfo(ctx->name->getText(), unit.scope);
         unit.scope=cbClass;
         for(auto m:ctx->classMember())visit(m);
-        unit.scope=cbClass->parent;
+        unit.scope=cbClass->getParent();
         return nullptr;
     }
 
@@ -33,6 +33,7 @@ namespace classicBasic {
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         info->retInfo=new structure::ParameterInfo(ctx->returnType);
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
     antlrcpp::Any StructureScan::visitSubDecl(BasicParser::SubDeclContext *ctx){
@@ -40,6 +41,7 @@ namespace classicBasic {
         info->name=strToLower(ctx->name->getText());
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
 
@@ -49,6 +51,7 @@ namespace classicBasic {
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         info->retInfo=new structure::ParameterInfo(ctx->returnType);
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
     antlrcpp::Any StructureScan::visitExternalSub(BasicParser::ExternalSubContext *ctx){
@@ -56,6 +59,7 @@ namespace classicBasic {
         info->name=strToLower(ctx->name->getText());
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
 
@@ -65,6 +69,7 @@ namespace classicBasic {
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         info->retInfo=new structure::ParameterInfo(ctx->returnType);
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
     antlrcpp::Any StructureScan::visitPropertySet(BasicParser::PropertySetContext *ctx){
@@ -72,6 +77,7 @@ namespace classicBasic {
         info->name=strToLower(ctx->name->getText())+"_set";
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
     antlrcpp::Any StructureScan::visitPropertyLet(BasicParser::PropertyLetContext *ctx){
@@ -79,6 +85,7 @@ namespace classicBasic {
         info->name=strToLower(ctx->name->getText())+"_let";
         info->parameterInfoList = visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>();
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
 
@@ -91,7 +98,7 @@ namespace classicBasic {
             cout<<p.first<<endl;
         }
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
-        cout<<unit.scope->memberInfoList.size()<<endl;
+        info->parent=unit.scope;
         return info;
     }
     antlrcpp::Any StructureScan::visitTypeDecl(BasicParser::TypeDeclContext *ctx){
@@ -105,6 +112,7 @@ namespace classicBasic {
             info->memberInfoList.insert(make_pair(m->name,m));
         }
         unit.scope->memberInfoList.insert(make_pair(info->name,info));
+        info->parent=unit.scope;
         return info;
     }
 
@@ -173,7 +181,7 @@ namespace classicBasic {
         ModuleInfo* cbModule=unit.scope->lookUp(ctx->name->getText())->as<ModuleInfo>();
         unit.scope=cbModule;
         for(auto m:ctx->moduleMember())visit(m);
-        unit.scope=cbModule->parent;
+        unit.scope=cbModule->getParent();
         return nullptr;
     }
 
@@ -181,7 +189,7 @@ namespace classicBasic {
         ClassInfo* cbClass=unit.scope->lookUp(ctx->name->getText())->as<ClassInfo>();
         unit.scope=cbClass;
         for(auto m:ctx->classMember())visit(m);
-        unit.scope=cbClass->parent;
+        unit.scope=cbClass->getParent();
         return nullptr;
     }
 
@@ -221,7 +229,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -322,7 +330,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -344,7 +352,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -379,7 +387,7 @@ namespace classicBasic {
         for(auto m:info->memberInfoList){
             members.push_back(m.second->getType(this));
         }
-        info->setType(llvm::StructType::create(members,info->name));
+        info->setType(llvm::StructType::create(members,info->mangling()));
         return info;
     }
 

@@ -16,18 +16,18 @@ namespace classicBasic{
         transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
     }
 
-    SourceUnit::SourceUnit(CodeGenerator* gen, const string& path):Unit(gen->getContext()){
+    SourceUnit::SourceUnit(CodeGenerator* gen,const string& path,istream& stream):Unit(gen->getContext()){
         this->gen=gen;
         this->scope=gen->getGlobalScope();
-        ifstream file(path);
-        input=new ANTLRInputStream(file);
+        input=new ANTLRInputStream(stream);
         lexer=new BasicLexer(input);
         tokens=new CommonTokenStream(lexer);
         parser=new BasicParser(tokens);
         StructureScan scan(this);
-        scan.visit(parser->body());
+        auto tree = parser->body();
+        scan.visit(tree);
         StructureGen genStruct(this);
-        genStruct.visit(parser->body());
+        genStruct.visit(tree);
     }
     void SourceUnit::generate(){
         CodeGenVisitor visitor(this);
@@ -108,10 +108,13 @@ namespace classicBasic{
     }
 
     Unit* CodeGenerator::createUnitFromStream(istream& stream){
-
+        Unit* unit = new SourceUnit(this,"",stream);
+        this->units.push_back(unit);
+        return unit;
     }
     Unit* CodeGenerator::createUnitFromFile(const string& path){
-        Unit* unit = new SourceUnit(this,path);
+        ifstream file(path);
+        Unit* unit = new SourceUnit(this,path,file);
         this->units.push_back(unit);
         return unit;
     }
@@ -170,8 +173,30 @@ namespace classicBasic{
     }
 
     namespace structure {
-        Scope* Scope::global=new Scope();
         Info* Info::handling=nullptr;
+
+        string Info::mangling(){
+            stack<string> path;
+            Info* p=this;
+            while(p->parent!=nullptr){
+                path.push(p->name);
+                p=p->parent;
+            }
+            string ret;
+            while(path.size()>1){
+                ret+=path.top();
+                ret+='.';
+                path.pop();
+            }
+            ret+=path.top();
+            return ret;
+        }
+
+        llvm::Type* Info::getType(BasicBaseVisitor* visitor){
+            if(type==nullptr)load(visitor);
+            if(type==nullptr)throw "";
+            return type;
+        };
 
         void ParameterInfo::load(BasicBaseVisitor* visitor){
             Info::handling=this;
@@ -220,7 +245,7 @@ namespace classicBasic{
             while(p!=nullptr){
                 auto target = p->memberInfoList.find(strToLower(name));
                 if(target!=p->memberInfoList.end())return target->second;
-                else p=p->parent;
+                else p=p->getParent();
             }
             Reporter::singleton->report("Undefined Type or Object '" + name +"'");
             return p->memberInfoList.find("integer")->second;
@@ -228,8 +253,8 @@ namespace classicBasic{
 
         Info* Scope::lookUp(vector<string>& path){
             if(path.size()==1)return lookUp(path[0]);
-            Scope* p=this;
-            for(int i=0;i<path.size();i++){
+            Scope* p=(Scope*)lookUp(path[0]);
+            for(int i=1;i<path.size();i++){
                 if(i<path.size()-1){
                     auto next = p->childScope.find(path[i]);
                     if(next==p->childScope.end())return nullptr;
@@ -241,6 +266,7 @@ namespace classicBasic{
                     return target->second;
                 }
             }
+            throw "error";
         }
 
     }

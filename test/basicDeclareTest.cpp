@@ -28,9 +28,8 @@ TEST(DeclareTest,TypeMemberTest){
 
     )code";
     stringstream stream(code);
-    CodeGenerator generator;
-    auto unit = generator.CreateUnit("TypeMemberTest",stream,cout);
-    unit->scan();
+    CodeGenerator generator(cout,"test");
+    auto unit = generator.createUnitFromStream(stream);
     TypeInfo* info = unit->scope->memberInfoList.find("mytype")->second->as<TypeInfo>();
     auto& list=info->memberInfoList;
     auto cannotFind = list.end();
@@ -81,10 +80,8 @@ TEST(DeclareTest,GlobalVariableTest){
 
     )code";
     stringstream stream(code);
-    CodeGenerator generator;
-    auto unit = generator.CreateUnit("GlobalVariableTest",stream,cout);
-    unit->scan();
-    unit->generate();
+    CodeGenerator generator(cout,"test");
+    auto unit = generator.createUnitFromStream(stream);
     auto& list = unit->scope->memberInfoList;
 
 }
@@ -103,9 +100,8 @@ TEST(DeclareTest,EnumMemberTest){
 
     )code";
     stringstream stream(code);
-    CodeGenerator generator;
-    auto unit = generator.CreateUnit("EnumMemberTest",stream,cout);
-    unit->scan();
+    CodeGenerator generator(cout,"test");
+    auto unit = generator.createUnitFromStream(stream);
     unit->generate();
     auto& e1 = unit->scope->memberInfoList.find("myenum")->second->as<EnumInfo>()->memberList;
     auto e1m1 = e1.find("m1");
@@ -131,9 +127,8 @@ TEST(DeclareTest,FunctionParameterTest){
         end function
     )code";
     stringstream stream(code);
-    CodeGenerator generator;
-    auto unit = generator.CreateUnit("FunctionParameterTest",stream,cout);
-    unit->scan();
+    CodeGenerator generator(cout,"test");
+    auto unit = generator.createUnitFromStream(stream);
     unit->generate();
     auto f = (FunctionInfo*)unit->scope->memberInfoList.find("test")->second;
     auto i=f->parameterInfoList.begin();
