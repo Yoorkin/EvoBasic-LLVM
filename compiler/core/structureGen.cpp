@@ -2,11 +2,15 @@
 // Created by yorkin on 4/27/21.
 //
 #include"structureGen.h"
+#include"ExpGen.h"
 namespace classicBasic {
     using namespace structure;
 
-    StructureScan::StructureScan(GenerateUnit& unit): unit(unit), gen(unit.gen){}
+    StructureScan::StructureScan(Unit* unit): unit(*unit), gen(*(unit->gen)){}
 
+    antlrcpp::Any StructureScan::visitAliasDecl(BasicParser::AliasDeclContext *ctx){
+
+    }
     antlrcpp::Any StructureScan::visitModuleDecl(BasicParser::ModuleDeclContext *ctx){
         ModuleInfo* cbModule=new ModuleInfo(ctx->name->getText(), unit.scope);
         unit.scope=cbModule;
@@ -159,8 +163,12 @@ namespace classicBasic {
 
 
 
-    StructureGen::StructureGen(GenerateUnit& unit):unit(unit),gen(unit.gen){}
-
+    StructureGen::StructureGen(Unit* unit): unit(*unit), gen(*(unit->gen)){
+        this->constExpVisitor=new constExpCompute::ConstExpVisitor(*unit);
+    }
+    StructureGen::~StructureGen(){
+        delete constExpVisitor;
+    }
     antlrcpp::Any StructureGen::visitModuleDecl(BasicParser::ModuleDeclContext *ctx){
         ModuleInfo* cbModule=unit.scope->lookUp(ctx->name->getText())->as<ModuleInfo>();
         unit.scope=cbModule;
@@ -191,7 +199,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -211,9 +219,9 @@ namespace classicBasic {
             else typelist.push_back(p->getType(this));
         }
 
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -238,7 +246,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -262,9 +270,9 @@ namespace classicBasic {
             else typelist.push_back(p->getType(this));
         }
 
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -292,7 +300,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -312,9 +320,9 @@ namespace classicBasic {
             else typelist.push_back(p->getType(this));
         }
 
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -334,9 +342,9 @@ namespace classicBasic {
             else typelist.push_back(p->getType(this));
         }
 
-        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.context),typelist,hasParamArray);
+        FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,unit.mod);
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -349,12 +357,16 @@ namespace classicBasic {
     antlrcpp::Any StructureGen::visitEnumDecl(BasicParser::EnumDeclContext *ctx){
         EnumInfo* info = (EnumInfo*)Info::handling;
         if(info==nullptr)info = (EnumInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText()))->second;
-        info->setType(Type::getInt32Ty(gen.context));
+        info->setType(Type::getInt32Ty(gen.getContext()));
         int index=0;
         for(auto pctx:ctx->enumPair()){
             string name = strToLower(pctx->name->getText());
-            if(pctx->value!=nullptr)index=std::stoi(pctx->value->getText());
-            info->memberList.insert(make_pair(name,ConstantInt::get(Type::getInt32Ty(gen.context),index)));
+            if(pctx->value!=nullptr){
+                auto ret = constExpVisitor->visitConstExp(pctx->value).as<constExpCompute::ExpRetValue>();
+                constExpCompute::builtInCast::i32_(ret);
+                index=ret.data.i32val;
+            }
+            info->memberList.insert(make_pair(name,ConstantInt::get(Type::getInt32Ty(gen.getContext()),index)));
             index++;
         }
         return info;
@@ -384,10 +396,15 @@ namespace classicBasic {
         info->setType(info->getType(this)->getPointerTo());
         info->array=true;
         if(ctx->size!=nullptr){
-            ConstantInt* i=(ConstantInt*)visit(ctx->size).as<Value*>();
-            info->arraySize=i->getZExtValue();
+            auto expVal = visit(ctx->size).as<constExpCompute::ExpRetValue>();
+            constExpCompute::builtInCast::i32_(expVal);
+            info->arraySize=expVal.data.i32val;
         }
         return nullptr;
+    }
+
+    antlrcpp::Any StructureGen::visitConstExp(BasicParser::ConstExpContext *ctx){
+        return constExpVisitor->visit(ctx).as<constExpCompute::ExpRetValue>();
     }
 
     antlrcpp::Any StructureGen::visitVarDecl(BasicParser::VarDeclContext *ctx){
@@ -434,6 +451,6 @@ namespace classicBasic {
 
     antlrcpp::Any StructureGen::visitInteger(BasicParser::IntegerContext *ctx){
         long number = std::stol(ctx->Integer()->getSymbol()->getText());
-        return ConstantInt::get(Type::getInt64Ty(gen.context),number);
+        return ConstantInt::get(Type::getInt64Ty(gen.getContext()),number);
     }
 }

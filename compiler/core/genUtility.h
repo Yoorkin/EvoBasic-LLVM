@@ -6,6 +6,7 @@
 #define CLASSICBASIC_GENUTILITY_H
 
 #include"errorListener.h"
+#include"basicTypeDef.h"
 
 #include<map>
 #include<string>
@@ -45,57 +46,118 @@ using namespace std;
 using namespace antlr4;
 
 namespace classicBasic{
+
     class CodeGenVisitor;
     class StackFrame;
     class TypeTable;
     class CodeGenerator;
     class JIT;
     class StructureScan;
+    class Log;
     namespace structure{
         class Scope;
         class Info;
     }
+    namespace constExpCompute{
+        class ConstExpVisitor;
+    }
+
+
     string strToLower(string str);
 
-    class GenerateUnit{
-        friend CodeGenVisitor;
-        friend JIT;
-        friend StructureScan;
-        istream& in;
-        ostream& out;
-        ANTLRInputStream input;
-        BasicLexer lexer;
-        CommonTokenStream tokens;
-        BasicParser parser;
-        tree::ParseTree *tree = nullptr;
+    class Unit{
+    protected:
+        Unit(LLVMContext& context):builder(context){}
     public:
-        CodeGenerator& gen;
-        llvm::Module mod;
-        structure::Scope* scope;
-        GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out);
-        void scan();
-        void generate();
-        void printIR();
-        Value * findVariable(Token* id);
-        Function* findFunction(Token* id);
-        void addVariableInStack(Token* id, Value* variable);
+        CodeGenerator* gen=nullptr;
+        structure::Scope* scope=nullptr;
+        IRBuilder<> builder;
+        virtual void scan()=0;
+        virtual void generate()=0;
+        virtual string getPath()=0;
+        virtual string operator[](int line)=0;
+    };
+
+    class SourceUnit:public Unit{
+        ANTLRInputStream* input;
+        BasicLexer* lexer;
+        CommonTokenStream* tokens;
+        BasicParser* parser;
+    public:
+        SourceUnit(CodeGenerator* gen, const string& path);
+        ~SourceUnit();
+        virtual void scan()override;
+        virtual void generate()override;
+        virtual string getPath()override;
+        virtual string operator[](int line)override;
+    };
+
+    class LibraryUnit:public Unit{
+    public:
+        LibraryUnit(CodeGenerator* gen, const string& path);
+        virtual void scan()override;
+        virtual void generate()override;
+        virtual string getPath()override;
+        virtual string operator[](int line)override;
     };
 
     class CodeGenerator{
-        friend GenerateUnit;
+        friend SourceUnit;
         friend StackFrame;
         friend TypeTable;
         friend CodeGenVisitor;
         BasicErrorListener errorListener;
-        list<GenerateUnit*> units;
+        list<SourceUnit*> units;
+        LLVMContext* context;
+        llvm::Module* mod;
+        Reporter* reporter;
+        Log* logger;
+        structure::Scope* global;
     public:
-        LLVMContext context;
-        CodeGenerator();
-        ~CodeGenerator(){
-            for(auto u:units)delete u;
-        }
-        GenerateUnit* CreateUnit(string path,istream& in,ostream& out);
+        Log& log;
+        LLVMContext& getContext(){return *context;}
+        Module& getModule(){return *mod;}
+        structure::Scope* getGlobalScope(){return global;}
+
+        CodeGenerator(ostream& output,string name);
+        ~CodeGenerator();
         list<string> linkTargetPaths;
+        Unit* createUnitFromStream(istream& stream);
+        Unit* createUnitFromFile(const string& path);
+        Unit* createUnitFromIBL(string path);
+        void printLLVMIR();
+        Reporter& getReporter(){
+            return *reporter;
+        }
+    };
+
+    class Log{
+        ostream& out;
+        Unit* unit=nullptr;
+        Token* token=nullptr;
+        int errorCount=0;
+        int warningCount=0;
+    public:
+        void handling(Unit* u);
+        void handling(Token* t);
+        Token* getHandlingToken();
+        Unit* getHandlingUnit();
+        static const string Red;
+        static const string Yellow;
+        static const string ColorEnd;
+        static const char endl;
+        enum Enum{endMsg,Position,TokenMark};
+        Log(ostream& output):out(output){}
+
+        template<typename T>
+        Log& operator<<(const T t){
+            out<<t;
+        }
+        void stop();
+        void error(string msg);
+        void warning(string msg);
+
+        Log& operator<<(const Enum e);
     };
 
     namespace structure{
@@ -171,7 +233,7 @@ namespace classicBasic{
             bool byval=false;
             bool array=false;
             bool paramArray=false;
-            uint64_t arraySize=0;
+            u32 arraySize=0;
             BasicParser::ConstExpContext* initial=nullptr;
             virtual Enum getKind()override{return Info::Parameter;}
         };

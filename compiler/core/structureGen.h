@@ -41,6 +41,7 @@
 #include<llvm/ExecutionEngine/ExecutionEngine.h>
 
 #include"genUtility.h"
+#include"ExpGen.h"
 
 namespace classicBasic {
     using namespace llvm;
@@ -53,9 +54,10 @@ namespace classicBasic {
 
     class StructureScan : public BasicBaseVisitor {
         CodeGenerator& gen;
-        GenerateUnit& unit;
+        Unit& unit;
     public:
-        StructureScan(GenerateUnit& unit);
+        StructureScan(Unit* unit);
+        virtual antlrcpp::Any visitAliasDecl(BasicParser::AliasDeclContext *ctx)override;
         virtual antlrcpp::Any visitModuleDecl(BasicParser::ModuleDeclContext *ctx)override;
         virtual antlrcpp::Any visitClassDecl(BasicParser::ClassDeclContext *ctx)override;
 
@@ -82,13 +84,14 @@ namespace classicBasic {
         virtual antlrcpp::Any visitParameterList(BasicParser::ParameterListContext *ctx) override;
 
     };
-
     class StructureGen : public BasicBaseVisitor{
-    public:
         CodeGenerator& gen;
-        GenerateUnit& unit;
+        Unit& unit;
+        constExpCompute::ConstExpVisitor* constExpVisitor;
     public:
-        StructureGen(GenerateUnit& unit);
+        StructureGen(Unit* unit);
+        ~StructureGen();
+
         virtual antlrcpp::Any visitModuleDecl(BasicParser::ModuleDeclContext *ctx) override;
         virtual antlrcpp::Any visitClassDecl(BasicParser::ClassDeclContext *ctx) override;
 
@@ -122,6 +125,7 @@ namespace classicBasic {
         virtual antlrcpp::Any visitTypeLocation(BasicParser::TypeLocationContext *ctx) override;
 
         virtual antlrcpp::Any visitInteger(BasicParser::IntegerContext *ctx) override;
+        virtual antlrcpp::Any visitConstExp(BasicParser::ConstExpContext *ctx) override;
     };
 }
 #endif //CLASSICBASIC_STRUCTUREGEN_H

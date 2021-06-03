@@ -2,6 +2,9 @@
 // Created by yorkin on 4/27/21.
 //
 #include"genUtility.h"
+#include"ExpGen.h"
+
+#include <dlfcn.h>
 
 namespace classicBasic{
     string strToLower(string str){
@@ -13,57 +16,158 @@ namespace classicBasic{
         transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
     }
 
-    GenerateUnit::GenerateUnit(CodeGenerator& gen,string path,string name,istream& in,ostream& out)
-            :gen(gen),in(in),out(out),mod(name,gen.context),
-            input(in),lexer(&input),tokens(&lexer),parser(&tokens){
-        this->scope=structure::Scope::global;
-        Reporter::singleton=new Reporter(out,in,path);
-        parser.removeErrorListeners();
-        parser.addErrorListener(&gen.errorListener);
+    SourceUnit::SourceUnit(CodeGenerator* gen, const string& path):Unit(gen->getContext()){
+        this->gen=gen;
+        this->scope=gen->getGlobalScope();
+        ifstream file(path);
+        input=new ANTLRInputStream(file);
+        lexer=new BasicLexer(input);
+        tokens=new CommonTokenStream(lexer);
+        parser=new BasicParser(tokens);
+    }
+    void SourceUnit::scan(){
+        StructureScan scan(this);
+        scan.visit(parser->body());
+        StructureGen genStruct(this);
+        genStruct.visit(parser->body());
+    }
+    void SourceUnit::generate(){
+        CodeGenVisitor visitor(this);
+        visitor.visit(parser->body());
+    }
+    string SourceUnit::getPath(){
+
+    }
+    string SourceUnit::operator[](int line){
+
+    }
+    SourceUnit::~SourceUnit(){
+        delete input;
+        delete lexer;
+        delete tokens;
+        delete parser;
     }
 
-    void GenerateUnit::scan(){
-        if(tree==NULL)tree = parser.body();
-        StructureScan visitor(*this);
-        visitor.visit(tree);
-        StructureGen v2(*this);
-        v2.visit(tree);
+    LibraryUnit::LibraryUnit(CodeGenerator* gen, const string& path):Unit(gen->getContext()){
+        if(path=="")return;//IBL内部的Declare lib=“”
+        gen->linkTargetPaths.push_back(path);
+        typedef char*(*GetHeader)();
+        auto h = dlopen(path.c_str(),RTLD_LAZY);
+        if(!h)Reporter::singleton->report("库'"+path+"'加载失败");
+        else{
+            GetHeader getHeader = (GetHeader)dlsym(h,"IBL_getHeader");
+            if(getHeader==NULL)Reporter::singleton->report("库'"+path+"'不是有效的INBasic库");
+            else{
+                string header(getHeader());
+                ANTLRInputStream input(header);
+                BasicLexer lexer(&input);
+                CommonTokenStream tokens(&lexer);
+                BasicParser parser(&tokens);
+                StructureScan visitor(this);
+                visitor.visit(parser.body());
+            }
+        }
     }
-    void GenerateUnit::generate(){
-        if(tree==NULL)tree = parser.body();
-//        CodeGenVisitor visitor(*this);
-//        visitor.visit(tree);
+    void LibraryUnit::scan(){
+
     }
-    void GenerateUnit::printIR(){
-        mod.print(outs(),nullptr,false,true);
+    void LibraryUnit::generate(){
+
+    }
+    string LibraryUnit::getPath(){
+
+    }
+    string LibraryUnit::operator[](int line){
+
     }
 
-    Function* GenerateUnit::findFunction(Token* id){
-        string name = strToLower(id->getText());
-        Function* func = mod.getFunction(name);
-        return func;
+
+    void CodeGenerator::printLLVMIR(){
+        mod->print(outs(),nullptr,false,true);
     }
 
-
-    CodeGenerator::CodeGenerator(){
+    CodeGenerator::CodeGenerator(ostream& output,string name):logger(new Log(output)),log(*logger){
         LLVMInitializeNativeTarget();
         LLVMInitializeNativeAsmPrinter();
+        this->context=new llvm::LLVMContext;
+        this->mod=new llvm::Module(name,*context);
         using namespace structure;
-        Scope::global->memberInfoList.operator=({
-            {"integer",new BuiltInType(Type::getInt32Ty(context))},
-            {"single",new BuiltInType(Type::getFloatTy(context))},
-            {"double",new BuiltInType(Type::getDoubleTy(context))},
-            {"boolean",new BuiltInType(Type::getInt1Ty(context))},
-            {"long",new BuiltInType(Type::getInt64Ty(context))},
-            {"byte",new BuiltInType(Type::getInt8Ty(context))}
+        this->global=new structure::Scope();
+        this->global->memberInfoList.operator=({
+            {"integer",new BuiltInType(Type::getInt32Ty(*context))},
+            {"single",new BuiltInType(Type::getFloatTy(*context))},
+            {"double",new BuiltInType(Type::getDoubleTy(*context))},
+            {"boolean",new BuiltInType(Type::getInt1Ty(*context))},
+            {"long",new BuiltInType(Type::getInt64Ty(*context))},
+            {"byte",new BuiltInType(Type::getInt8Ty(*context))}
         });
-        Scope::global->name="global";
+        this->global->name="global";
     }
 
-    GenerateUnit* CodeGenerator::CreateUnit(string path,istream& in,ostream& out){
-        auto unit=new GenerateUnit(*this,path,path,in,out);
-        units.push_back(unit);
+    CodeGenerator::~CodeGenerator(){
+        for(auto u:units)delete u;
+        delete mod;
+        delete context;
+        delete logger;
+        delete global;
+    }
+
+    Unit* CodeGenerator::createUnitFromStream(istream& stream){
+
+    }
+    Unit* CodeGenerator::createUnitFromFile(const string& path){
+        return new SourceUnit(this,path);
+    }
+    Unit* CodeGenerator::createUnitFromIBL(string path){
+        return new LibraryUnit(this,path);
+    }
+
+    void Log::handling(Unit* u){
+        unit=u;
+    }
+    void Log::handling(Token* t){
+        token=t;
+    }
+    Token* Log::getHandlingToken(){
+        return token;
+    }
+    Unit* Log::getHandlingUnit(){
         return unit;
+    }
+    const string Log::Red = "\033[31m";
+    const string Log::Yellow = "\033[33m";
+    const string Log::ColorEnd = "\033[0m";
+    const char Log::endl = '\n';
+
+    void Log::stop(){
+        out<<errorCount<<" error(s),"<<warningCount<<" warning(s)."<<endl;
+    }
+
+    void Log::error(string msg){
+        errorCount++;
+        (*this)<<Red<<Position<<" error:"<<msg<<ColorEnd<<endl<<TokenMark<<endMsg;
+    }
+
+    void Log::warning(string msg){
+        warningCount++;
+        (*this)<<Position<<" warning:"<<msg<<endl<<TokenMark<<endMsg;
+    }
+
+    Log& Log::operator<<(const Enum e){
+        if(e==Position){
+            out << unit->getPath() << "("
+                << token->getLine() << ":" << token->getCharPositionInLine()
+                <<")"<<endl;
+        }
+        else if(e==endMsg){
+            out<<"\033[0m\n";
+        }
+        else if(e==TokenMark){
+            out << endMsg << (*unit)[token->getLine()]
+                << std::string(token->getCharPositionInLine(),' ')
+                << Red << '^' << std::string(token->getStopIndex() - token->getStartIndex() - 1, '~')
+                << ColorEnd << endl;
+        }
     }
 
     namespace structure {

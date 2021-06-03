@@ -16,8 +16,8 @@ namespace classicBasic{
         ExecutionEngine* engine=nullptr;
     public:
         JIT(){}
-        void addUnit(GenerateUnit* unit){
-            unique_ptr<llvm::Module> ptr(&unit->mod);
+        void addUnit(Unit* unit){
+            unique_ptr<llvm::Module> ptr(&unit->gen->getModule());
             if(engine==nullptr)
                 engine=EngineBuilder(std::move(ptr)).create();
             else

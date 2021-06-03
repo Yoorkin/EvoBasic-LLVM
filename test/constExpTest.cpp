@@ -2,6 +2,8 @@
 #include<core/genUtility.h>
 #include<core/ExpGen.h>
 #include<iostream>
+#include "ExpGen.h"
+
 using namespace std;
 using namespace classicBasic;
 using namespace classicBasic::constExpCompute;
@@ -21,8 +23,8 @@ TEST(constExp,AddSubMulDiv){
     )code";
     loadUnit(AddSubMulDiv)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::f32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::f32Ty);
     ASSERT_EQ(exp.data.f32val,3);
 }
 
@@ -32,7 +34,7 @@ TEST(constExp,Add){
     )code";
     loadUnit(Add)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
     ASSERT_EQ(exp.data.i32val,37);
 }
 
@@ -42,7 +44,7 @@ TEST(constExp,Sub){
     )code";
     loadUnit(Sub);
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
     ASSERT_EQ(exp.data.i32val,-22);
 }
 
@@ -52,8 +54,8 @@ TEST(constExp,Mul){
     )code";
     loadUnit(Mul)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i32Ty);
     ASSERT_EQ(exp.data.i32val,88);
 }
 
@@ -63,8 +65,8 @@ TEST(constExp,fpDiv){
     )code";
     loadUnit(fpDiv)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::f32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::f32Ty);
     ASSERT_TRUE(exp.data.f32val-6.66666 < 0.001f);
 }
 
@@ -74,8 +76,8 @@ TEST(constExp,ZDiv){
     )code";
     loadUnit(ZDiv)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i32Ty);
     ASSERT_EQ(exp.data.i32val,6);
 }
 
@@ -85,8 +87,8 @@ TEST(constExp,BucketExp){
     )code";
     loadUnit(BucketExp)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i32Ty);
     ASSERT_EQ(exp.data.i32val,4);
 }
 
@@ -96,8 +98,8 @@ TEST(constExp,TrueLiteral){
     )code";
     loadUnit(TrueLiteral)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::bTy);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::bTy);
     ASSERT_EQ(exp.data.bval,true);
 }
 
@@ -107,8 +109,8 @@ TEST(constExp,FalseLiteral){
     )code";
     loadUnit(FalseLiteral)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::bTy);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::bTy);
     ASSERT_EQ(exp.data.bval,false);
 }
 
@@ -118,8 +120,8 @@ TEST(constExp,IntegerLiteral){
     )code";
     loadUnit(IntegerLiteral)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i32Ty);
     ASSERT_EQ(exp.data.i32val,114514);
 }
 
@@ -129,8 +131,8 @@ TEST(constExp,FloatingPointLiteral){
     )code";
     loadUnit(FloatingPointLiteral)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::f64Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::f64Ty);
     ASSERT_EQ(exp.data.f64val,3.1415926);
 }
 
@@ -140,8 +142,8 @@ TEST(constExp,IntegralPromotion){
     )code";
     loadUnit(IntegralPromotion)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i64Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i64Ty);
     ASSERT_EQ(exp.data.i64val,9876543211);
 }
 
@@ -151,8 +153,8 @@ TEST(constExp,trueToi32Promotion){
     )code";
     loadUnit(IntegralPromotion)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i32Ty);
     ASSERT_EQ(exp.data.i32val,2);
 }
 
@@ -162,8 +164,8 @@ TEST(constExp,falseToi32Promotion){
     )code";
     loadUnit(IntegralPromotion)
     ConstExpVisitor visitor(*unit);
-    auto exp = visitor.visitConstExp(tree).as<expRetValue>();
-    ASSERT_EQ(exp.kind,Kind::i32Ty);
+    auto exp = visitor.visitConstExp(tree).as<ExpRetValue>();
+    ASSERT_EQ(exp.kind, BuiltInKind::i32Ty);
     ASSERT_EQ(exp.data.i32val,-1);
 }
 

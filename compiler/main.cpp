@@ -7,9 +7,9 @@ using namespace classicBasic;
 int main(int argc, const char* argv[]){
     std::ifstream stream;
     stream.open("./test.txt");
-    CodeGenerator generator;
-    auto mainUnit = generator.CreateUnit("main",stream,cout);
+    CodeGenerator generator(cout,"JIT");
+    auto mainUnit = generator.createUnitFromFile("./test.txt");
     mainUnit->scan();
     mainUnit->generate();
-    mainUnit->printIR();
+    generator.printLLVMIR();
 }

@@ -49,12 +49,11 @@ namespace classicBasic{
     class JIT;
 
     class CodeGenVisitor: public BasicBaseVisitor{
-        GenerateUnit& unit;
+        SourceUnit& unit;
         CodeGenerator& gen;
-        IRBuilder<> builder;
     public:
 
-        CodeGenVisitor(GenerateUnit& unit);
+        CodeGenVisitor(SourceUnit* unit);
         void handleBlock(vector<BasicParser::LineContext*>& block);
         void handleFunction(string name,vector<BasicParser::LineContext*>& block);
 //        //=========================================== utility =================================================

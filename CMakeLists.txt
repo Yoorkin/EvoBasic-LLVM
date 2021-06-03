@@ -35,7 +35,7 @@ set(ANTLR_INCLUDE_DIRS
         ${ANTLR_INCLUDE}/antlr4-runtime/tree
         ${ANTLR_INCLUDE}/antlr4-runtime/utf8)
 
-#add_subdirectory(runtime ${CMAKE_BINARY_DIR}/runtime)
+add_subdirectory(runtime ${CMAKE_BINARY_DIR}/runtime)
 add_subdirectory(compiler ${CMAKE_BINARY_DIR}/compiler)
 add_subdirectory(test ${CMAKE_BINARY_DIR}/test)
 

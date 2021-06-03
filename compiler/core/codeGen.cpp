@@ -6,12 +6,15 @@
 
 namespace classicBasic{
     using namespace structure;
+    CodeGenVisitor::CodeGenVisitor(SourceUnit *unit):unit(*unit),gen(*(unit->gen)){
+
+    }
 //    //===================================== visitor =========================================================================
 //    antlrcpp::Any CodeGenVisitor::visitExitStmt(BasicParser::ExitStmtContext *ctx){
 //        return nullptr;
 //    }
 //
-//    CodeGenVisitor::CodeGenVisitor(GenerateUnit& unit):builder(gen.context),unit(unit),gen(unit.gen){
+//    CodeGenVisitor::CodeGenVisitor(SourceUnit& unit):builder(gen.context),unit(unit),gen(unit.gen){
 //    }
 //
 //    antlrcpp::Any CodeGenVisitor::visitForStmt(BasicParser::ForStmtContext *ctx){
@@ -230,12 +233,12 @@ namespace classicBasic{
 
     void CodeGenVisitor::handleFunction(string name,vector<BasicParser::LineContext*>& block){
         Function* function = unit.scope->memberInfoList.find(name)->second->as<FunctionInfo>()->function;
-        BasicBlock* entryBlock = BasicBlock::Create(gen.context,"Entry",function);
-        builder.SetInsertPoint(entryBlock);
+        BasicBlock* entryBlock = BasicBlock::Create(gen.getContext(),"Entry",function);
+        unit.builder.SetInsertPoint(entryBlock);
         handleBlock(block);
-        BasicBlock* exitBlock = BasicBlock::Create(gen.context,"Exit",function);
-        builder.CreateBr(exitBlock);
-        builder.CreateRetVoid();
+        BasicBlock* exitBlock = BasicBlock::Create(gen.getContext(),"Exit",function);
+        unit.builder.CreateBr(exitBlock);
+        unit.builder.CreateRetVoid();
     }
 
     antlrcpp::Any CodeGenVisitor::visitFunctionDecl(BasicParser::FunctionDeclContext *ctx){

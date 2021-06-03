@@ -36,7 +36,7 @@ TEST(DeclareTest,TypeMemberTest){
     auto cannotFind = list.end();
 
 #define getm(name) auto m##name=list.find("m"#name);\
-                    auto a##name=list.find("a"#name);\
+                    auto a##name=list.find("au"#name);\
                     EXPECT_NE(m##name,cannotFind);\
                     EXPECT_NE(a##name,cannotFind);\
                     EXPECT_EQ(a##name->second->as<ParameterInfo>()->array,true);\
@@ -97,7 +97,7 @@ TEST(DeclareTest,EnumMemberTest){
         end Enum
 
         Enum myEnum2
-            m1=5
+            m1=5+10-(1+2)
             m2
         end Enum
 
@@ -120,8 +120,8 @@ TEST(DeclareTest,EnumMemberTest){
     auto e2m2 = e2.find("m2");
     EXPECT_NE(e2m1,e2.end());
     EXPECT_NE(e2m2,e2.end());
-    EXPECT_EQ(e2m1->second->getZExtValue(),5);
-    EXPECT_EQ(e2m2->second->getZExtValue(),6);
+    EXPECT_EQ(e2m1->second->getZExtValue(),12);
+    EXPECT_EQ(e2m2->second->getZExtValue(),13);
 }
 
 TEST(DeclareTest,FunctionParameterTest){

@@ -13,7 +13,7 @@ moduleMember: controlFlag=(Public|Private)? Static?
 
 aliasDecl: Alias name=ID genericDecl? '=' typeLocation;
 
-enumDecl: Enum name=ID (enumPair)* End Enum  ;
+enumDecl: Enum name=ID (enumPair)* End Enum;
 
 propertyDecl:Property Get name=ID parameterList As returnType=typeLocation block+=line* End Property  #propertyGet
             |Property Set name=ID parameterList block+=line* End Property                   #propertySet
@@ -54,7 +54,7 @@ paramArrayParameter: ParamArray nameTypePair;
 
 
 nameTypePair: name=ID (As typeLocation)?                         #NormalNameTypePair
-            | name=ID '['(size=exp)?']' (As typeLocation)?       #ArrayNameTypePair
+            | name=ID '['(size=constExp)?']' (As typeLocation)?       #ArrayNameTypePair
             ;
 
 typeLocation: (path+=type'.')*?target=type
