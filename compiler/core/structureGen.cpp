@@ -207,7 +207,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -249,12 +249,11 @@ namespace classicBasic {
             if(p->paramArray) hasParamArray=true;
             else typelist.push_back(p->getType(this));
         }
-        info->retInfo=new structure::ParameterInfo(ctx->returnType);
         auto retT = info->retInfo->getType(this);
 
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -262,7 +261,7 @@ namespace classicBasic {
             arg_iter++;
         }
 
-        string libPath = strToLower(ctx->libPath->getText());
+        string libPath = ctx->libPath==nullptr ? "" : strToLower(ctx->libPath->getText());
         gen.linkTargetPaths.push_back(libPath.substr(0,libPath.length()-2));
         return info;
     }
@@ -270,7 +269,6 @@ namespace classicBasic {
         FunctionInfo* info=(FunctionInfo*)Info::handling;
         if(info==nullptr)info = (structure::FunctionInfo*)unit.scope->memberInfoList.find(strToLower(ctx->name->getText()))->second;
 
-        info->parameterInfoList = std::move(visit(ctx->parameterList()).as<list<structure::ParameterInfo*>>());
         vector<Type*> typelist;
         bool hasParamArray=false;
         for(auto p:info->parameterInfoList){
@@ -280,7 +278,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(Type::getVoidTy(gen.getContext()),typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);
@@ -288,7 +286,7 @@ namespace classicBasic {
             arg_iter++;
         }
 
-        string libPath = strToLower(ctx->libPath->getText());
+        string libPath = ctx->libPath==nullptr ? "" : strToLower(ctx->libPath->getText());
         gen.linkTargetPaths.push_back(libPath.substr(0,libPath.length()-2));
         return info;
     }
@@ -308,7 +306,7 @@ namespace classicBasic {
 
         FunctionType* fT = FunctionType::get(retT,typelist,hasParamArray);
         info->setType(fT);
-        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->name,gen.getModule());
+        info->function=Function::Create(fT,GlobalValue::LinkageTypes::ExternalLinkage,info->mangling(),gen.getModule());
         auto arg_iter=info->function->arg_begin();
         for(auto p:info->parameterInfoList){
             arg_iter->setName(p->name);

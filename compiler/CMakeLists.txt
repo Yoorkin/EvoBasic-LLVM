@@ -24,7 +24,7 @@ add_definitions(${LLVM_DEFINITIONS})
 add_definitions(-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 
 file(GLOB CORE_SOURCE "core/*.cpp" "antlr/*.cpp" "JIT/*.cpp")
-add_library(INBasicCore SHARED ${CORE_SOURCE} core/basicTypeDef.h core/basicPack.cpp core/basicPack.h)
+add_library(INBasicCore SHARED ${CORE_SOURCE} core/basicTypeDef.h core/basicPack.cpp core/basicPack.h ../runtime/runtimeHeader.h)
 
 llvm_map_components_to_libnames(llvm_libs Core Interpreter MC mcdisassembler MCJIT Support nativecodegen IRReader)
 target_link_libraries(INBasicCore antlr4-runtime ${llvm_libs})

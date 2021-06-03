@@ -5,8 +5,9 @@
 #include"ExpGen.h"
 
 #include <dlfcn.h>
-
+#include"../../runtime/runtimeHeader.h"
 namespace classicBasic{
+
     string strToLower(string str){
         transform(str.begin(),str.end(),str.begin(),[](unsigned char c){ return std::tolower(c); });
         return str;
@@ -97,6 +98,9 @@ namespace classicBasic{
             {"byte",new BuiltInType(Type::getInt8Ty(*context))}
         });
         this->global->name="global";
+        //load runtime library declarations
+        stringstream stream(RTHeader);
+        this->createUnitFromStream(stream);
     }
 
     CodeGenerator::~CodeGenerator(){
@@ -185,7 +189,7 @@ namespace classicBasic{
             string ret;
             while(path.size()>1){
                 ret+=path.top();
-                ret+='.';
+                ret+='$';
                 path.pop();
             }
             ret+=path.top();

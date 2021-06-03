@@ -317,9 +317,9 @@ namespace classicBasic{
         public:
             ModuleInfo(string name, Scope* parent){
                 this->parent=parent;
-                this->name=name;
-                parent->childScope.insert(make_pair(strToLower(name),this));
-                parent->memberInfoList.insert(make_pair(strToLower(name),this));
+                this->name=strToLower(name);
+                parent->childScope.insert(make_pair(this->name,this));
+                parent->memberInfoList.insert(make_pair(this->name,this));
             }
             virtual Enum getKind()override{return Info::Module;}
         };

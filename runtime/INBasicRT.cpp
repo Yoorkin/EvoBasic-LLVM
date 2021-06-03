@@ -25,41 +25,27 @@ using namespace std;
 list<void*> memList;
 
 extern "C" {
-    void* _sys_IBN_malloc(int size) {
+    void* sys$malloc(int size) {
         void* mem=malloc(size);
         memList.push_back(mem);
         return mem;
     }
-    void _sys_IBN_free(void* ptr){
+    void sys$free(void* ptr){
         free(ptr);
     }
-    void console_IBN_puts(char c){
+    void console$puts(char c){
 
     }
-    char console_IBN_getChar(){
+    char console$getChar(){
 
     }
-    void sys_IBN_initRT(){
+    void sys$initRT(){
 
     }
-    void sys_IBN_terminateRT(){
+    void sys$terminateRT(){
         for(auto mem:memList)
             free(mem);
     }
-    char* IBL_getHeader(){
-        return R"code(
-                Module _sys
-                    public Declare Function malloc(size as integer)as integer
-                    public Declare sub free(ptr as integer)
-                    public Declare sub initRT()
-                    public Declare sub terminateRT()
-                End Module
 
-                Module Console
-                    public Declare sub puts(c as byte)
-                    public Declare Function getChar()as char
-                End Module
-        )code";
-    }
 }
 
