@@ -39,9 +39,8 @@
 
 namespace classicBasic{
     //TODO: 考虑添加INF和NaH https://zh.wikipedia.org/wiki/NaN
-    enum BuiltInKind{bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty};
-
     namespace constExpCompute{
+        enum BuiltInKind{bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty};
         class ExpRetValue{
         public:
             ExpRetValue()=default;
@@ -142,28 +141,34 @@ namespace classicBasic{
 
     }
 
-    namespace ExpLLVMValueCast{
-        enum LLVMValueKind{
-            bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty
-        };
 
-        class ExpRetInfo{
-        public:
-            llvm::Value* value;
-            LLVMValueKind kind;
-            ExpRetInfo(Value* v,LLVMValueKind k):value(v),kind(k){}
-            ExpRetInfo cast(LLVMValueKind dst,Unit* unit);
-        };
+    enum LLVMValueKind{
+        bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty
+    };
 
-        void promotionLLVMValue(ExpRetInfo* a,ExpRetInfo* b){
-#define i8_ Type::getInt8Ty(gen.getContext())
-#define i16_ Type::getInt16Ty(gen.getContext())
-#define i32_ Type::getInt32Ty(gen.getContext())
-#define i64_ Type::getInt64Ty(gen.getContext())
-#define f32_ Type::getFloatTy(gen.getContext())
-#define f64_ Type::getDoubleTy(gen.getContext())
+    class ExpRetInfo{
+    public:
+        llvm::Value* value;
+        LLVMValueKind kind;
+        ExpRetInfo(Value* v,LLVMValueKind k):value(v),kind(k){}
+        ExpRetInfo cast(LLVMValueKind dst,Unit& unit);
+    };
+
+
+
+    class ExpVisitor:public BasicBaseVisitor {
+        CodeGenerator& gen;
+        Unit& unit;
+    public:
+        LLVMValueKind promotionLLVMValue(ExpRetInfo& a,ExpRetInfo& b){
+#define i8_ i8Ty
+#define i16_ i16Ty
+#define i32_ i32Ty
+#define i64_ i64Ty
+#define f32_ f32Ty
+#define f64_ f64Ty
 #define N nullptr
-            llvm::Type* promotion_table[7][7]={
+            LLVMValueKind promotion_table[7][7]={
                     /* b    i8   i16  i32  i64  f32  f64 */
                     /*b*/  {N,   i8_, i16_,i32_,i64_,f32_,f64_},
                     /*i8*/ {i8_, N,   i16_,i32_,i64_,f32_,f64_},
@@ -181,16 +186,10 @@ namespace classicBasic{
 #undef f32_
 #undef f64_
             auto cvt = promotion_table[a->kind][b->kind];
-            // return a->kind;
+            a.cast(cvt,unit);
+            b.cast(cvt,unit);
+            return cvt;
         }
-    }
-
-
-    class ExpVisitor:public BasicBaseVisitor {
-        CodeGenerator& gen;
-        Unit& unit;
-    public:
-
         ExpVisitor(Unit& unit): unit(unit), gen(*(unit.gen)){}
         virtual antlrcpp::Any visitMulExp(BasicParser::MulExpContext *ctx) override;
         virtual antlrcpp::Any visitNegExp(BasicParser::NegExpContext *ctx) override;
