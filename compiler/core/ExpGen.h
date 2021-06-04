@@ -40,12 +40,7 @@
 namespace classicBasic{
     //TODO: 考虑添加INF和NaH https://zh.wikipedia.org/wiki/NaN
     enum BuiltInKind{bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty};
-    class ExpRetInfo{
-    public:
-        llvm::Value* value;
-        BuiltInKind kind;
-        ExpRetInfo(Value* v,BuiltInKind k):value(v),kind(k){}
-    };
+
     namespace constExpCompute{
         class ExpRetValue{
         public:
@@ -145,14 +140,20 @@ namespace classicBasic{
             virtual antlrcpp::Any visitLambda(BasicParser::LambdaContext *ctx) override;
         };
 
-
     }
 
+    namespace ExpLLVMValueCast{
+        enum LLVMValueKind{
+            bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty
+        };
 
-    class ExpVisitor:public BasicBaseVisitor {
-        CodeGenerator& gen;
-        Unit& unit;
-    public:
+        class ExpRetInfo{
+        public:
+            llvm::Value* value;
+            LLVMValueKind kind;
+            ExpRetInfo(Value* v,LLVMValueKind k):value(v),kind(k){}
+            ExpRetInfo cast(LLVMValueKind dst,Unit* unit);
+        };
 
         void promotionLLVMValue(ExpRetInfo* a,ExpRetInfo* b){
 #define i8_ Type::getInt8Ty(gen.getContext())
@@ -180,9 +181,15 @@ namespace classicBasic{
 #undef f32_
 #undef f64_
             auto cvt = promotion_table[a->kind][b->kind];
-           // return a->kind;
+            // return a->kind;
         }
+    }
 
+
+    class ExpVisitor:public BasicBaseVisitor {
+        CodeGenerator& gen;
+        Unit& unit;
+    public:
 
         ExpVisitor(Unit& unit): unit(unit), gen(*(unit.gen)){}
         virtual antlrcpp::Any visitMulExp(BasicParser::MulExpContext *ctx) override;

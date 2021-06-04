@@ -271,9 +271,9 @@ namespace classicBasic{
 
         class VariableInfo:public Info{
         public:
-            llvm::GlobalVariable* variable;
             virtual void load(BasicBaseVisitor* visitor)override{}
             virtual Enum getKind()override{return Info::Variable;}
+            llvm::Value* value;
         };
 
         class BuiltInType:public Info{

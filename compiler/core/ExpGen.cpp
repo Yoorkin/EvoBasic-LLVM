@@ -848,13 +848,86 @@ namespace classicBasic{
         }
     }
 
+    namespace ExpLLVMValueCast {
+        ExpRetInfo ExpRetInfo::cast(LLVMValueKind dst,Unit* unit) {
+            IRBuilder<>& builder=unit->builder;
+            LLVMContext& context=unit->gen->getContext();
+            switch (kind) {
+                case bTy:
+                    switch (dst) {
+                        case i8Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt8Ty(context)),i8Ty);
+                        case i16Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt16Ty(context)),i16Ty);
+                        case i32Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt32Ty(context)),i32Ty);
+                        case i64Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt64Ty(context)),i64Ty);
+                        case f32Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getFloatTy(context)),f32Ty);
+                        case f64Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getDoubleTy(context)),f64Ty);
+                    }
+                case i8Ty:
+                    switch (dst) {
+                        case bTy: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt1Ty(context)),bTy);
+                        case i16Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt16Ty(context)),i16Ty);
+                        case i32Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt32Ty(context)),i32Ty);
+                        case i64Ty: return ExpRetInfo(builder.CreateZExt(this->value,Type::getInt64Ty(context)),i64Ty);
+                        case f32Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getFloatTy(context)),f32Ty);
+                        case f64Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getDoubleTy(context)),f64Ty);
+                    }
+                case i16Ty:
+                    switch (dst) {
+                        case bTy: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt1Ty(context)),bTy);
+                        case i8Ty: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt8Ty(context)),i8Ty);
+                        case i32Ty: return ExpRetInfo(builder.CreateSExt(this->value,Type::getInt32Ty(context)),i32Ty);
+                        case i64Ty: return ExpRetInfo(builder.CreateSExt(this->value,Type::getInt64Ty(context)),i64Ty);
+                        case f32Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getFloatTy(context)),f32Ty);
+                        case f64Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getDoubleTy(context)),f64Ty);
+                    }
+                case i32Ty:
+                    switch (dst) {
+                        case bTy: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt1Ty(context)),bTy);
+                        case i8Ty: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt8Ty(context)),i8Ty);
+                        case i16Ty: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt16Ty(context)),i16Ty);
+                        case i64Ty: return ExpRetInfo(builder.CreateSExt(this->value,Type::getInt64Ty(context)),i64Ty);
+                        case f32Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getFloatTy(context)),f32Ty);
+                        case f64Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getDoubleTy(context)),f64Ty);
+                    }
+                case i64Ty:
+                    switch (dst) {
+                        case bTy: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt1Ty(context)),bTy);
+                        case i8Ty: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt8Ty(context)),i8Ty);
+                        case i16Ty: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt16Ty(context)),i16Ty);
+                        case i32Ty: return ExpRetInfo(builder.CreateTrunc(this->value,Type::getInt32Ty(context)),i32Ty);
+                        case f32Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getFloatTy(context)),f32Ty);
+                        case f64Ty: return ExpRetInfo(builder.CreateCast(Instruction::UIToFP,this->value,Type::getDoubleTy(context)),f64Ty);
+                    }
+                case f32Ty:
+                    switch (dst) {
+                        case bTy: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt1Ty(context)),bTy);
+                        case i8Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt8Ty(context)),i8Ty);
+                        case i16Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt16Ty(context)),i16Ty);
+                        case i32Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt32Ty(context)),i32Ty);
+                        case i64Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt64Ty(context)),i64Ty);
+                        case f64Ty: return ExpRetInfo(builder.CreateFPExt(this->value,Type::getDoubleTy(context)),f64Ty);
+                    }
+                case f64Ty:
+                    switch (dst) {
+                        case bTy: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt1Ty(context)),bTy);
+                        case i8Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt8Ty(context)),i8Ty);
+                        case i16Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt16Ty(context)),i16Ty);
+                        case i32Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt32Ty(context)),i32Ty);
+                        case i64Ty: return ExpRetInfo(builder.CreateFPToUI(this->value,Type::getInt64Ty(context)),i64Ty);
+                        case f32Ty: return ExpRetInfo(builder.CreateFPTrunc(this->value,Type::getDoubleTy(context)),f32Ty);
+                    }
+            }
+        }
+    }
     antlrcpp::Any ExpVisitor::visitMulExp(BasicParser::MulExpContext *ctx){
-//        auto left = visit(ctx->left).as<Value*>();
+        auto left = visit(ctx->left).as<Value*>();
+        unit.builder.CreateCast(Instruction::CastOps::)
 //        left->getType()->getTypeID()
 //        auto right = visit(ctx->right).as<Value*>();
 //        char op = ctx->op->getText()[0];
 //        if(op=='*')builder.CreateMul(left,right);
 //        else if(op=='/')
+        unit.builder.
     }
     antlrcpp::Any ExpVisitor::visitNegExp(BasicParser::NegExpContext *ctx){
 
@@ -868,19 +941,19 @@ namespace classicBasic{
     antlrcpp::Any ExpVisitor::visitCmpExp(BasicParser::CmpExpContext *ctx){}
 
     antlrcpp::Any ExpVisitor::visitInteger(BasicParser::IntegerContext *ctx){
-        i32 val = std::stoi(ctx->getText());
-        return ExpRetInfo(ConstantInt::get(Type::getInt32Ty(gen.getContext()),val,true),BuiltInKind::i32Ty);
+//        i32 val = std::stoi(ctx->getText());
+//        return ExpRetInfo(ConstantInt::get(Type::getInt32Ty(gen.getContext()),val,true),BuiltInKind::i32Ty);
     }
     antlrcpp::Any ExpVisitor::visitDecimal(BasicParser::DecimalContext *ctx){
-        f64 val = std::stod(ctx->getText());
-        return ExpRetInfo(ConstantFP::get(Type::getDoubleTy(gen.getContext()),val),BuiltInKind::f64Ty);
+//        f64 val = std::stod(ctx->getText());
+//        return ExpRetInfo(ConstantFP::get(Type::getDoubleTy(gen.getContext()),val),BuiltInKind::f64Ty);
     }
     antlrcpp::Any ExpVisitor::visitString(BasicParser::StringContext *ctx){
         //TODO
     }
     antlrcpp::Any ExpVisitor::visitBoolean(BasicParser::BooleanContext *ctx){
-        bool val = strToLower(ctx->getText())[0]=='t'? 1 : 0;
-        return ExpRetInfo(ConstantInt::get(Type::getInt1Ty(gen.getContext()),val),BuiltInKind::bTy);
+//        bool val = strToLower(ctx->getText())[0]=='t'? 1 : 0;
+//        return ExpRetInfo(ConstantInt::get(Type::getInt1Ty(gen.getContext()),val),BuiltInKind::bTy);
     }
     antlrcpp::Any ExpVisitor::visitFunctionCall(BasicParser::FunctionCallContext *ctx){}
     antlrcpp::Any ExpVisitor::visitBucketExp(BasicParser::BucketExpContext *ctx){}
