@@ -928,7 +928,6 @@ namespace classicBasic{
         auto right = visit(ctx->right).as<ExpRetInfo>();
         return ExpRetInfo(unit.builder.CreateNeg(right.value),right.kind);
     }
-    antlrcpp::Any ExpVisitor::visitRefExp(BasicParser::RefExpContext *ctx){}
     antlrcpp::Any ExpVisitor::visitPowModExp(BasicParser::PowModExpContext *ctx){
 
     }
@@ -1021,8 +1020,31 @@ namespace classicBasic{
         bool val = strToLower(ctx->getText())[0]=='t'? 1 : 0;
         return ExpRetInfo(ConstantInt::get(Type::getInt1Ty(gen.getContext()),val),bTy);
     }
-    antlrcpp::Any ExpVisitor::visitFunctionCall(BasicParser::FunctionCallContext *ctx){}
-    antlrcpp::Any ExpVisitor::visitTargetExp(BasicParser::TargetExpContext *ctx){}
+    antlrcpp::Any ExpVisitor::visitFunctionCall(BasicParser::FunctionCallContext *ctx){
+
+    }
+    antlrcpp::Any ExpVisitor::visitTargetExp(BasicParser::TargetExpContext *ctx){
+        using namespace structure;
+        Info* target = unit.scope->lookUp(strToLower(ctx->ID()->getText()));
+        switch(target->getKind()){
+            case Info::Variable:
+
+                break;
+            case Info::Function:
+                break;
+        }
+    }
+    antlrcpp::Any ExpVisitor::visitRefExp(BasicParser::RefExpContext *ctx){
+        vector<string> paths;
+        for(auto p:ctx->path){
+            paths.push_back(strToLower(p->getText()));
+        }
+        auto prvScope=unit.scope;
+        unit.scope=(structure::Scope*)unit.scope->lookUp(paths);
+        auto ret = visit(ctx->target).as<ExpRetInfo>();
+        unit.scope=prvScope;
+        return ret;
+    }
     antlrcpp::Any ExpVisitor::visitMapExp(BasicParser::MapExpContext *ctx){}
     antlrcpp::Any ExpVisitor::visitArrayExp(BasicParser::ArrayExpContext *ctx){}
     antlrcpp::Any ExpVisitor::visitTupleExp(BasicParser::TupleExpContext *ctx){}

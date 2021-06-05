@@ -183,146 +183,217 @@ namespace classicBasic{
          *  int b=1;
          * }
          */
-
         class Info{
-        protected:
-            llvm::Type* type=nullptr;
         public:
-            Info* parent=nullptr;
-            std::string name;
-            enum Enum{Parameter,Variable,Function,Type,Property,Module_,
-                    BuiltIn,Enum_,Scope,Class,Module,TypeMember,TypeArrayMember};
+            enum Enum{Scope,Function,StructVariable,BuiltInVariable,BuiltInTy,StructTy,GenericTy};
+            virtual Info* getParent()=0;
+            virtual void setName(Info* info)=0;
+            virtual string mangling()=0;
+            virtual string getName()=0;
+            virtual void setName(string name)=0;
             virtual Enum getKind()=0;
-            virtual void load(BasicBaseVisitor* visitor)=0;
-            void setType(llvm::Type* t){type=t;}
-            llvm::Type* getType(BasicBaseVisitor* visitor);
-            virtual string mangling();
             template<typename T>
             T* as(){return (T*)this;}
-            static Info* handling;
         };
 
-        class ParameterInfo: public Info{
+        class Instance:public Info{
+
+        };
+        class Scope:public Instance{
+            std::multimap<string,Info*> members;
         public:
-            BasicParser::NecessaryParameterContext* necessaryParameterCtx=nullptr;
-            BasicParser::ParamArrayParameterContext* paramArrayParameterCtx=nullptr;
-            BasicParser::OptionalParameterContext* optionalParameterCtx=nullptr;
-            BasicParser::TypeLocationContext* returnCtx=nullptr;
-            BasicParser::NameTypePairContext* typeMember=nullptr;
-
-            ParameterInfo(BasicParser::NecessaryParameterContext* ctx):necessaryParameterCtx(ctx){}
-            ParameterInfo(BasicParser::ParamArrayParameterContext* ctx):paramArrayParameterCtx(ctx){}
-            ParameterInfo(BasicParser::OptionalParameterContext* ctx):optionalParameterCtx(ctx){}
-            ParameterInfo(BasicParser::TypeLocationContext* ctx):returnCtx(ctx){}
-            ParameterInfo(BasicParser::NameTypePairContext* ctx):typeMember(ctx){}
-
-            virtual void load(BasicBaseVisitor* visitor)override;
-            bool byval=false;
-            bool array=false;
-            bool paramArray=false;
-            u32 arraySize=0;
-            BasicParser::ConstExpContext* initial=nullptr;
-            virtual Enum getKind()override{return Info::Parameter;}
-        };
-
-        class FunctionInfo:public Info{
-        public:
-            BasicParser::ExternalFunctionContext* externalFunctionCtx=nullptr;
-            BasicParser::ExternalSubContext* externalSubCtx=nullptr;
-            BasicParser::FunctionDeclContext* functionDeclCtx=nullptr;
-            BasicParser::SubDeclContext* subDeclCtx=nullptr;
-            BasicParser::PropertyGetContext* propertyGetCtx=nullptr;
-            BasicParser::PropertySetContext* propertySetCtx=nullptr;
-            BasicParser::PropertyLetContext* propertyLetCtx=nullptr;
-
-            llvm::Function* function;
-            std::list<ParameterInfo*> parameterInfoList;
-            ParameterInfo* retInfo=nullptr;
-
-            FunctionInfo(BasicParser::ExternalFunctionContext* ctx):externalFunctionCtx(ctx){}
-            FunctionInfo(BasicParser::ExternalSubContext* ctx):externalSubCtx(ctx){}
-            FunctionInfo(BasicParser::FunctionDeclContext* ctx):functionDeclCtx(ctx){}
-            FunctionInfo(BasicParser::SubDeclContext* ctx):subDeclCtx(ctx){}
-            FunctionInfo(BasicParser::PropertyGetContext* ctx):propertyGetCtx(ctx){}
-            FunctionInfo(BasicParser::PropertySetContext* ctx):propertySetCtx(ctx){}
-            FunctionInfo(BasicParser::PropertyLetContext* ctx):propertyLetCtx(ctx){}
-
-            virtual void load(BasicBaseVisitor* visitor)override;
-            virtual Enum getKind()override{return Info::Function;}
-        };
-
-        class TypeInfo:public Info{
-        public:
-            BasicParser::TypeDeclContext *ctx=nullptr;
-            std::map<std::string,ParameterInfo*> memberInfoList;
-            TypeInfo(BasicParser::TypeDeclContext *ctx):ctx(ctx){}
-            virtual void load(BasicBaseVisitor* visitor)override;
-            virtual Enum getKind()override{return Info::Type;}
-        };
-
-        class EnumInfo:public Info{
-        public:
-            BasicParser::EnumDeclContext* ctx=nullptr;
-            std::map<std::string,ConstantInt*> memberList;
-            EnumInfo(BasicParser::EnumDeclContext* ctx):ctx(ctx){}
-            virtual void load(BasicBaseVisitor* visitor)override;
-            virtual Enum getKind()override{return Info::Enum_;}
-        };
-
-        class VariableInfo:public Info{
-        public:
-            virtual void load(BasicBaseVisitor* visitor)override{}
-            virtual Enum getKind()override{return Info::Variable;}
-            llvm::Value* value;
-        };
-
-        class BuiltInType:public Info{
-        public:
-            BuiltInType(llvm::Type* type){this->type=type;}
-            virtual void load(BasicBaseVisitor* visitor)override{
-                cout<<"loading bulitin"<<endl;//TODO 这tm是干嘛用的？
-            }
-            virtual Enum getKind()override{return Info::BuiltIn;}
-        };
-
-        class LambdaInfo:public Info{
-
-        };
-
-        class Scope:public Info{
-        public:
-            Scope* getParent(){return (Scope*)parent;}
-            std::map<std::string,Scope*> childScope;
-            std::map<std::string,Info*> memberInfoList;
-            virtual void load(BasicBaseVisitor* visitor)override{}
-            virtual Enum getKind()override{return Info::Scope;}
-            //动作类似using namespace scope
             void extend(Scope* scope);
             Info* lookUp(vector<string>& path);
             Info* lookUp(string name);
+            virtual void addChild(Info* info);
+            virtual vector<Info*> getChild();
         };
 
-        class ClassInfo: public Scope{
+
+        namespace constraints{
+            class Constraint{
+
+            };
+            //a as long
+            class IsConstraint:public Constraint{
+
+            };
+            //a has <MemberType>
+            class HasConstraint:public Constraint{
+
+            };
+//            //a like "route/user/{id as long}" --在运行时刻决定
+//            class MatchConstraint:public Constraint{
+//
+//            };
+        }
+
+        class Function:public Instance{
         public:
-            ClassInfo(string name, Scope* parent){
-                this->parent=parent;
-                this->name=strToLower(name);
-                parent->childScope.insert(make_pair(strToLower(name),this));
-                parent->memberInfoList.insert(make_pair(this->name,this));
-            }
-            virtual Enum getKind()override{return Info::Class;}
+            struct Parameter{
+                constraints::Constraint* constraint;
+                string name;
+                bool byval;
+                bool optional;
+                BasicParser::ExpContext* initialExp;
+            };
+
+        };
+        class Variable:public Instance{
+
         };
 
-        class ModuleInfo: public Scope{
-        public:
-            ModuleInfo(string name, Scope* parent){
-                this->parent=parent;
-                this->name=strToLower(name);
-                parent->childScope.insert(make_pair(this->name,this));
-                parent->memberInfoList.insert(make_pair(this->name,this));
-            }
-            virtual Enum getKind()override{return Info::Module;}
+        class Entity:public Info{
+
         };
+        class BuiltIn:public Entity{
+
+        };
+        class Struct:public Entity{
+
+        };
+        class Generic:public Entiry{
+
+        };
+
+//        class Info{
+//        protected:
+//            llvm::Type* type=nullptr;
+//        public:
+//            Info* parent=nullptr;
+//            std::string name;
+//            enum Enum{Parameter,Variable,Function,Type,Property,Module_,
+//                    BuiltIn,Enum_,Scope,Class,Module,TypeMember,TypeArrayMember};
+//            virtual Enum getKind()=0;
+//            virtual void load(BasicBaseVisitor* visitor)=0;
+//            void setType(llvm::Type* t){type=t;}
+//            virtual llvm::Type* getType(BasicBaseVisitor* visitor);
+//            virtual string mangling();
+//            template<typename T>
+//            T* as(){return (T*)this;}
+//            static Info* handling;
+//        };
+//
+//        class FunctionInfo:public Info{
+//        public:
+//            class ParameterInfo: public Info{
+//            public:
+//                BasicParser::NecessaryParameterContext* necessaryParameterCtx=nullptr;
+//                BasicParser::ParamArrayParameterContext* paramArrayParameterCtx=nullptr;
+//                BasicParser::OptionalParameterContext* optionalParameterCtx=nullptr;
+//                BasicParser::TypeLocationContext* returnCtx=nullptr;
+//                BasicParser::NameTypePairContext* typeMember=nullptr;
+//
+//                ParameterInfo(BasicParser::NecessaryParameterContext* ctx):necessaryParameterCtx(ctx){}
+//                ParameterInfo(BasicParser::ParamArrayParameterContext* ctx):paramArrayParameterCtx(ctx){}
+//                ParameterInfo(BasicParser::OptionalParameterContext* ctx):optionalParameterCtx(ctx){}
+//                ParameterInfo(BasicParser::TypeLocationContext* ctx):returnCtx(ctx){}
+//                ParameterInfo(BasicParser::NameTypePairContext* ctx):typeMember(ctx){}
+//
+//                virtual void load(BasicBaseVisitor* visitor)override;
+//                bool byval=false;
+//                bool array=false;
+//                bool paramArray=false;
+//                u32 arraySize=0;
+//                BasicParser::ConstExpContext* initial=nullptr;
+//                virtual Enum getKind()override{return Info::Parameter;}
+//            };
+//
+//            BasicParser::ExternalFunctionContext* externalFunctionCtx=nullptr;
+//            BasicParser::ExternalSubContext* externalSubCtx=nullptr;
+//            BasicParser::FunctionDeclContext* functionDeclCtx=nullptr;
+//            BasicParser::SubDeclContext* subDeclCtx=nullptr;
+//            BasicParser::PropertyGetContext* propertyGetCtx=nullptr;
+//            BasicParser::PropertySetContext* propertySetCtx=nullptr;
+//            BasicParser::PropertyLetContext* propertyLetCtx=nullptr;
+//
+//            llvm::Function* function;
+//            std::list<ParameterInfo*> parameterInfoList;
+//            ParameterInfo* retInfo=nullptr;
+//
+//            FunctionInfo(BasicParser::ExternalFunctionContext* ctx):externalFunctionCtx(ctx){}
+//            FunctionInfo(BasicParser::ExternalSubContext* ctx):externalSubCtx(ctx){}
+//            FunctionInfo(BasicParser::FunctionDeclContext* ctx):functionDeclCtx(ctx){}
+//            FunctionInfo(BasicParser::SubDeclContext* ctx):subDeclCtx(ctx){}
+//            FunctionInfo(BasicParser::PropertyGetContext* ctx):propertyGetCtx(ctx){}
+//            FunctionInfo(BasicParser::PropertySetContext* ctx):propertySetCtx(ctx){}
+//            FunctionInfo(BasicParser::PropertyLetContext* ctx):propertyLetCtx(ctx){}
+//
+//            virtual void load(BasicBaseVisitor* visitor)override;
+//            virtual Enum getKind()override{return Info::Function;}
+//        };
+//
+//        class TypeInfo:public Info{
+//        public:
+//            BasicParser::TypeDeclContext *ctx=nullptr;
+//            std::map<std::string,ParameterInfo*> memberInfoList;
+//            TypeInfo(BasicParser::TypeDeclContext *ctx):ctx(ctx){}
+//            virtual void load(BasicBaseVisitor* visitor)override;
+//            virtual Enum getKind()override{return Info::Type;}
+//        };
+//
+////        class EnumInfo:public Info{
+////        public:
+////            BasicParser::EnumDeclContext* ctx=nullptr;
+////            std::map<std::string,ConstantInt*> memberList;
+////            EnumInfo(BasicParser::EnumDeclContext* ctx):ctx(ctx){}
+////            virtual void load(BasicBaseVisitor* visitor)override;
+////            virtual Enum getKind()override{return Info::Enum_;}
+////        };
+//
+//        class VariableInfo:public Info{
+//            virtual void load(BasicBaseVisitor* visitor)override{}
+//            virtual llvm::Type* getType(BasicBaseVisitor* visitor){}
+//        public:
+//
+//            virtual Enum getKind()override{return Info::Variable;}
+//            llvm::Value* value;
+//        };
+//
+//        class ValueTypeVariableInfo:public VariableInfo{
+//
+//        };
+//
+//        class ObjectTypeVariableInfo:public VariableInfo{
+//
+//        };
+//
+//        class BuiltInType:public Info{
+//        public:
+//            BuiltInType(llvm::Type* type){this->type=type;}
+//            virtual void load(BasicBaseVisitor* visitor)override{
+//                cout<<"loading bulitin"<<endl;//TODO 这tm是干嘛用的？
+//            }
+//            virtual Enum getKind()override{return Info::BuiltIn;}
+//        };
+//
+//        class LambdaInfo:public Info{
+//
+//        };
+//
+//        class Scope:public Info{
+//        public:
+//            Scope* getParent(){return (Scope*)parent;}
+//            std::map<std::string,Scope*> childScope;
+//            std::map<std::string,Info*> memberInfoList;
+//            virtual void load(BasicBaseVisitor* visitor)override{}
+//            virtual Enum getKind()override{return Info::Scope;}
+//            //动作类似using namespace scope
+//            void extend(Scope* scope);
+//            Info* lookUp(vector<string>& path);
+//            Info* lookUp(string name);
+//        };
+//
+//        class ClassInfo: public Scope{
+//        public:
+//            ClassInfo(string name, Scope* parent){
+//                this->parent=parent;
+//                this->name=strToLower(name);
+//                parent->childScope.insert(make_pair(strToLower(name),this));
+//                parent->memberInfoList.insert(make_pair(this->name,this));
+//            }
+//            virtual Enum getKind()override{return Info::Class;}
+//        };
 
     }
 }

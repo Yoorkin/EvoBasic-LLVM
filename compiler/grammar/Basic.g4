@@ -5,20 +5,15 @@ body:(globalModule=moduleMember)* EOF;
 classDecl: Class name=ID genericDecl? (Extend (implements+=typeLocation(','implements+=typeLocation)*))?
             (classMember)* End Class;
 classMember: controlFlag=(Public|Private)? Static?
-                (importDecl|aliasDecl|functionDecl|subDecl|propertyDecl|varDecl|typeDecl|externalDecl|enumDecl|factoryDecl|operatorOverride);
+                (importDecl|aliasDecl|functionDecl|propertyDecl|varDecl|typeDecl|enumDecl|factoryDecl|operatorOverride);
 
 moduleDecl: ModuleInfo name=ID genericDecl? genericDecl? (moduleMember)* End ModuleInfo;
 moduleMember: controlFlag=(Public|Private)? Static?
-                (importDecl|aliasDecl|functionDecl|subDecl|varDecl|typeDecl|externalDecl|enumDecl|moduleDecl|classDecl);
+                (importDecl|aliasDecl|functionDecl|varDecl|typeDecl|enumDecl|moduleDecl|classDecl);
 
 aliasDecl: Alias name=ID genericDecl? '=' typeLocation;
 
 enumDecl: Enum name=ID (enumPair)* End Enum;
-
-propertyDecl:Property Get name=ID parameterList As returnType=typeLocation block+=line* End Property  #propertyGet
-            |Property Set name=ID parameterList block+=line* End Property                   #propertySet
-            |Property Let name=ID parameterList block+=line* End Property                   #propertyLet
-            ;
 
 operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList As returnType=typeLocation (Implements implements=typeLocation)?
             block+=line* End Function  ;
@@ -26,10 +21,6 @@ operatorOverride:Function Operator op=('+'|'-'|'*'|'\\'|'/'|Clone) parameterList
 importDecl: Import typeLocation;
 
 enumPair: name=ID ('=' value=constExp)?;
-
-externalDecl: Declare Sub name=ID (Lib libPath=String)? (Alias aliasName=String)? parameterList #externalSub
-            | Declare Function name=ID (Lib libPath=String)? (Alias aliasName=String)? parameterList As returnType=typeLocation #externalFunction
-            ;
 
 factoryDecl:Factory name=ID parameterList block+=line* End Factory;
 
@@ -39,19 +30,20 @@ varDecl: varFlag=(Dim|Static) variable (','variable)*  ;
 
 variable: nameTypePair ('=' initial=exp)?;
 
-functionDecl:Function name=ID genericDecl? parameterList As returnType=typeLocation
-            (Override implements=typeLocation?)?
-            block+=line* End Function  ;
+functionDecl: Function name=ID genericDecl? parameterList As returnType=typeLocation (Override override=typeLocation?)? block+=line* End Function
+            | Sub name=ID genericDecl? parameterList (Override override=typeLocation?)? block+=line* End Sub
+            | Declare Function name=ID (Lib libPath=String)? (Alias aliasName=String)? parameterList As returnType=typeLocation
+            | Declare Sub name=ID (Lib libPath=String)? (Alias aliasName=String)? parameterList
+            ;
 
-subDecl: Sub name=ID genericDecl? parameterList
-        (Override implements=typeLocation?)?
-        block+=line* End Sub  ;
+propertyDecl:Property name=ID As propertyType=typeLocation (getter? setter?|setter? getter?) End Property;
+getter: Get (block+=line*) End Get;
+setter: Set (block+=line*) End Set;
 
 parameterList:'(' (necessaryParameter (','necessaryParameter)*?)? (','optionalParameter)*? (','paramArrayParameter)? ')';
 necessaryParameter: passFlag=(Byref|Byval)? nameTypePair ;
 optionalParameter: Optional passFlag=(Byref|Byval)? nameTypePair ('=' initial=constExp)?;
 paramArrayParameter: ParamArray nameTypePair;
-
 
 nameTypePair: name=ID (As typeLocation)?                         #NormalNameTypePair
             | name=ID '['(size=constExp)?']' (As typeLocation)?       #ArrayNameTypePair
@@ -76,8 +68,21 @@ statement:forStmt
         |returnStmt
         |assignStmt
         |varDecl
+        |select
         |exp
         ;
+
+select:Select exp matchCase* (Case Else elseBlock+=line*)? End Select;
+matchCase:Case matchExp block+=line*;
+matchExp: exp '..' exp     #RangeMatchExp
+        | matchTerminal(':'matchExp)+ #SliceMatchExp
+        | '['(matchTerminal(','matchExp)*)?']'  #ArrayMatchExp
+        | '('matchTerminal(','matchExp)*')'  #TrupleMatchExp
+        | matchTerminal                      #TerminalMatchExp
+        ;
+matchTerminal: name=ID (As typeLocation)? #DefineInMatch
+             | constExp                   #MatchFactor
+             ;
 
 passArg:value=exp                #ArgPassValue
        |option=ID ':' value=exp  #ArgOptional
