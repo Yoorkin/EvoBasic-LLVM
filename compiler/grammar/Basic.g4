@@ -69,6 +69,7 @@ statement:forStmt
         |assignStmt
         |varDecl
         |select
+        |exceptionHandling
         |exp
         ;
 
@@ -83,6 +84,9 @@ matchExp: exp '..' exp     #RangeMatchExp
 matchTerminal: name=ID (As typeLocation)? #DefineInMatch
              | constExp                   #MatchFactor
              ;
+
+exceptionHandling: Try block+=line* catchHandling+ End Try;
+catchHandling: Catch nameTypePair block+=line*;
 
 passArg:value=exp                #ArgPassValue
        |option=ID ':' value=exp  #ArgOptional
@@ -178,7 +182,8 @@ BlockComment: '\'*' .*? '*\'' -> skip;
 LineEnd: [\n\r]->skip;
 WS: [ \t]->skip;
 
-
+Try: T R Y;
+Catch:C A T C H;
 Override:O V E R R I D E;
 Operator:O P E R A T O R;
 Clone: C L O N E;

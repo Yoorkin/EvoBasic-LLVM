@@ -56,6 +56,9 @@ namespace classicBasic{
     class StructureScan;
     class Log;
     namespace structure{
+        namespace constraints{
+            class Constraint;
+        }
         class Scope;
         class Info;
     }
@@ -192,6 +195,7 @@ namespace classicBasic{
             virtual string getName()=0;
             virtual void setName(string name)=0;
             virtual Enum getKind()=0;
+
             template<typename T>
             T* as(){return (T*)this;}
         };
@@ -207,26 +211,8 @@ namespace classicBasic{
             Info* lookUp(string name);
             virtual void addChild(Info* info);
             virtual vector<Info*> getChild();
+            virtual Enum getKind(){return Info::Scope;}
         };
-
-
-        namespace constraints{
-            class Constraint{
-
-            };
-            //a as long
-            class IsConstraint:public Constraint{
-
-            };
-            //a has <MemberType>
-            class HasConstraint:public Constraint{
-
-            };
-//            //a like "route/user/{id as long}" --在运行时刻决定
-//            class MatchConstraint:public Constraint{
-//
-//            };
-        }
 
         class Function:public Instance{
         public:
@@ -237,24 +223,77 @@ namespace classicBasic{
                 bool optional;
                 BasicParser::ExpContext* initialExp;
             };
-
+            bool accept(vector<Instance*> args);
+            virtual Enum getKind(){return Info::Function;}
+        private:
+            list<Parameter> arglist;
         };
         class Variable:public Instance{
+            Enum kind;
+            Type* ty;
+        public:
+            virtual Enum getKind(){return kind;}
+            Type* getLLVMTy(){
+                return ty;
+            }
+        };
+
+        enum BuiltInKind{
+            bTy,i8Ty,i16Ty,i32Ty,i64Ty,f32Ty,f64Ty
+        };
+
+        class BuiltInVariable:public Variable{
+            LLVMValueKind kind;
+        public:
+            virtual Enum getKind(){return VariableBuiltIn;}
 
         };
 
         class Entity:public Info{
 
         };
-        class BuiltIn:public Entity{
+        class BuiltInEntity:public Entity{
+            Type* ty;
+        public:
+            BuiltInEntity(BuiltInKind kind){
 
+            }
+            virtual Enum getKind(){return Info::BuiltInTy;}
+            Type* getLLVMTy(){
+                return ty;
+            }
         };
-        class Struct:public Entity{
+        class StructEntity:public Entity{
+            llvm::StructType* ty;
+        public:
+            virtual Enum getKind(){return Info::StructTy;}
+            StructType* getLLVMTy(){
+                return ty;
+            }
+        };
+        class Generic:public Entity{
+        public:
+            virtual Enum getKind(){return Info::Generic;}
+        };
 
-        };
-        class Generic:public Entiry{
-
-        };
+        namespace constraints{
+            class Constraint{
+            public:
+                virtual bool accept(Instance* inst)=0;
+            };
+            //a as long
+            class IsConstraint:public Constraint{
+            public:
+                IsConstraint(BuiltIn builtIn);
+                IsConstraint(Struct struct_);
+                virtual bool accept(Instance* inst);
+            };
+            //a has <MemberType>
+            class HasConstraint:public Constraint{
+                HasConstraint(Instance* inst);
+                virtual bool accept(Instance* inst);
+            };
+        }
 
 //        class Info{
 //        protected:
