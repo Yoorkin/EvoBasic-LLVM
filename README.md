@@ -1,4 +1,4 @@
-# classicBasic
+# EvoBasic
 
 
 This is a personal experimental project, and maintenance may be discontinued at any time.
