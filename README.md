@@ -1,5 +1,7 @@
 # EvoBasic
 
+** This project is not longer active. The successor is [evoBasic-lang](https://github.com/Yoorkin/evoBasic-lang) **
+
 
 This is a personal experimental project, and maintenance may be discontinued at any time.
 If you want a modern vb6-compatible compiler,see [twinBasic](https://github.com/WaynePhillipsEA/twinbasic).
